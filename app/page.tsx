@@ -1,20 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
+import { useUiStore } from '@/shared/store/use-ui-store';
 
 export default function Home() {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-  }, [isDark]);
+  const { theme, toggleTheme } = useUiStore();
+  const isDark = theme === 'dark';
   const brandShades = [
     { shade: '50', bg: 'bg-brand-50' },
     { shade: '100', bg: 'bg-brand-100' },
@@ -43,7 +35,7 @@ export default function Home() {
           </div>
           <Button 
             variant="outline" 
-            onClick={() => setIsDark(!isDark)}
+            onClick={toggleTheme}
             className="flex gap-2 items-center"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
