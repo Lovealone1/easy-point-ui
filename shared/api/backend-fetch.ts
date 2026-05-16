@@ -1,7 +1,20 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// shared/api/backend-fetch.ts
+//
+// Server-side fetch utility for the BFF catch-all proxy route.
+// Runs exclusively in Next.js Route Handlers and Server Components.
+// NEVER imported in the browser.
+//
+// Moved from: server/backend-api-client.ts
+//
+// Difference vs shared/api/server-fetch.ts:
+//   - server-fetch.ts  → used by Server Components (auth-aware, with retry)
+//   - backend-fetch.ts → used by the generic /api/v1/[...path] proxy route
+//     (forwards any authenticated request from Axios/clientFetch to NestJS)
+// ─────────────────────────────────────────────────────────────────────────────
 import { cookies } from 'next/headers';
-import type { BackendFetchOptions } from '@/server/types/api.types';
-import { BackendApiError } from '@/server/utils/api-error';
-
+import type { BackendFetchOptions } from '@/shared/types/api.types';
+import { BackendApiError } from '@/shared/utils/api-error';
 
 const BACKEND_URL = process.env.BACKEND_API_URL ?? 'http://localhost:3001';
 const API_VERSION = process.env.API_VERSION ?? 'v1';
@@ -20,21 +33,17 @@ export function buildApiUrl(endpoint: string): string {
   return `${BACKEND_URL}/api/${API_VERSION}/${cleanEndpoint}`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Core fetch utility (Server-Side Only — runs in Next.js Server Components
-// and Route Handlers, NEVER in the browser)
-// ─────────────────────────────────────────────────────────────────────────────
-
 /**
- * Server-side fetch wrapper that communicates directly with the backend.
+ * Server-side fetch wrapper for the BFF proxy.
  *
  * Features:
  * - Automatically attaches the Authorization header from the `access_token` cookie.
+ * - Forwards x-organization-id from cookies when present.
  * - Forwards Content-Type: application/json for JSON bodies.
  * - Throws a typed `BackendApiError` on non-2xx responses.
  * - Returns `null` for 204 No Content responses.
  *
- * Usage (in a Server Component or Route Handler):
+ * Usage (in the catch-all proxy Route Handler):
  * ```ts
  * const data = await backendFetch<User[]>('users');
  * const user = await backendFetch<User>('users/1');
@@ -87,11 +96,15 @@ export async function backendFetch<T = unknown>(
   }
 
   if (!response.ok) {
-    let apiError = { statusCode: response.status, message: response.statusText };
+    let apiError: { statusCode: number; message: string | string[]; error?: string } = {
+      statusCode: response.status,
+      message: response.statusText,
+    };
     try {
       const json = await response.json();
-      apiError = { ...apiError, ...json };
+      apiError = { ...apiError, ...(json as object) };
     } catch {
+      // non-JSON error body — keep defaults
     }
     throw new BackendApiError(response.status, apiError);
   }

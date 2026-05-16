@@ -1,5 +1,21 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// shared/store/use-auth-store.ts
+//
+// In-memory auth state — aligned with the NestJS backend contract.
+//
+// Login data flow:
+//   1. POST /api/auth/verify-otp  → { user: { id, email } }  → setUserFromLogin()
+//   2. GET  /api/v1/users/me      → full profile              → hydrateProfile()
+//   3. org selected               → org membership fetch      → setActiveOrganization()
+//
+// Security model:
+//   - access_token: HttpOnly cookie — invisible to JS
+//   - refresh_token: HttpOnly cookie — invisible to JS
+//   - x-organization-id: Axios default header (in-memory), cleared on logout
+//   - No localStorage, no sessionStorage, ever.
+// ─────────────────────────────────────────────────────────────────────────────
 import { create } from 'zustand';
-import type { AuthUser, ActiveOrganization } from '@/shared/types/auth.types';
+import type { AuthUser, ActiveOrganization, LoginUser } from '@/shared/types/auth.types';
 import { apiClient } from '@/shared/services/api-client';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -9,89 +25,161 @@ import { apiClient } from '@/shared/services/api-client';
 interface AuthState {
   // ── State ──────────────────────────────────────────────────────────────────
 
-  /** Authenticated user profile. Null means the user is not logged in. */
+  /**
+   * Authenticated user profile. Null means the user is not logged in.
+   *
+   * After login: only `id` and `email` are populated.
+   * After profile hydration: `firstName`, `lastName`, `globalRole` etc. are set.
+   * After org selection: `orgRoles` and `permissions` are populated.
+   */
   user: AuthUser | null;
 
   /**
    * Active organization selected by the user.
-   * A user with no organization yet will have this as null.
+   * Null until the user selects (or is redirected to) an org context.
    */
   activeOrganization: ActiveOrganization | null;
 
-  /** True while the initial session is being validated against the server. */
+  /**
+   * True while the initial session is being validated on mount.
+   * The root layout or a SessionProvider should flip this to false
+   * once the /api/v1/users/me call completes (success or 401).
+   */
   isLoadingSession: boolean;
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
-  /** Convenience flag — true when user is not null. */
+  /** Convenience flag — true when `user` is not null. */
   isAuthenticated: boolean;
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
   /**
-   * Stores the user profile in memory after a successful login or
-   * session hydration. No localStorage, no cookies — tokens live in
-   * the HttpOnly cookie managed by the Next.js BFF.
+   * Populates the minimal user identity after a successful OTP verification.
+   * Only `id` and `email` are available at this point.
+   * Call `hydrateProfile` afterwards to fill in the full profile.
    */
-  setUser: (user: AuthUser) => void;
+  setUserFromLogin: (loginUser: LoginUser) => void;
 
   /**
-   * Sets the active organization and updates the Axios default header
-   * (x-organization-id) so all subsequent API calls include it automatically.
+   * Merges full profile data from /api/v1/users/me into the auth store.
+   * Safe to call on any existing `user` object — partial update via spread.
    */
-  setActiveOrganization: (org: ActiveOrganization) => void;
+  hydrateProfile: (
+    profile: Pick<
+      AuthUser,
+      'firstName' | 'lastName' | 'fullName' | 'avatarUrl' | 'globalRole'
+    >,
+  ) => void;
+
+  /**
+   * Populates org-scoped roles and permissions after the user selects an org.
+   * Also sets the Axios x-organization-id default header.
+   */
+  setActiveOrganization: (
+    org: ActiveOrganization,
+    membership?: { orgRoles: string[]; permissions: string[] },
+  ) => void;
 
   /**
    * Clears all auth state from memory.
-   * Does NOT clear the HttpOnly cookie (that is done server-side via
-   * the /api/v1/auth/logout BFF endpoint).
+   * Does NOT clear the HttpOnly cookies — that is done by POST /api/auth/logout.
+   * Also removes the x-organization-id Axios header.
    */
   clearSession: () => void;
 
-  /** Sets the loading state while validating the session on mount. */
+  /** Controls the loading state while validating the session on mount. */
   setLoadingSession: (loading: boolean) => void;
 
-  /** Returns true if the user has a specific permission. */
+  /**
+   * Returns true if the user has the given granular permission in the
+   * active organization. Always false before org membership is loaded.
+   */
   hasPermission: (permission: string) => boolean;
 
-  /** Returns true if the user has any of the given roles. */
-  hasRole: (...roles: string[]) => boolean;
+  /**
+   * Returns true if the user has any of the given org-scoped roles.
+   * Always false before org membership is loaded.
+   */
+  hasOrgRole: (...roles: string[]) => boolean;
+
+  /**
+   * Returns true if the user has the given global platform role.
+   * Available as soon as the profile is hydrated (globalRole from JWT payload).
+   */
+  hasGlobalRole: (role: AuthUser['globalRole']) => boolean;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Blank user template — avoids repeated object literals
+// ─────────────────────────────────────────────────────────────────────────────
+
+function makeBlankUser(loginUser: LoginUser): AuthUser {
+  return {
+    id: loginUser.id,
+    email: loginUser.email,
+    firstName: null,
+    lastName: null,
+    fullName: null,
+    globalRole: null,
+    orgRoles: [],
+    permissions: [],
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Store
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Auth Store — in-memory only.
- *
- * Security model:
- * - The access_token lives in an HttpOnly cookie → invisible to JavaScript.
- * - The x-organization-id is set as a default Axios header (in memory) when
- *   the user selects an organization. It is never persisted to localStorage.
- * - On a hard refresh, the session is re-hydrated from the server using the
- *   cookie (which the browser sends automatically to Next.js BFF routes).
- */
 export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   activeOrganization: null,
   isAuthenticated: false,
   isLoadingSession: true,
 
-  setUser: (user) =>
+  // ── setUserFromLogin ────────────────────────────────────────────────────────
+  setUserFromLogin: (loginUser) =>
     set({
-      user,
+      user: makeBlankUser(loginUser),
       isAuthenticated: true,
     }),
 
-  setActiveOrganization: (org) => {
-    // Inject the org ID into Axios so every client-side request includes it.
-    // The BFF proxy will forward this header to NestJS.
-    apiClient.defaults.headers.common['x-organization-id'] = org.id;
+  // ── hydrateProfile ──────────────────────────────────────────────────────────
+  hydrateProfile: (profile) => {
+    const { user } = get();
+    if (!user) return; // guard: must have logged in first
 
-    set({ activeOrganization: org });
+    set({
+      user: {
+        ...user,
+        ...profile,
+      },
+    });
   },
 
+  // ── setActiveOrganization ───────────────────────────────────────────────────
+  setActiveOrganization: (org, membership) => {
+    // Inject the org ID into Axios so every client-side request includes it.
+    // The BFF proxy forwards this header to NestJS.
+    apiClient.defaults.headers.common['x-organization-id'] = org.id;
+
+    const { user } = get();
+
+    set({
+      activeOrganization: org,
+      ...(user && membership
+        ? {
+            user: {
+              ...user,
+              orgRoles: membership.orgRoles,
+              permissions: membership.permissions,
+            },
+          }
+        : {}),
+    });
+  },
+
+  // ── clearSession ────────────────────────────────────────────────────────────
   clearSession: () => {
     // Remove the org header from Axios when the user logs out.
     delete apiClient.defaults.headers.common['x-organization-id'];
@@ -103,15 +191,24 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     });
   },
 
+  // ── setLoadingSession ───────────────────────────────────────────────────────
   setLoadingSession: (loading) => set({ isLoadingSession: loading }),
 
+  // ── hasPermission ───────────────────────────────────────────────────────────
   hasPermission: (permission) => {
     const { user } = get();
     return user?.permissions.includes(permission) ?? false;
   },
 
-  hasRole: (...roles) => {
+  // ── hasOrgRole ──────────────────────────────────────────────────────────────
+  hasOrgRole: (...roles) => {
     const { user } = get();
-    return roles.some((role) => user?.roles.includes(role)) ?? false;
+    return roles.some((role) => user?.orgRoles.includes(role)) ?? false;
+  },
+
+  // ── hasGlobalRole ───────────────────────────────────────────────────────────
+  hasGlobalRole: (role) => {
+    const { user } = get();
+    return user?.globalRole === role;
   },
 }));
