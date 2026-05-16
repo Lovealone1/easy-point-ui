@@ -1,5 +1,5 @@
 import { toast as sonnerToast } from 'sonner';
-import { BackendApiError } from '@/server/utils/api-error';
+import { BackendApiError } from '@/shared/utils/api-error';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

@@ -48,9 +48,12 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-
+      // Do NOT use window.location.href here — that causes a full page reload
+      // and loses all in-flight React state. Instead, dispatch the global event
+      // that AuthWatcher (in the root layout) listens to for a soft redirect.
+      // This mirrors the behaviour of clientFetch in @/shared/api/client-fetch.
       if (typeof window !== 'undefined') {
-        window.location.href = '/auth/login';
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
       }
     }
 

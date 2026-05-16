@@ -1,4 +1,12 @@
-import type { ApiError } from '@/server/types/api.types';
+// ─────────────────────────────────────────────────────────────────────────────
+// shared/utils/api-error.ts
+//
+// Typed error class thrown by backendFetch / serverFetch when the NestJS
+// backend responds with a non-2xx status.
+//
+// Moved from: server/utils/api-error.ts
+// ─────────────────────────────────────────────────────────────────────────────
+import type { NestApiError } from '@/shared/types/api.types';
 
 /**
  * Typed error thrown by backendFetch when the backend responds with a non-2xx status.
@@ -6,7 +14,7 @@ import type { ApiError } from '@/server/types/api.types';
  * Usage:
  * ```ts
  * try {
- *   await backendFetch('/auth/login', { method: 'POST', body: dto });
+ *   await backendFetch('/products', { method: 'POST', body: dto });
  * } catch (err) {
  *   if (err instanceof BackendApiError) {
  *     console.error(err.statusCode, err.message);
@@ -19,7 +27,7 @@ export class BackendApiError extends Error {
   public readonly details: string | string[];
   public readonly errorType?: string;
 
-  constructor(statusCode: number, apiError: ApiError) {
+  constructor(statusCode: number, apiError: NestApiError) {
     const message = Array.isArray(apiError.message)
       ? apiError.message.join(', ')
       : apiError.message;

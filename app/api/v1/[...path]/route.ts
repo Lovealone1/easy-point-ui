@@ -19,8 +19,8 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { backendFetch } from '@/server/backend-api-client';
-import { BackendApiError } from '@/server/utils/api-error';
+import { backendFetch } from '@/shared/api/backend-fetch';
+import { BackendApiError } from '@/shared/utils/api-error';
 
 type RouteParams = { params: Promise<{ path: string[] }> };
 

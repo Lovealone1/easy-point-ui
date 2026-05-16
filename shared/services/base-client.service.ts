@@ -1,5 +1,5 @@
 import { apiClient } from './api-client';
-import type { ApiResponse, PaginatedApiResponse } from '@/server/types/api.types';
+import type { ApiResponse, PaginatedApiResponse } from '@/shared/types/api.types';
 
 export class BaseClientService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> {
   protected readonly endpoint: string;
