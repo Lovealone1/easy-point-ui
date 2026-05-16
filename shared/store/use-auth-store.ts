@@ -41,6 +41,30 @@ interface AuthState {
   activeOrganization: ActiveOrganization | null;
 
   /**
+   * Temporary email stored during the passwordless login/register flow.
+   * If null, the user should not be able to access the OTP verification page.
+   */
+  pendingVerificationEmail: string | null;
+
+  /**
+   * Intent of the current OTP flow — 'login' or 'register'.
+   * Stored so the OTP page can forward the correct intent to verify-otp.
+   */
+  pendingIntent: 'login' | 'register' | null;
+
+  /**
+   * Registration fields captured from the register form.
+   * Stored here temporarily so the OTP page can send them to the backend
+   * on successful verification (if needed by the backend), or we can
+   * use them client-side after verify-otp succeeds.
+   */
+  pendingRegistrationData: {
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  } | null;
+
+  /**
    * True while the initial session is being validated on mount.
    * The root layout or a SessionProvider should flip this to false
    * once the /api/v1/users/me call completes (success or 401).
@@ -87,6 +111,16 @@ interface AuthState {
    * Also removes the x-organization-id Axios header.
    */
   clearSession: () => void;
+
+  /** Sets the email waiting for OTP verification and the flow intent. */
+  setPendingVerification: (
+    email: string,
+    intent: 'login' | 'register',
+    registrationData?: { firstName: string; lastName: string; phone?: string },
+  ) => void;
+
+  /** @deprecated use setPendingVerification instead. Kept for backward compat. */
+  setPendingVerificationEmail: (email: string | null) => void;
 
   /** Controls the loading state while validating the session on mount. */
   setLoadingSession: (loading: boolean) => void;
@@ -136,6 +170,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   activeOrganization: null,
   isAuthenticated: false,
   isLoadingSession: true,
+  pendingVerificationEmail: null,
+  pendingIntent: null,
+  pendingRegistrationData: null,
 
   // ── setUserFromLogin ────────────────────────────────────────────────────────
   setUserFromLogin: (loginUser) =>
@@ -188,8 +225,22 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       user: null,
       activeOrganization: null,
       isAuthenticated: false,
+      pendingVerificationEmail: null,
+      pendingIntent: null,
+      pendingRegistrationData: null,
     });
   },
+
+  // ── setPendingVerification ──────────────────────────────────────────────────
+  setPendingVerification: (email, intent, registrationData) =>
+    set({
+      pendingVerificationEmail: email,
+      pendingIntent: intent,
+      pendingRegistrationData: registrationData ?? null,
+    }),
+
+  // ── setPendingVerificationEmail (deprecated) ───────────────────────────────
+  setPendingVerificationEmail: (email) => set({ pendingVerificationEmail: email }),
 
   // ── setLoadingSession ───────────────────────────────────────────────────────
   setLoadingSession: (loading) => set({ isLoadingSession: loading }),

@@ -148,7 +148,7 @@ async function callNestRefresh(
       originalRequest.headers.get('x-real-ip') ??
       '127.0.0.1';
 
-    return await fetch(`${BACKEND_URL}/auth/refresh`, {
+    return await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
