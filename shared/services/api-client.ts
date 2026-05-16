@@ -12,6 +12,12 @@
  *
  * The browser never talks to localhost:3001 directly.
  * Cookies (access_token) are managed exclusively server-side.
+ *
+ * Token refresh strategy:
+ *   On 401, this interceptor calls /api/auth/refresh (BFF) to silently rotate
+ *   the access_token using the HttpOnly refresh_token cookie.
+ *   A module-level Promise mutex prevents concurrent refresh races.
+ *   If the refresh also fails with 401, the user is evicted via auth:unauthorized.
  */
 
 import axios, {
@@ -36,22 +42,54 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Refresh mutex
+// A single in-flight Promise shared by all concurrent 401 retries.
+// ─────────────────────────────────────────────────────────────────────────────
+let refreshPromise: Promise<boolean> | null = null;
+
+async function silentRefresh(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = fetch('/api/auth/refresh', { method: 'POST' })
+    .then((res) => res.ok)
+    .catch(() => false)
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Request interceptor — no-op (org header is set imperatively by the store)
+// ─────────────────────────────────────────────────────────────────────────────
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    return config;
-  },
+  (config: InternalAxiosRequestConfig) => config,
   (error: AxiosError) => Promise.reject(error),
 );
 
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Response interceptor — auto-refresh on 401, evict on second 401
+// ─────────────────────────────────────────────────────────────────────────────
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retried?: boolean };
+
+    if (error.response?.status === 401 && !originalRequest._retried) {
+      originalRequest._retried = true;
+
+      const refreshed = await silentRefresh();
+
+      if (refreshed) {
+        // Cookies have been rotated — retry the original request.
+        return apiClient(originalRequest);
+      }
+    }
+
+    // Token refresh failed or this is already a retry — evict the user.
     if (error.response?.status === 401) {
-      // Do NOT use window.location.href here — that causes a full page reload
-      // and loses all in-flight React state. Instead, dispatch the global event
-      // that AuthWatcher (in the root layout) listens to for a soft redirect.
-      // This mirrors the behaviour of clientFetch in @/shared/api/client-fetch.
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:unauthorized'));
       }
@@ -60,3 +98,4 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+

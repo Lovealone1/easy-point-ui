@@ -1,12 +1,8 @@
 "use client";
 
 import { Button } from '@/shared/components/ui/button';
-import { Moon, Sun } from 'lucide-react';
-import { useUiStore } from '@/shared/store/use-ui-store';
 
 export default function Home() {
-  const { theme, toggleTheme } = useUiStore();
-  const isDark = theme === 'dark';
   const brandShades = [
     { shade: '50', bg: 'bg-brand-50' },
     { shade: '100', bg: 'bg-brand-100' },
@@ -33,14 +29,6 @@ export default function Home() {
               Exploración de la colorimetría global. Tema principal basado en <span className="font-mono text-primary font-semibold">#571777</span>.
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={toggleTheme}
-            className="flex gap-2 items-center"
-          >
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {isDark ? 'Light Mode' : 'Dark Mode'}
-          </Button>
         </header>
 
         {/* Brand Shades Palette */}

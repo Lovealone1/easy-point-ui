@@ -71,7 +71,7 @@ export async function POST(
       request.headers.get('x-real-ip') ??
       '127.0.0.1';
 
-    nestResponse = await fetch(`${BACKEND_URL}/auth/otp/verify`, {
+    nestResponse = await fetch(`${BACKEND_URL}/api/v1/auth/otp/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

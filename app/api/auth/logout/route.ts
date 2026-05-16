@@ -29,6 +29,7 @@ export async function POST(
 ): Promise<NextResponse<ApiResponse<LogoutResponse>>> {
   // ── 1. Read tokens from incoming cookies ───────────────────────────────────
   const accessToken = request.cookies.get('access_token')?.value;
+  const refreshToken = request.cookies.get('refresh_token')?.value;
 
   // We can still attempt to clear cookies even without a valid token.
   // However, NestJS requires a valid Bearer token to revoke the DB session.
@@ -45,12 +46,13 @@ export async function POST(
         request.headers.get('x-real-ip') ??
         '127.0.0.1';
 
-      await fetch(`${BACKEND_URL}/auth/logout`, {
+      await fetch(`${BACKEND_URL}/api/v1/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
           'X-Forwarded-For': forwardedFor,
+          ...(refreshToken ? { Cookie: `refresh_token=${refreshToken}` } : {}),
         },
         signal: controller.signal,
       });
