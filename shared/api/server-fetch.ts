@@ -66,6 +66,7 @@ export async function serverFetch<T>(
 
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
+  const refreshToken = cookieStore.get('refresh_token')?.value;
   const orgId = cookieStore.get('x-organization-id')?.value;
 
   const buildHeaders = (token: string | undefined): Record<string, string> => ({
@@ -92,7 +93,7 @@ export async function serverFetch<T>(
 
   // ── 401: attempt a silent token refresh ──────────────────────────────────
   if (response.status === 401) {
-    const refreshed = await attemptRefresh();
+    const refreshed = await attemptRefresh(refreshToken);
 
     if (!refreshed.ok) {
       throw new ServerAuthError(
@@ -133,7 +134,7 @@ export async function serverFetch<T>(
 // ---------------------------------------------------------------------------
 
 /** Calls the BFF refresh route to obtain new tokens. */
-async function attemptRefresh(): Promise<Response> {
+async function attemptRefresh(refreshToken?: string): Promise<Response> {
   const controller = withTimeout(TIMEOUT_MS);
   // Use an absolute URL so this works in both Node and Edge runtimes.
   const nextUrl =
@@ -143,7 +144,10 @@ async function attemptRefresh(): Promise<Response> {
 
   return fetch(`${nextUrl}/api/auth/refresh`, {
     method: 'POST',
-    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(refreshToken ? { Cookie: `refresh_token=${refreshToken}` } : {}),
+    },
     signal: controller.signal,
   });
 }
