@@ -30,6 +30,8 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { toast } from '@/shared/utils/toast';
+import { HexColorPicker } from 'react-colorful';
+import { Popover, PopoverTrigger, PopoverContent } from '@/shared/components/ui/popover';
 
 export default function OrganizationConfigPage() {
   const router = useRouter();
@@ -615,25 +617,45 @@ export default function OrganizationConfigPage() {
 
                 <div className="flex gap-4 items-center">
                   
-                  {/* Styled Color Trigger */}
-                  <div className="relative group shrink-0">
-                    <input 
-                      type="color" 
-                      id="colorInputPicker"
-                      value={primaryColor}
-                      disabled={!isAdmin}
-                      onChange={(e) => handleColorChange(e.target.value)}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                    />
-                    <div 
-                      className="h-12 w-12 rounded-xl border-2 border-border shadow-inner cursor-pointer select-none group-hover:scale-105 transition-transform duration-300"
-                      style={{ backgroundColor: primaryColor }}
-                      title="Seleccionar color"
-                    />
-                    <div className="absolute -bottom-1 -right-1 p-0.5 bg-background rounded-md border border-border shadow-xs group-hover:scale-105 transition-transform duration-300">
-                      <Palette className="h-3 w-3 text-muted-foreground" />
-                    </div>
-                  </div>
+                  {/* Custom Color Trigger & Picker */}
+                  <Popover>
+                    <PopoverTrigger disabled={!isAdmin} className="relative group shrink-0 outline-none">
+                      <div 
+                        className="h-12 w-12 rounded-xl border-2 border-border shadow-inner cursor-pointer select-none group-hover:scale-105 transition-transform duration-300"
+                        style={{ backgroundColor: primaryColor }}
+                        title="Seleccionar color"
+                      />
+                      <div className="absolute -bottom-1 -right-1 p-0.5 bg-background rounded-md border border-border shadow-xs group-hover:scale-105 transition-transform duration-300">
+                        <Palette className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-4 border border-border/60 shadow-xl rounded-xl" align="start" side="bottom">
+                      <div className="space-y-4">
+                        <HexColorPicker color={primaryColor} onChange={handleColorChange} />
+                        
+                        {/* Quick preset colors */}
+                        <div className="space-y-2">
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Recomendados</span>
+                          <div className="flex flex-wrap gap-2 max-w-[200px]">
+                            {['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b1fc1', '#d946ef', '#f43f5e', '#000000', '#ffffff'].map(preset => (
+                              <button
+                                key={preset}
+                                type="button"
+                                className="w-6 h-6 rounded-md shadow-sm border border-border/50 hover:scale-110 transition-transform flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                style={{ backgroundColor: preset }}
+                                onClick={() => handleColorChange(preset)}
+                                aria-label={`Seleccionar ${preset}`}
+                              >
+                                {preset.toLowerCase() === primaryColor.toLowerCase() && (
+                                  <div className="w-1.5 h-1.5 rounded-full bg-white mix-blend-difference" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
 
                   <div className="flex-1 space-y-1.5">
                     <Input
