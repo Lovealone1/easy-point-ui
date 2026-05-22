@@ -266,6 +266,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       pendingVerificationEmail: null,
       pendingIntent: null,
       pendingRegistrationData: null,
+      isLoadingSession: true,
     });
   },
 
