@@ -139,7 +139,11 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
                         name={mod.icon}
                         className={cn(
                           "h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-105",
-                          isActive ? "text-brand-500" : "text-brand-400 group-hover:text-brand-500"
+                          isActive 
+                            ? "text-brand-500" 
+                            : isSidebarCollapsed
+                              ? "text-brand-100"
+                              : "text-brand-400 group-hover:text-brand-500"
                         )}
                       />
                       {!isSidebarCollapsed && (

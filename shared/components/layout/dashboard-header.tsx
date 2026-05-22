@@ -469,23 +469,6 @@ function Breadcrumbs() {
 export default function DashboardHeader() {
   const { setMobileMenuOpen } = useUiStore();
   const user = useAuthStore((s) => s.user);
-  const organizationConfig = useAuthStore((s) => s.organizationConfig);
-
-  const logoShortUrl = organizationConfig?.logoShortUrl;
-  const logoUrl = organizationConfig?.logoUrl;
-  const [logoToRender, setLogoToRender] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLogoToRender(logoShortUrl || logoUrl || null);
-  }, [logoShortUrl, logoUrl]);
-
-  const handleImageError = () => {
-    if (logoToRender === logoShortUrl && logoUrl) {
-      setLogoToRender(logoUrl);
-    } else {
-      setLogoToRender(null);
-    }
-  };
 
   return (
     <header
@@ -507,22 +490,6 @@ export default function DashboardHeader() {
         >
           <Menu className="h-4 w-4" />
         </button>
-
-        {/* Brand logo — mobile only (replaces sidebar logo) */}
-        <div className="flex md:hidden items-center gap-2 shrink-0 select-none">
-          {logoToRender ? (
-            <img
-              src={logoToRender}
-              alt="Logo"
-              className="h-6 w-auto object-contain"
-              onError={handleImageError}
-            />
-          ) : (
-            <span className="text-[13px] font-bold tracking-tight text-foreground truncate">
-              {organizationConfig?.organizationName ?? 'EasyPoint'}
-            </span>
-          )}
-        </div>
 
         {/* Breadcrumbs — desktop only */}
         <div className="hidden md:flex items-center min-w-0 flex-1">
