@@ -32,6 +32,11 @@ export interface OrganizationConfig {
   currency?: string;
   language?: string;
   dateFormat?: string;
+  organizationName: string;
+  organizationEmail: string | null;
+  plan: string;
+  planActiveUntil: string | null;
+  organizationIsActive: boolean;
 }
 
 interface AuthState {
