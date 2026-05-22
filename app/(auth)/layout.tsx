@@ -42,7 +42,11 @@ export default function AuthLayout({
       </div>
 
       {/* Right Panel: Form Area */}
-      <div className="flex-1 flex flex-col min-h-screen relative">
+      <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
+        {/* Ambient background elements */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.06] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 w-[380px] h-[380px] rounded-full bg-primary/10 blur-[120px] pointer-events-none animate-pulse-slow" />
+
         <header className="absolute top-0 left-0 w-full p-8 sm:px-12 lg:px-16 flex items-center z-10">
           <Image
             src="/global/easypoint-logo.png"
