@@ -22,6 +22,18 @@ import { apiClient } from '@/shared/services/api-client';
 // State & Actions
 // ─────────────────────────────────────────────────────────────────────────────
 
+export interface OrganizationConfig {
+  id: string;
+  organizationId: string;
+  logoUrl: string | null;
+  primaryColor: string | null;
+  defaultTheme: 'LIGHT' | 'DARK' | 'SYSTEM';
+  timezone?: string;
+  currency?: string;
+  language?: string;
+  dateFormat?: string;
+}
+
 interface AuthState {
   // ── State ──────────────────────────────────────────────────────────────────
 
@@ -39,6 +51,11 @@ interface AuthState {
    * Null until the user selects (or is redirected to) an org context.
    */
   activeOrganization: ActiveOrganization | null;
+
+  /**
+   * Active organization branding/visual configuration.
+   */
+  organizationConfig: OrganizationConfig | null;
 
   /**
    * Temporary email stored during the passwordless login/register flow.
@@ -70,6 +87,9 @@ interface AuthState {
    * once the /api/v1/users/me call completes (success or 401).
    */
   isLoadingSession: boolean;
+
+  /** True once /api/v1/users/me has fetched and merged full profile data. */
+  profileHydrated: boolean;
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
@@ -104,6 +124,11 @@ interface AuthState {
     org: ActiveOrganization,
     membership?: { orgRoles: string[]; permissions: string[] },
   ) => void;
+
+  /**
+   * Sets/updates the active organization configuration.
+   */
+  setOrganizationConfig: (config: OrganizationConfig | null) => void;
 
   /**
    * Clears all auth state from memory.
@@ -168,8 +193,10 @@ function makeBlankUser(loginUser: LoginUser): AuthUser {
 export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   activeOrganization: null,
+  organizationConfig: null,
   isAuthenticated: false,
   isLoadingSession: true,
+  profileHydrated: false,
   pendingVerificationEmail: null,
   pendingIntent: null,
   pendingRegistrationData: null,
@@ -191,6 +218,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         ...user,
         ...profile,
       },
+      profileHydrated: true,
     });
   },
 
@@ -216,6 +244,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     });
   },
 
+  // ── setOrganizationConfig ───────────────────────────────────────────────────
+  setOrganizationConfig: (config) => set({ organizationConfig: config }),
+
   // ── clearSession ────────────────────────────────────────────────────────────
   clearSession: () => {
     // Remove the org header from Axios when the user logs out.
@@ -224,7 +255,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     set({
       user: null,
       activeOrganization: null,
+      organizationConfig: null,
       isAuthenticated: false,
+      profileHydrated: false,
       pendingVerificationEmail: null,
       pendingIntent: null,
       pendingRegistrationData: null,

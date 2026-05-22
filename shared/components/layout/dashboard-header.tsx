@@ -17,6 +17,7 @@ export default function DashboardHeader() {
   
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const organizationConfig = useAuthStore((s) => s.organizationConfig);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -29,7 +30,30 @@ export default function DashboardHeader() {
   return (
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full p-4 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="flex items-center gap-4">
-        <h1 className="text-xl font-bold tracking-tight">EasyPoint</h1>
+        {organizationConfig?.logoUrl ? (
+          <div className="flex items-center h-8 relative select-none">
+            <img
+              src={organizationConfig.logoUrl}
+              alt="Logo de la organización"
+              className="h-8 w-auto object-contain transition-opacity duration-500 ease-in-out opacity-0"
+              onLoad={(e) => {
+                e.currentTarget.classList.remove('opacity-0');
+                e.currentTarget.classList.add('opacity-100');
+              }}
+              onError={(e) => {
+                // If S3 presigned URL fails/expires, hide image and show text
+                e.currentTarget.style.display = 'none';
+                const txt = document.getElementById('header-text-fallback');
+                if (txt) txt.classList.remove('hidden');
+              }}
+            />
+            <span id="header-text-fallback" className="text-xl font-bold tracking-tight hidden">
+              EasyPoint
+            </span>
+          </div>
+        ) : (
+          <h1 className="text-xl font-bold tracking-tight">EasyPoint</h1>
+        )}
         {user && (
           <span className="text-sm font-medium text-muted-foreground hidden sm:inline-block">
             {user.email}

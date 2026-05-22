@@ -34,7 +34,7 @@ export interface AuthUser {
    * Global platform role returned by NestJS JWT payload.
    * Values: 'SUPER_ADMIN' | 'USER' (from GlobalRole enum in Prisma)
    */
-  globalRole: 'ADMIN' | 'USER' | null;
+  globalRole: 'ADMIN' | 'MODERATOR' | 'USER' | null;
   /**
    * Org-scoped roles — populated after the user selects an organization.
    * Empty until setActiveOrganization is called and org data is fetched.

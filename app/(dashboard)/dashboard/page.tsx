@@ -1,8 +1,16 @@
 "use client";
 
-import { Button } from '@/shared/components/ui/button';
+import { Button, buttonVariants } from '@/shared/components/ui/button';
+import { useAuthStore } from '@/shared/store/use-auth-store';
+import { Settings, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { cn } from '@/shared/lib/utils';
 
 export default function Home() {
+  const activeOrg = useAuthStore((s) => s.activeOrganization);
+  const hasOrgRole = useAuthStore((s) => s.hasOrgRole);
+  const isAdmin = hasOrgRole('OWNER', 'ADMINISTRATOR');
+
   const brandShades = [
     { shade: '50', bg: 'bg-brand-50' },
     { shade: '100', bg: 'bg-brand-100' },
@@ -30,6 +38,43 @@ export default function Home() {
             </p>
           </div>
         </header>
+
+        {/* Organization Config Access Card */}
+        <section className="relative overflow-hidden rounded-2xl border border-brand-500/20 bg-gradient-to-r from-card via-card/90 to-brand-950/5 p-6 md:p-8 shadow-xl transition-all duration-300 hover:shadow-brand-500/10 hover:border-brand-500/40 group">
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-brand-500/10 blur-2xl group-hover:bg-brand-500/20 transition-all duration-500" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-brand-500/10 text-brand-500 border border-brand-500/20 group-hover:scale-110 transition-transform duration-300">
+                <Settings className="h-6 w-6" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">Configuración de Organización</h2>
+                  <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border ${
+                    isAdmin 
+                      ? 'bg-brand-500/10 border-brand-500/30 text-brand-400' 
+                      : 'bg-muted border-border text-muted-foreground'
+                  }`}>
+                    {isAdmin ? 'Acceso Total' : 'Solo Lectura'}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground max-w-2xl">
+                  Personaliza y gestiona la identidad visual de <span className="font-semibold text-foreground">{activeOrg?.name || 'tu organización'}</span>. Ajusta el color primario, la marca del tema por defecto y carga el logo oficial de la plataforma.
+                </p>
+              </div>
+            </div>
+            <Link 
+              href="/organization-config" 
+              className={cn(
+                buttonVariants({ variant: 'default' }),
+                "shrink-0 bg-brand-500 hover:bg-brand-600 text-white font-medium shadow-lg shadow-brand-500/25 transition-all hover:translate-x-1 duration-300"
+              )}
+            >
+              Gestionar Marca
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </div>
+        </section>
 
         {/* Brand Shades Palette */}
         <section className="space-y-6">
