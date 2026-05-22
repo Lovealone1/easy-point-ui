@@ -62,11 +62,46 @@ export function applyBrandingToDOM(
   root.style.setProperty('--ring', activePrimary);
   root.style.setProperty('--sidebar-primary', activePrimary);
 
-  // Overwrite all individual shade variables
   Object.entries(shades).forEach(([shade, hex]) => {
     root.style.setProperty(`--color-brand-${shade}`, hex);
   });
   root.style.setProperty('--color-brand-DEFAULT', shades[500]);
+}
+
+/**
+ * Resets any inline branding styles applied to document.documentElement,
+ * restoring the default :root CSS variables and styling.
+ */
+export function resetBrandingDOM(): void {
+  if (typeof document === 'undefined') return;
+
+  const root = document.documentElement;
+
+  // Remove overriding style properties
+  root.style.removeProperty('--primary');
+  root.style.removeProperty('--ring');
+  root.style.removeProperty('--sidebar-primary');
+
+  // Also remove color brand shades (e.g. 50-950 and DEFAULT)
+  const shadesKeys = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950', 'DEFAULT'];
+  shadesKeys.forEach((shade) => {
+    root.style.removeProperty(`--color-brand-${shade}`);
+  });
+}
+
+/**
+ * React hook to reset branding colors and reset theme to light mode.
+ * Useful on public/auth pages to keep them neutral and theme-independent.
+ */
+export function useAuthBrandingReset(): void {
+  const setTheme = useUiStore((s) => s.setTheme);
+
+  useEffect(() => {
+    // 1. Reset theme to light mode (removing .dark class and setting style.colorScheme to light)
+    setTheme('light');
+    // 2. Remove all custom branding inline CSS variables
+    resetBrandingDOM();
+  }, [setTheme]);
 }
 
 export default function BrandingProvider({ children }: { children: React.ReactNode }) {
