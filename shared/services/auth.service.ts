@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import type { ApiResponse, OtpRequestBody, OtpVerifyBody, VerifyOtpResponse } from '@/shared/api/types';
 import type { Intent } from '@/shared/api/types';
+import { apiClient } from './api-client';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -86,4 +87,13 @@ export async function refreshTokens(): Promise<ApiResponse<{ message: string }>>
  */
 export async function logout(): Promise<ApiResponse<{ message: string }>> {
   return post<{ message: string }>('/api/auth/logout', {});
+}
+
+/**
+ * Fetches the currently authenticated user's profile and organizations.
+ * Proxied via /api/v1/auth/me to the NestJS backend.
+ */
+export async function getMe(): Promise<any> {
+  const response = await apiClient.get('/auth/me');
+  return response.data;
 }
