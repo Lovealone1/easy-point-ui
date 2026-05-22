@@ -6,6 +6,7 @@ import { useUiStore } from '@/shared/store/use-ui-store';
 import { MODULES_CATALOG, type ModuleItem } from '@/shared/config/modules.config';
 import { AppIcon } from '@/shared/components/ui/app-icon';
 import { cn } from '@/shared/lib/utils';
+import SidebarFavorites from './sidebar-favorites';
 
 interface SidebarMenuProps {
   searchQuery: string;
@@ -19,20 +20,26 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
   const pathname = usePathname();
   const { isSidebarCollapsed } = useUiStore();
 
-  // Filter catalog based on search query
-  const filteredCatalog = MODULES_CATALOG.filter((mod) =>
-    mod.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // Check if any pinned/favorite modules match the search query
+  const hasMatchingFavorites = MODULES_CATALOG.some(
+    (mod) => mod.pinned && mod.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (filteredCatalog.length === 0) {
+  // Filter regular (non-pinned) catalog modules based on search query
+  const filteredCatalog = MODULES_CATALOG.filter(
+    (mod) => !mod.pinned && mod.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // If no regular modules and no favorites match the query, render empty search state
+  if (filteredCatalog.length === 0 && !hasMatchingFavorites) {
     return (
-      <div className="px-6 py-4 text-center text-xs text-muted-foreground">
+      <div className="px-6 py-4 text-center text-xs text-muted-foreground animate-fade-in">
         No se encontraron módulos
       </div>
     );
   }
 
-  // Group modules by category
+  // Group non-pinned modules by category
   const groupedModules = CATEGORIES.reduce((acc, cat) => {
     const mods = filteredCatalog.filter((m) => m.category === cat);
     if (mods.length > 0) {
@@ -43,6 +50,9 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-2 space-y-4">
+      {/* Pinned and Custom Favorites */}
+      <SidebarFavorites searchQuery={searchQuery} />
+
       {CATEGORIES.map((cat) => {
         const mods = groupedModules[cat];
         if (!mods) return null;
@@ -51,7 +61,7 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
           <div key={`cat-${cat}`} className="space-y-1">
             {/* Category header — hidden when collapsed */}
             {!isSidebarCollapsed && (
-              <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider px-3 select-none">
+              <span className="text-[10px] font-bold text-brand-200 uppercase tracking-wider px-3 select-none">
                 {cat}
               </span>
             )}
@@ -83,7 +93,7 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
                       >
                         <AppIcon
                           name={mod.icon}
-                          className="h-4 w-4 shrink-0"
+                          className="h-4 w-4 shrink-0 text-brand-400"
                         />
                         {!isSidebarCollapsed && (
                           <span className="truncate flex-1">{mod.name}</span>
@@ -124,7 +134,7 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
                         name={mod.icon}
                         className={cn(
                           "h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-105",
-                          isActive ? "text-brand-500" : "text-muted-foreground group-hover:text-foreground"
+                          isActive ? "text-brand-500" : "text-brand-400 group-hover:text-brand-500"
                         )}
                       />
                       {!isSidebarCollapsed && (
