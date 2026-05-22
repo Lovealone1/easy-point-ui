@@ -26,6 +26,7 @@ export interface OrganizationConfig {
   id: string;
   organizationId: string;
   logoUrl: string | null;
+  logoShortUrl: string | null;
   primaryColor: string | null;
   defaultTheme: 'LIGHT' | 'DARK' | 'SYSTEM';
   timezone?: string;

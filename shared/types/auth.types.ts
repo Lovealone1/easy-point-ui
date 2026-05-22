@@ -57,6 +57,7 @@ export interface ActiveOrganization {
   name: string;
   slug: string;
   logoUrl?: string;
+  logoShortUrl?: string;
   /** Primary brand color hex sent from the server (e.g. "#571777") */
   primaryColor?: string;
 }

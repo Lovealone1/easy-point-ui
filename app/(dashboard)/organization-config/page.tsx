@@ -22,7 +22,9 @@ import { useUiStore } from '@/shared/store/use-ui-store';
 import { 
   updateConfig, 
   uploadLogo, 
-  deleteLogo 
+  deleteLogo,
+  uploadLogoShort,
+  deleteLogoShort
 } from '@/shared/services/organization-configs.service';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -57,8 +59,14 @@ export default function OrganizationConfigPage() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isDeletingLogo, setIsDeletingLogo] = useState(false);
 
-  // File input ref
+  // Short Logo Upload State
+  const [isDraggingShort, setIsDraggingShort] = useState(false);
+  const [isUploadingLogoShort, setIsUploadingLogoShort] = useState(false);
+  const [isDeletingLogoShort, setIsDeletingLogoShort] = useState(false);
+
+  // File input refs
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputShortRef = useRef<HTMLInputElement>(null);
 
   // 1. Initialize form state from store
   useEffect(() => {
@@ -201,6 +209,95 @@ export default function OrganizationConfigPage() {
     }
   };
 
+  const processLogoShortFile = async (file: File) => {
+    // Validate format
+    const validTypes = ['image/png', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Formato no válido. Sólo se permiten imágenes PNG o SVG.');
+      return;
+    }
+
+    // Validate size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('El archivo es demasiado grande. El límite máximo es 2MB.');
+      return;
+    }
+
+    setIsUploadingLogoShort(true);
+    const toastId = toast.loading('Subiendo logo resumido...');
+
+    try {
+      const updatedConfig = await uploadLogoShort(file);
+      setOrganizationConfig(updatedConfig);
+      // Update our fallback uploader reference so cancelling doesn't roll back the uploaded logo
+      if (initialConfigRef.current) {
+        initialConfigRef.current.logoShortUrl = updatedConfig.logoShortUrl;
+      }
+      toast.dismiss(toastId);
+      toast.success('Logo resumido subido y aplicado exitosamente.');
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(error instanceof Error ? error : 'Error al subir el logo resumido');
+    } finally {
+      setIsUploadingLogoShort(false);
+      if (fileInputShortRef.current) fileInputShortRef.current.value = '';
+    }
+  };
+
+  const handleDragOverShort = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isAdmin) return;
+    setIsDraggingShort(true);
+  };
+
+  const handleDragLeaveShort = () => {
+    setIsDraggingShort(false);
+  };
+
+  const handleDropShort = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingShort(false);
+    if (!isAdmin) return;
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      await processLogoShortFile(files[0]);
+    }
+  };
+
+  const handleFileSelectShort = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await processLogoShortFile(files[0]);
+    }
+  };
+
+  const handleDeleteLogoShort = async () => {
+    if (!isAdmin || !organizationConfig?.logoShortUrl) return;
+
+    if (!confirm('¿Estás seguro de que deseas eliminar el logo resumido de la organización?')) {
+      return;
+    }
+
+    setIsDeletingLogoShort(true);
+    const toastId = toast.loading('Eliminando logo resumido...');
+
+    try {
+      const updatedConfig = await deleteLogoShort();
+      setOrganizationConfig(updatedConfig);
+      if (initialConfigRef.current) {
+        initialConfigRef.current.logoShortUrl = null;
+      }
+      toast.dismiss(toastId);
+      toast.success('Logo resumido eliminado exitosamente.');
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(error instanceof Error ? error : 'Error al eliminar el logo resumido');
+    } finally {
+      setIsDeletingLogoShort(false);
+    }
+  };
+
   // 6. Submit handler
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -295,85 +392,171 @@ export default function OrganizationConfigPage() {
           <form onSubmit={handleSave} className="lg:col-span-7 space-y-6">
             
             {/* Logo Configuration Card */}
-            <div className="p-6 rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <h3 className="font-bold text-lg">Logotipo de la Organización</h3>
-                  <p className="text-xs text-muted-foreground">Logotipo corporativo que se mostrará en el encabezado global.</p>
-                </div>
-                {organizationConfig?.logoUrl && isAdmin && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleDeleteLogo}
-                    disabled={isDeletingLogo}
-                    className="border-destructive/40 text-destructive hover:bg-destructive/5"
-                  >
-                    {isDeletingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                    <span className="ml-1.5 hidden sm:inline">Eliminar Logo</span>
-                  </Button>
-                )}
+            <div className="p-6 rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md shadow-sm space-y-6">
+              <div className="space-y-1">
+                <h3 className="font-bold text-lg">Logotipos de la Organización</h3>
+                <p className="text-xs text-muted-foreground">Administra los logotipos de tu empresa para diferentes ubicaciones de la interfaz.</p>
               </div>
 
-              {/* Logo Preview and Dropzone */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                {/* Image Live Preview */}
-                <div className="flex flex-col items-center justify-center h-28 border border-border/80 rounded-xl bg-muted/30 relative overflow-hidden group">
-                  {organizationConfig?.logoUrl ? (
-                    <img 
-                      src={organizationConfig.logoUrl} 
-                      alt="Logo de la organización" 
-                      className="max-h-16 max-w-[85%] object-contain select-none transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="text-center p-2 text-muted-foreground">
-                      <span className="text-xs font-semibold block">EasyPoint</span>
-                      <span className="text-[10px] text-muted-foreground/60">(Fallback de Texto)</span>
+                {/* ── LOGO PRINCIPAL ── */}
+                <div className="space-y-3 p-4 rounded-xl border border-border/50 bg-background/25">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <h4 className="font-semibold text-sm text-foreground">Logo Principal</h4>
+                      <p className="text-[10px] text-muted-foreground font-normal">Para el encabezado global y páginas principales.</p>
                     </div>
-                  )}
-                  <div className="absolute bottom-1 right-2 text-[8px] font-mono opacity-40">Vista Previa</div>
+                    {organizationConfig?.logoUrl && isAdmin && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleDeleteLogo}
+                        disabled={isDeletingLogo}
+                        className="h-7 border-destructive/40 text-destructive hover:bg-destructive/5 px-2"
+                      >
+                        {isDeletingLogo ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                        <span className="ml-1 text-[10px]">Eliminar</span>
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Preview & Upload Zone */}
+                  <div className="space-y-3">
+                    <div className="flex flex-col items-center justify-center h-28 border border-border/80 rounded-xl bg-muted/30 relative overflow-hidden group">
+                      {organizationConfig?.logoUrl ? (
+                        <img 
+                          src={organizationConfig.logoUrl} 
+                          alt="Logo principal" 
+                          className="max-h-16 max-w-[85%] object-contain select-none transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="text-center p-2 text-muted-foreground">
+                          <span className="text-xs font-semibold block">EasyPoint</span>
+                          <span className="text-[10px] text-muted-foreground/60">(Fallback de Texto)</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-1 right-2 text-[8px] font-mono opacity-40">Vista Previa</div>
+                    </div>
+
+                    <div 
+                      className={`flex flex-col items-center justify-center h-28 border border-dashed rounded-xl transition-all duration-300 text-center p-4 relative ${
+                        !isAdmin 
+                          ? 'border-muted bg-muted/10 cursor-not-allowed opacity-60' 
+                          : isDragging
+                            ? 'border-brand-500 bg-brand-500/5 scale-[0.99] shadow-inner'
+                            : 'border-border/80 hover:border-brand-500/50 hover:bg-accent/10 cursor-pointer'
+                      }`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => isAdmin && fileInputRef.current?.click()}
+                    >
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept=".png,.svg" 
+                        onChange={handleFileSelect}
+                        disabled={!isAdmin || isUploadingLogo}
+                      />
+                      {isUploadingLogo ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
+                          <span className="text-[11px] text-muted-foreground font-medium">Subiendo...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5">
+                          <Upload className={`h-5 w-5 ${isDragging ? 'text-brand-500' : 'text-muted-foreground'}`} />
+                          <div>
+                            <span className="text-[11px] font-semibold text-brand-500">Arrastra una imagen</span>{' '}
+                            <span className="text-[11px] text-muted-foreground">o haz clic</span>
+                          </div>
+                          <span className="text-[9px] text-muted-foreground/60">Soporta PNG, SVG. Máx 2MB.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Drag and Drop Zone */}
-                <div 
-                  className={`col-span-2 flex flex-col items-center justify-center h-28 border border-dashed rounded-xl transition-all duration-300 text-center p-4 relative ${
-                    !isAdmin 
-                      ? 'border-muted bg-muted/10 cursor-not-allowed opacity-60' 
-                      : isDragging
-                        ? 'border-brand-500 bg-brand-500/5 scale-[0.99] shadow-inner'
-                        : 'border-border/80 hover:border-brand-500/50 hover:bg-accent/10 cursor-pointer'
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => isAdmin && fileInputRef.current?.click()}
-                >
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept=".png,.svg" 
-                    onChange={handleFileSelect}
-                    disabled={!isAdmin || isUploadingLogo}
-                  />
+                {/* ── LOGO RESUMIDO (CUADRADO) ── */}
+                <div className="space-y-3 p-4 rounded-xl border border-border/50 bg-background/25">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <h4 className="font-semibold text-sm text-foreground">Logo Resumido (Cuadrado)</h4>
+                      <p className="text-[10px] text-muted-foreground font-normal">Para la barra lateral (sidebar) y layouts reducidos.</p>
+                    </div>
+                    {organizationConfig?.logoShortUrl && isAdmin && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleDeleteLogoShort}
+                        disabled={isDeletingLogoShort}
+                        className="h-7 border-destructive/40 text-destructive hover:bg-destructive/5 px-2"
+                      >
+                        {isDeletingLogoShort ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                        <span className="ml-1 text-[10px]">Eliminar</span>
+                      </Button>
+                    )}
+                  </div>
 
-                  {isUploadingLogo ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
-                      <span className="text-xs text-muted-foreground font-medium">Subiendo archivo...</span>
+                  {/* Preview & Upload Zone */}
+                  <div className="space-y-3">
+                    <div className="flex flex-col items-center justify-center h-28 border border-border/80 rounded-xl bg-muted/30 relative overflow-hidden group">
+                      {organizationConfig?.logoShortUrl ? (
+                        <img 
+                          src={organizationConfig.logoShortUrl} 
+                          alt="Logo resumido" 
+                          className="max-h-16 max-w-[85%] object-contain select-none transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-muted border border-sidebar-border flex items-center justify-center font-bold text-base text-foreground select-none rounded-xl">
+                          {activeOrganization?.name ? activeOrganization.name.charAt(0).toUpperCase() : 'O'}
+                        </div>
+                      )}
+                      <div className="absolute bottom-1 right-2 text-[8px] font-mono opacity-40">Vista Previa</div>
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-1.5">
-                      <Upload className={`h-5 w-5 ${isDragging ? 'text-brand-500' : 'text-muted-foreground'}`} />
-                      <div>
-                        <span className="text-xs font-semibold text-brand-500">Arrastra una imagen aquí</span>{' '}
-                        <span className="text-xs text-muted-foreground">o haz clic para explorar</span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground/60">Soporta PNG, SVG. Máx 2MB.</span>
+
+                    <div 
+                      className={`flex flex-col items-center justify-center h-28 border border-dashed rounded-xl transition-all duration-300 text-center p-4 relative ${
+                        !isAdmin 
+                          ? 'border-muted bg-muted/10 cursor-not-allowed opacity-60' 
+                          : isDraggingShort
+                            ? 'border-brand-500 bg-brand-500/5 scale-[0.99] shadow-inner'
+                            : 'border-border/80 hover:border-brand-500/50 hover:bg-accent/10 cursor-pointer'
+                      }`}
+                      onDragOver={handleDragOverShort}
+                      onDragLeave={handleDragLeaveShort}
+                      onDrop={handleDropShort}
+                      onClick={() => isAdmin && fileInputShortRef.current?.click()}
+                    >
+                      <input 
+                        type="file" 
+                        ref={fileInputShortRef} 
+                        className="hidden" 
+                        accept=".png,.svg" 
+                        onChange={handleFileSelectShort}
+                        disabled={!isAdmin || isUploadingLogoShort}
+                      />
+                      {isUploadingLogoShort ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
+                          <span className="text-[11px] text-muted-foreground font-medium">Subiendo...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5">
+                          <Upload className={`h-5 w-5 ${isDraggingShort ? 'text-brand-500' : 'text-muted-foreground'}`} />
+                          <div>
+                            <span className="text-[11px] font-semibold text-brand-500">Arrastra una imagen</span>{' '}
+                            <span className="text-[11px] text-muted-foreground">o haz clic</span>
+                          </div>
+                          <span className="text-[9px] text-muted-foreground/60">Soporta PNG, SVG. Máx 2MB.</span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
               </div>
@@ -580,11 +763,30 @@ export default function OrganizationConfigPage() {
               <div className="flex-1 bg-background p-4 flex gap-4 overflow-hidden">
                 
                 {/* Fake Sidebar */}
-                <div className="w-24 shrink-0 space-y-1.5 border-r border-border/30 pr-2 hidden sm:block">
-                  <div className="h-5 w-full rounded bg-brand-500/15 border-l-2 border-brand-500" />
-                  <div className="h-5 w-18 rounded bg-muted/30" />
-                  <div className="h-5 w-16 rounded bg-muted/30" />
-                  <div className="h-5 w-20 rounded bg-muted/30" />
+                <div className="w-24 shrink-0 space-y-3 border-r border-border/30 pr-2 hidden sm:block">
+                  {/* Sidebar Header Logo in Mockup */}
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden mx-auto">
+                    {organizationConfig?.logoShortUrl ? (
+                      <img 
+                        src={organizationConfig.logoShortUrl} 
+                        alt="Logo corto" 
+                        className="h-full w-full object-contain"
+                      />
+                    ) : organizationConfig?.logoUrl ? (
+                      <img 
+                        src={organizationConfig.logoUrl} 
+                        alt="Logo largo" 
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-[10px] font-bold">{activeOrganization?.name ? activeOrganization.name.charAt(0).toUpperCase() : 'O'}</span>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-full rounded bg-brand-500/15 border-l-2 border-brand-500" />
+                    <div className="h-4 w-18 rounded bg-muted/30" />
+                    <div className="h-4 w-16 rounded bg-muted/30" />
+                  </div>
                 </div>
 
                 {/* Fake App Body */}
