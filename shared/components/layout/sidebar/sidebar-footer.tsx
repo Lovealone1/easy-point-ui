@@ -104,31 +104,36 @@ export default function SidebarFooter() {
         {isSidebarCollapsed ? (
           /* Collapsed: just the initial avatar */
           <div
-            className="w-full flex items-center justify-center h-10 rounded-xl bg-muted/30 border border-sidebar-border"
+            className="w-full flex items-center justify-center h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 hover:bg-brand-500/20 hover:border-brand-500/30 transition-colors"
             title={`${orgName}${orgPlan ? ` · ${orgPlan}` : ''}`}
           >
-            <div className="w-7 h-7 rounded-lg bg-muted border border-sidebar-border text-foreground flex items-center justify-center font-bold text-sm select-none">
+            <div className="w-7 h-7 rounded-lg bg-background text-brand-500 flex items-center justify-center font-bold text-sm shadow-sm select-none">
               {initial}
             </div>
           </div>
         ) : (
           /* Expanded: full org card */
-          <div className="p-3 rounded-xl border border-sidebar-border bg-card/40 hover:bg-card/60 transition-all duration-200 space-y-2">
+          <div className="relative overflow-hidden p-3 rounded-xl border border-sidebar-border hover:border-brand-500/40 bg-card/40 hover:bg-brand-500/5 transition-all duration-300 space-y-2 group">
+            
+            {/* Subtle background glow/sparkle effect on hover */}
+            <div className="absolute -top-10 -right-10 w-24 h-24 bg-brand-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-brand-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
             {/* Name + email row */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-muted border border-sidebar-border text-foreground flex items-center justify-center font-bold text-sm shrink-0 select-none">
+            <div className="relative flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500/20 to-brand-500/5 border border-brand-500/20 text-brand-500 flex items-center justify-center font-bold text-[15px] shrink-0 select-none shadow-sm group-hover:scale-105 transition-transform duration-300">
                 {initial}
               </div>
               <div className="min-w-0 flex-1">
-                <span className="block text-xs font-bold text-foreground truncate leading-none">
+                <span className="block text-xs font-bold text-foreground truncate leading-none group-hover:text-brand-500 transition-colors duration-200">
                   {orgName}
                 </span>
                 {orgEmail ? (
-                  <span className="block text-[10px] text-muted-foreground truncate mt-0.5">
+                  <span className="block text-[10px] text-muted-foreground truncate mt-1">
                     {orgEmail}
                   </span>
                 ) : (
-                  <span className="block text-[10px] text-muted-foreground/40 truncate mt-0.5 italic">
+                  <span className="block text-[10px] text-muted-foreground/40 truncate mt-1 italic">
                     Sin email registrado
                   </span>
                 )}
@@ -136,7 +141,7 @@ export default function SidebarFooter() {
             </div>
 
             {/* Plan badge */}
-            <div className="flex items-center justify-between pt-1.5 border-t border-sidebar-border text-[10px] select-none">
+            <div className="relative flex items-center justify-between pt-2 border-t border-sidebar-border group-hover:border-brand-500/20 transition-colors duration-300 text-[10px] select-none">
               <span className="text-muted-foreground font-medium">Plan actual:</span>
               <div className={cn(
                 "flex items-center gap-1 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border",

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import SidebarHeader from './sidebar-header';
 import SidebarSearch from './sidebar-search';
+import SidebarFavorites from './sidebar-favorites';
 import SidebarMenu from './sidebar-menu';
 import SidebarFooter from './sidebar-footer';
 import { cn } from '@/shared/lib/utils';
@@ -37,6 +38,9 @@ export default function Sidebar() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
+
+        {/* Favorites — locked above the scrollable area */}
+        <SidebarFavorites searchQuery={searchQuery} />
 
         {/* Scrollable module list */}
         <SidebarMenu searchQuery={searchQuery} />

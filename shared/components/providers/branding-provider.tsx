@@ -1,18 +1,22 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuthStore, type OrganizationConfig } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
+import { useFavoritesStore } from '@/shared/store/use-favorites-store';
 import { getMe } from '@/shared/services/auth.service';
 import { getConfig } from '@/shared/services/organization-configs.service';
 import { generateShades } from '@/shared/utils/color-shades';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Pure DOM function — applies brand colors & theme class synchronously.
-// Can be called outside React's render cycle (e.g. inside an async function)
-// to avoid the one-frame flash that happens when relying solely on useEffect.
-// ─────────────────────────────────────────────────────────────────────────────
+
+async function forceLogout(): Promise<void> {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } catch {
+  }
+  window.location.replace('/auth');
+}
+
 /**
  * Applies brand CSS variables and optionally the initial theme to the DOM.
  *
@@ -34,8 +38,6 @@ export function applyBrandingToDOM(
   const primaryColor = config.primaryColor || '#8b1fc1';
   const shades = generateShades(primaryColor);
 
-  // Resolve which shade to use for --primary based on the theme that WILL be active.
-  // Even when not applying the theme, we need to know light vs dark for correct shade.
   let resolvedTheme: 'light' | 'dark' = 'light';
   if (applyTheme) {
     const defaultTheme = config.defaultTheme || 'SYSTEM';
@@ -44,17 +46,13 @@ export function applyBrandingToDOM(
     } else if (defaultTheme === 'LIGHT') {
       resolvedTheme = 'light';
     } else {
-      // SYSTEM: read OS preference at the moment of initial load only.
       resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-    // Apply .dark class and colorScheme on <html>
     setThemeFn(resolvedTheme);
   } else {
-    // User has manually set the theme — respect it, just read current DOM state.
     resolvedTheme = root.classList.contains('dark') ? 'dark' : 'light';
   }
 
-  // Apply CSS variables to :root inline style (highest specificity, overrides globals.css)
   const isDark = resolvedTheme === 'dark';
   const activePrimary = isDark ? shades[400] : shades[500];
 
@@ -62,15 +60,38 @@ export function applyBrandingToDOM(
   root.style.setProperty('--ring', activePrimary);
   root.style.setProperty('--sidebar-primary', activePrimary);
 
-  // Overwrite all individual shade variables
   Object.entries(shades).forEach(([shade, hex]) => {
     root.style.setProperty(`--color-brand-${shade}`, hex);
   });
   root.style.setProperty('--color-brand-DEFAULT', shades[500]);
 }
 
+export function resetBrandingDOM(): void {
+  if (typeof document === 'undefined') return;
+
+  const root = document.documentElement;
+  root.style.removeProperty('--primary');
+  root.style.removeProperty('--ring');
+  root.style.removeProperty('--sidebar-primary');
+
+  const shadesKeys = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950', 'DEFAULT'];
+  shadesKeys.forEach((shade) => {
+    root.style.removeProperty(`--color-brand-${shade}`);
+  });
+}
+
+export function useAuthBrandingReset(): void {
+  const setTheme = useUiStore((s) => s.setTheme);
+  const setLoadingSession = useAuthStore((s) => s.setLoadingSession);
+
+  useEffect(() => {
+    setTheme('light');
+    resetBrandingDOM();
+    setLoadingSession(true);
+  }, [setTheme, setLoadingSession]);
+}
+
 export default function BrandingProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const {
     user,
     profileHydrated,
@@ -86,8 +107,26 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
   } = useAuthStore();
 
   const { setTheme } = useUiStore();
+  const { initForUser, clearForUser } = useFavoritesStore();
 
-  // 1. Session Recovery on Mount
+  // Initialize favorites store when user logs in
+  useEffect(() => {
+    if (user?.id) {
+      initForUser(user.id);
+    }
+  }, [user?.id, initForUser]);
+
+  useEffect(() => {
+    function handleUnauthorized() {
+      clearSession();
+      clearForUser();
+      void forceLogout();
+    }
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [clearSession, clearForUser]);
+
   useEffect(() => {
     async function recoverSession() {
       if (user && profileHydrated) {
@@ -115,21 +154,29 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
             );
             if (firstOrg.config) {
               setOrganizationConfig(firstOrg.config);
-              // ⚡ Apply branding SYNCHRONOUSLY before clearing the loading gate.
-              // Without this, React batches setState + setLoadingSession into a single
-              // render, so children appear before useEffect([organizationConfig]) fires,
-              // causing a one-frame flash of the default purple from globals.css.
               applyBrandingToDOM(firstOrg.config, setTheme);
+              await new Promise((resolve) => setTimeout(resolve, 600));
             }
           }
         } else {
           clearSession();
-          router.push('/auth/login');
+          await forceLogout();
+          return;
         }
       } catch (error) {
-        console.error('Session recovery failed:', error);
+        const is401 =
+          typeof error === 'object' &&
+          error !== null &&
+          'response' in error &&
+          (error as { response?: { status?: number } }).response?.status === 401;
+
+        if (!is401) {
+          console.error('Session recovery failed unexpectedly:', error);
+        }
+
         clearSession();
-        router.push('/auth/login');
+        await forceLogout();
+        return;
       } finally {
         setLoadingSession(false);
       }
@@ -138,11 +185,6 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
     recoverSession();
   }, []);
 
-  // 2. Re-fetch full config (including organizationEmail, plan, etc.) whenever
-  // the active organization changes. This runs on initial load too — the session
-  // recovery above sets a minimal config from getMe(); calling getConfig() here
-  // ensures we always get the complete OrganizationConfigEntity with all fields
-  // (organizationEmail, plan, planActiveUntil, organizationIsActive) from the DB.
   useEffect(() => {
     if (!activeOrganization) return;
 
@@ -151,12 +193,9 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
         const config = await getConfig();
         const prevConfig = useAuthStore.getState().organizationConfig;
 
-        // Merge: spread the fresh config over the previous one, but keep
-        // branding-critical fields from the fresh response so colors always update.
         setOrganizationConfig({
           ...prevConfig,
           ...config,
-          // Ensure org-level fields from the entity are preserved
           organizationEmail: config.organizationEmail ?? prevConfig?.organizationEmail ?? null,
           organizationName: config.organizationName || prevConfig?.organizationName || activeOrganization?.name || 'Organización',
           plan: config.plan ?? prevConfig?.plan ?? 'FREE',
@@ -169,31 +208,22 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
     fetchOrgConfig();
   }, [activeOrganization]);
 
-  // 3. Re-apply branding whenever organizationConfig changes (e.g. from settings page).
-  // The initial application during mount is done synchronously in recoverSession above.
-  // When the user has already set their own theme for the session (hasUserSetTheme),
-  // we only refresh the CSS color variables without touching the active theme.
   useEffect(() => {
     if (!organizationConfig) return;
 
     const { hasUserSetTheme } = useUiStore.getState();
-    // applyTheme = false when user has manually overridden the theme this session.
-    // This preserves the user's choice even when config is re-fetched (e.g. settings save).
     applyBrandingToDOM(organizationConfig, setTheme, !hasUserSetTheme);
-    // Note: we intentionally do NOT set up a prefers-color-scheme listener here.
-    // The initial theme is a one-time bootstrap from the org config. After that,
-    // the user is in control — OS theme changes should NOT override their session.
   }, [organizationConfig]);
 
-  if (isLoadingSession) {
+  if (isLoadingSession || !user || !profileHydrated) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl">
         <div className="relative flex items-center justify-center">
-          <div className="absolute h-32 w-32 animate-pulse rounded-full border border-purple-500/30 bg-purple-500/5 blur-xl"></div>
-          <div className="h-16 w-16 animate-spin rounded-full border-t-2 border-r-2 border-purple-500"></div>
-          <div className="absolute h-10 w-10 animate-ping rounded-full border border-purple-400/50"></div>
+          <div className="absolute h-32 w-32 animate-pulse rounded-full border border-primary/30 bg-primary/5 blur-xl transition-all duration-500"></div>
+          <div className="h-16 w-16 animate-spin rounded-full border-t-2 border-r-2 border-primary transition-all duration-500"></div>
+          <div className="absolute h-10 w-10 animate-ping rounded-full border border-primary/50 transition-all duration-500"></div>
         </div>
-        <p className="mt-6 text-sm font-semibold tracking-wider text-purple-200/70 animate-pulse uppercase">
+        <p className="mt-6 text-sm font-semibold tracking-wider text-primary/70 animate-pulse uppercase transition-all duration-500">
           Iniciando EasyPoint...
         </p>
       </div>

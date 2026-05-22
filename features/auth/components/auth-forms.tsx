@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { requestOtp } from '@/shared/services/auth.service';
 import { TransitionCard } from './transition-card';
+import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
 
 const CountrySelect = ({ value, onChange, labels, options, iconComponent: Icon }: any) => {
   const [open, setOpen] = useState(false);
@@ -62,6 +63,7 @@ const CountrySelect = ({ value, onChange, labels, options, iconComponent: Icon }
 };
 
 export function AuthForms() {
+  useAuthBrandingReset();
   const [view, setView] = useState<'login' | 'register'>('login');
   const [phone, setPhone] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);

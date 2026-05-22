@@ -14,8 +14,10 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { verifyOtp } from '@/shared/services/auth.service';
 import { VerifiedCard } from './verified-card';
+import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
 
 export function OtpView() {
+  useAuthBrandingReset();
   const [otp, setOtp] = useState('');
   const [timeLeft, setTimeLeft] = useState(60);
   const [isVerifying, setIsVerifying] = useState(false);

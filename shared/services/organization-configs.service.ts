@@ -39,3 +39,20 @@ export async function deleteLogo(): Promise<any> {
   const response = await apiClient.delete('/organization-configs/logo');
   return response.data;
 }
+
+export async function uploadLogoShort(file: File): Promise<any> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await apiClient.post('/organization-configs/logo-short', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+}
+
+export async function deleteLogoShort(): Promise<any> {
+  const response = await apiClient.delete('/organization-configs/logo-short');
+  return response.data;
+}
