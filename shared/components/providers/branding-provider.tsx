@@ -193,27 +193,40 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
         const config = await getConfig();
         const prevConfig = useAuthStore.getState().organizationConfig;
 
-        setOrganizationConfig({
+        const merged: OrganizationConfig = {
           ...prevConfig,
           ...config,
+
+          primaryColor: config.primaryColor ?? prevConfig?.primaryColor ?? null,
+          defaultTheme: config.defaultTheme ?? prevConfig?.defaultTheme ?? 'SYSTEM',
+          logoUrl: config.logoUrl ?? prevConfig?.logoUrl ?? null,
+          logoShortUrl: config.logoShortUrl ?? prevConfig?.logoShortUrl ?? null,
           organizationEmail: config.organizationEmail ?? prevConfig?.organizationEmail ?? null,
           organizationName: config.organizationName || prevConfig?.organizationName || activeOrganization?.name || 'Organización',
           plan: config.plan ?? prevConfig?.plan ?? 'FREE',
-        });
+        };
+
+        setOrganizationConfig(merged);
+
+        // Apply branding immediately after merging — don't rely solely on the
+        // useEffect below, which can miss updates when the object reference
+        // doesn't change or when setTheme is captured as a stale closure.
+        const { hasUserSetTheme } = useUiStore.getState();
+        applyBrandingToDOM(merged, setTheme, !hasUserSetTheme);
       } catch (error) {
         console.error('Failed to fetch organization config:', error);
       }
     }
 
     fetchOrgConfig();
-  }, [activeOrganization]);
+  }, [activeOrganization, setTheme]);
 
   useEffect(() => {
     if (!organizationConfig) return;
 
     const { hasUserSetTheme } = useUiStore.getState();
     applyBrandingToDOM(organizationConfig, setTheme, !hasUserSetTheme);
-  }, [organizationConfig]);
+  }, [organizationConfig, setTheme]);
 
   if (isLoadingSession || !user || !profileHydrated) {
     return (
