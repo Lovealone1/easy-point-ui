@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUiStore } from '@/shared/store/use-ui-store';
+import { useFavoritesStore } from '@/shared/store/use-favorites-store';
 import { MODULES_CATALOG, type ModuleItem } from '@/shared/config/modules.config';
 import { AppIcon } from '@/shared/components/ui/app-icon';
 import { cn } from '@/shared/lib/utils';
-import SidebarFavorites from './sidebar-favorites';
 
 interface SidebarMenuProps {
   searchQuery: string;
@@ -14,30 +14,23 @@ interface SidebarMenuProps {
 
 type CategoryType = ModuleItem['category'];
 
-const CATEGORIES: CategoryType[] = ['Ventas', 'Inventario', 'Operaciones', 'Finanzas', 'Administración'];
+const CATEGORIES: CategoryType[] = ['Comercial', 'Inventario', 'Operaciones', 'Finanzas', 'Administración'];
 
 export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
   const pathname = usePathname();
   const { isSidebarCollapsed } = useUiStore();
+  const { dynamicFavoriteIds } = useFavoritesStore();
 
-  // Check if any pinned/favorite modules match the search query
-  const hasMatchingFavorites = MODULES_CATALOG.some(
-    (mod) => mod.pinned && mod.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // All modules that are in favorites (pinned or user-added) — these get their
+  // active highlight suppressed in the regular menu so only the favorites bar
+  // shows the selected state.
+  const pinnedIds = MODULES_CATALOG.filter((m) => m.pinned).map((m) => m.id);
+  const allFavoriteIds = new Set([...pinnedIds, ...dynamicFavoriteIds]);
 
-  // Filter regular (non-pinned) catalog modules based on search query
+  // Filter non-pinned catalog modules based on search query
   const filteredCatalog = MODULES_CATALOG.filter(
     (mod) => !mod.pinned && mod.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // If no regular modules and no favorites match the query, render empty search state
-  if (filteredCatalog.length === 0 && !hasMatchingFavorites) {
-    return (
-      <div className="px-6 py-4 text-center text-xs text-muted-foreground animate-fade-in">
-        No se encontraron módulos
-      </div>
-    );
-  }
 
   // Group non-pinned modules by category
   const groupedModules = CATEGORIES.reduce((acc, cat) => {
@@ -48,11 +41,20 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
     return acc;
   }, {} as Record<CategoryType, ModuleItem[]>);
 
+  const hasAnyGroup = Object.keys(groupedModules).length > 0;
+
+  if (!hasAnyGroup) {
+    return (
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        <div className="px-6 py-4 text-center text-xs text-muted-foreground animate-fade-in">
+          No se encontraron módulos
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-2 space-y-4">
-      {/* Pinned and Custom Favorites */}
-      <SidebarFavorites searchQuery={searchQuery} />
-
       {CATEGORIES.map((cat) => {
         const mods = groupedModules[cat];
         if (!mods) return null;
@@ -69,7 +71,10 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
             {/* Modules list */}
             <div className="space-y-0.5">
               {mods.map((mod) => {
-                const isActive = pathname === mod.path;
+                // A module in the favorites bar "owns" the active state:
+                // suppress the active highlight here when it's already a favorite.
+                const isInFavorites = allFavoriteIds.has(mod.id);
+                const isActive = !isInFavorites && pathname === mod.path;
 
                 if (!mod.available) {
                   // Disabled / coming-soon state

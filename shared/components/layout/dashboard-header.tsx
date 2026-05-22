@@ -5,9 +5,11 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
+import { useFavoritesStore } from '@/shared/store/use-favorites-store';
 import { logout } from '@/shared/services/auth.service';
 import { useRouter } from 'next/navigation';
 import { MODULES_CATALOG } from '@/shared/config/modules.config';
+import { AppIcon } from '@/shared/components/ui/app-icon';
 import {
   Bell,
   ChevronRight,
@@ -330,9 +332,19 @@ function UserMenu({ user }: UserMenuProps) {
 
 function Breadcrumbs() {
   const pathname = usePathname();
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
 
   // Build segments: split path, remove empty strings
   const segments = pathname.split('/').filter(Boolean);
+
+  // Determine the leaf module for the pin button
+  const leafSegment = segments[segments.length - 1];
+  const leafMod = leafSegment
+    ? MODULES_CATALOG.find((m) => m.path === `/${leafSegment}`)
+    : null;
+  // Pinned modules (Dashboard) cannot be toggled by the user
+  const canPin = leafMod && !leafMod.pinned;
+  const isPinned = canPin ? isFavorite(leafMod!.id) : false;
 
   if (segments.length === 0) {
     return (
@@ -358,14 +370,55 @@ function Breadcrumbs() {
       {segments.map((segment, idx) => {
         const href = '/' + segments.slice(0, idx + 1).join('/');
         const isLast = idx === segments.length - 1;
-        const label = segmentToLabel(segment);
 
+        // Try to find if this segment matches a module path
+        const mod = MODULES_CATALOG.find((m) => m.path === `/${segment}`);
+
+        if (mod) {
+          return (
+            <span key={href} className="flex items-center gap-1.5 min-w-0">
+              {idx > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />}
+
+              {/* Category (Non-clickable) */}
+              <span
+                className="text-[15px] font-medium text-muted-foreground/70 select-none shrink-0"
+                style={{ letterSpacing: '-0.12px' }}
+              >
+                {mod.category}
+              </span>
+
+              {/* Separator between Category and Name */}
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+
+              {/* Module Name — brand-500 when active (isLast) */}
+              {isLast ? (
+                <span
+                  className="text-[15px] font-semibold text-brand-500 truncate"
+                  style={{ letterSpacing: '-0.12px' }}
+                >
+                  {mod.name}
+                </span>
+              ) : (
+                <Link
+                  href={mod.path}
+                  className="text-[15px] font-medium text-muted-foreground hover:text-foreground truncate transition-colors duration-150"
+                  style={{ letterSpacing: '-0.12px' }}
+                >
+                  {mod.name}
+                </Link>
+              )}
+            </span>
+          );
+        }
+
+        // Fallback for non-catalog segments
+        const label = segmentToLabel(segment);
         return (
           <span key={href} className="flex items-center gap-1.5 min-w-0">
             {idx > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />}
             {isLast ? (
               <span
-                className="text-[15px] font-semibold text-foreground truncate"
+                className="text-[15px] font-semibold text-brand-500 truncate"
                 style={{ letterSpacing: '-0.12px' }}
               >
                 {label}
@@ -382,6 +435,29 @@ function Breadcrumbs() {
           </span>
         );
       })}
+
+      {/* Pin button — shown only for non-pinned catalog modules */}
+      {canPin && (
+        <button
+          id="header-pin-favorite-btn"
+          onClick={() => toggleFavorite(leafMod!.id)}
+          title={isPinned ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          className={cn(
+            "ml-1 flex items-center justify-center w-6 h-6 rounded-md transition-all duration-200 shrink-0 group",
+            isPinned
+              ? "text-brand-500 hover:text-brand-600 hover:bg-brand-500/10"
+              : "text-muted-foreground/40 hover:text-brand-500 hover:bg-brand-500/10"
+          )}
+          aria-label={isPinned ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+        >
+          <AppIcon
+            name={isPinned ? 'keep-rounded' : 'keep-off-rounded'}
+            className={cn(
+              "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
+            )}
+          />
+        </button>
+      )}
     </nav>
   );
 }

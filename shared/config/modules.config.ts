@@ -12,7 +12,7 @@ export interface ModuleItem {
   name: string;
   path: string;
   icon: string;
-  category: 'Ventas' | 'Inventario' | 'Operaciones' | 'Finanzas' | 'Administración';
+  category: 'Comercial' | 'Inventario' | 'Operaciones' | 'Finanzas' | 'Administración' | 'General';
   /** Whether this module has a real page behind it. Unavailable modules are
    *  rendered as disabled items with a "Próximamente" badge. */
   available: boolean;
@@ -26,26 +26,27 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Dashboard',
     path: '/dashboard',
     icon: 'dashboard-rounded',
-    category: 'Ventas',
+    category: 'General',
     available: true,
     pinned: true,
   },
 
-  // ── Ventas ────────────────────────────────────────────────────────────────
+  // ── Comercial ─────────────────────────────────────────────────────────────
   {
     id: 'clients',
     name: 'Clientes',
     path: '/clients',
     icon: 'group-rounded',
-    category: 'Ventas',
+    category: 'Comercial',
     available: true,
   },
   {
     id: 'discount-rules',
     name: 'Reglas de Descuento',
+
     path: '/discount-rules',
     icon: 'percent-discount-rounded',
-    category: 'Ventas',
+    category: 'Comercial',
     available: true,
   },
   {
@@ -53,7 +54,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Ventas',
     path: '/sales',
     icon: 'point-of-sale-rounded',
-    category: 'Ventas',
+    category: 'Comercial',
     available: true,
   },
 

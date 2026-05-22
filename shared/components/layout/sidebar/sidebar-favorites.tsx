@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { MODULES_CATALOG, type ModuleItem } from '@/shared/config/modules.config';
+import { useFavoritesStore } from '@/shared/store/use-favorites-store';
 import { AppIcon } from '@/shared/components/ui/app-icon';
 import { cn } from '@/shared/lib/utils';
 
@@ -13,22 +14,24 @@ interface SidebarFavoritesProps {
 
 /**
  * SidebarFavorites component
- * Renders pinned modules (like the Dashboard) and future dynamic user favorites.
- * Up to 5 favorites total are supported (1 pinned + 4 user-customizable).
+ * Renders pinned modules (like the Dashboard) and the user's dynamic favorites.
+ * Up to 5 favorites total are supported (1 pinned Dashboard + 4 user-customizable).
  */
 export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps) {
   const pathname = usePathname();
   const { isSidebarCollapsed } = useUiStore();
+  const { dynamicFavoriteIds } = useFavoritesStore();
 
-  // 1. Get pinned favorites from the modules configuration
+  // 1. Pinned favorites from modules config (always shown)
   const pinnedFavorites = MODULES_CATALOG.filter((mod) => mod.pinned);
 
-  // 2. Placeholder for dynamic user-added favorites (stored in state/localStorage later).
-  // Currently empty, but can accommodate up to 4 additional items.
-  const dynamicFavorites: ModuleItem[] = [];
+  // 2. Dynamic favorites from the user's localStorage-backed store
+  const dynamicFavorites = dynamicFavoriteIds
+    .map((id) => MODULES_CATALOG.find((m) => m.id === id))
+    .filter((mod): mod is ModuleItem => !!mod);
 
-  // Combine pinned and dynamic favorites, ensuring a maximum of 5 items
-  const allFavorites = [...pinnedFavorites, ...dynamicFavorites].slice(0, 5);
+  // Combine: pinned first, then dynamic (newest last in array → shown at bottom)
+  const allFavorites = [...pinnedFavorites, ...dynamicFavorites];
 
   // Filter based on active search query
   const filteredFavorites = allFavorites.filter((mod) =>
@@ -41,7 +44,7 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
   }
 
   return (
-    <div className="space-y-1">
+    <div className="shrink-0 px-3 py-2 space-y-1 border-b border-sidebar-border/60">
       {/* Favorites Section Header — hidden when sidebar is collapsed */}
       {!isSidebarCollapsed && (
         <span className="text-[10px] font-bold text-brand-200 uppercase tracking-wider px-3 select-none">

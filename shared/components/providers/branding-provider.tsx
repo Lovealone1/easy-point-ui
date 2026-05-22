@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useAuthStore, type OrganizationConfig } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
+import { useFavoritesStore } from '@/shared/store/use-favorites-store';
 import { getMe } from '@/shared/services/auth.service';
 import { getConfig } from '@/shared/services/organization-configs.service';
 import { generateShades } from '@/shared/utils/color-shades';
@@ -106,16 +107,25 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
   } = useAuthStore();
 
   const { setTheme } = useUiStore();
+  const { initForUser, clearForUser } = useFavoritesStore();
+
+  // Initialize favorites store when user logs in
+  useEffect(() => {
+    if (user?.id) {
+      initForUser(user.id);
+    }
+  }, [user?.id, initForUser]);
 
   useEffect(() => {
     function handleUnauthorized() {
       clearSession();
+      clearForUser();
       void forceLogout();
     }
 
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
-  }, [clearSession]);
+  }, [clearSession, clearForUser]);
 
   useEffect(() => {
     async function recoverSession() {
