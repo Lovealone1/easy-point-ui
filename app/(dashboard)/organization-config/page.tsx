@@ -25,7 +25,7 @@ import {
   deleteLogo,
   uploadLogoShort,
   deleteLogoShort
-} from '@/shared/services/organization-configs.service';
+} from '@/features/organization-configs/services/organization-configs.service';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
