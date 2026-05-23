@@ -398,7 +398,7 @@ export default function ProductsPage() {
         onClose={() => setIsCreateOpen(false)}
         title="Nuevo Producto"
         description="Completa la información para registrar un nuevo producto en el catálogo."
-        fields={productFields}
+        fields={productFields.filter((f) => f.name !== "sku" && f.name !== "barcode")}
         submitLabel="Crear Producto"
         isLoading={createProductMutation.isPending}
         onSubmit={(values) => {
@@ -425,7 +425,7 @@ export default function ProductsPage() {
         }}
         title="Editar Producto"
         description="Actualiza la información del producto seleccionado."
-        fields={productFields.filter((f) => f.name !== "sku")} // SKU is read-only / not allowed on updates
+        fields={productFields.filter((f) => f.name !== "sku" && f.name !== "barcode")} // SKU and barcode are read-only / not allowed on updates
         submitLabel="Guardar Cambios"
         defaultValues={selectedProduct || undefined}
         isLoading={updateProductMutation.isPending}
