@@ -28,7 +28,7 @@ export function DataTableToolbar({
       {/* Search and Filters container (Left/Top) */}
       <div className="flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
         {searchSection && (
-          <div className="w-full sm:w-auto sm:min-w-[240px] md:min-w-[280px]">
+          <div className="w-full sm:w-[480px]">
             {searchSection}
           </div>
         )}
