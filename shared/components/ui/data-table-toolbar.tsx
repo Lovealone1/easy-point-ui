@@ -41,7 +41,7 @@ export function DataTableToolbar({
       </div>
 
       {/* Actions and Advanced buttons container (Right/Bottom) */}
-      <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap justify-end">
+      <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
         {actionSection}
         {children}
       </div>

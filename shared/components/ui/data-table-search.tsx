@@ -70,7 +70,7 @@ export const DataTableSearch = React.forwardRef<
   return (
     <div
       className={cn(
-        "group relative flex h-11 w-full max-w-sm items-center border border-border/40 bg-card/45 px-4 shadow-2xs backdrop-blur-md transition-all duration-200 hover:border-border/70 hover:bg-card/70 focus-within:border-primary focus-within:bg-background focus-within:ring-3 focus-within:ring-primary/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50 dark:focus-within:bg-zinc-950/80",
+        "group relative flex h-11 w-full items-center border border-border/40 bg-card/45 px-4 shadow-2xs backdrop-blur-md transition-all duration-200 hover:border-border/70 hover:bg-card/70 focus-within:border-primary focus-within:bg-background focus-within:ring-3 focus-within:ring-primary/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50 dark:focus-within:bg-zinc-950/80",
         shapeClass,
         className
       )}

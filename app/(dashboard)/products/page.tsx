@@ -108,10 +108,10 @@ export default function ProductsPage() {
       sortable: true,
       className: "font-medium text-foreground",
       render: (row) => (
-        <div className="flex flex-col py-0.5">
-          <span className="font-semibold text-foreground leading-snug">{row.name}</span>
+        <div className="flex flex-col py-0.5 min-w-0">
+          <span className="font-semibold text-foreground leading-snug truncate">{row.name}</span>
           {row.description && (
-            <span className="text-xs text-muted-foreground/80 mt-0.5 max-w-[300px] truncate text-muted-foreground/75">
+            <span className="text-xs text-muted-foreground/80 mt-0.5 max-w-[160px] sm:max-w-[300px] truncate">
               {row.description}
             </span>
           )}
@@ -125,8 +125,8 @@ export default function ProductsPage() {
       render: (row) => {
         const catName = row.categoryId ? categoryMap.get(row.categoryId) : null
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-border/40 bg-muted/30 text-muted-foreground">
-            {catName || "Sin Categoría"}
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-border/40 bg-muted/30 text-muted-foreground max-w-[140px] sm:max-w-[160px]">
+            <span className="truncate">{catName || "Sin Categoría"}</span>
           </span>
         )
       },
