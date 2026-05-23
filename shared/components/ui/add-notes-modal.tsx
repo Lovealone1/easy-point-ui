@@ -52,7 +52,7 @@ export function AddNotesModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md rounded-2xl bg-card border border-border/40 shadow-xl p-6 gap-6 duration-200">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md rounded-2xl bg-card border border-border/40 shadow-xl p-5 sm:p-6 gap-5 sm:gap-6 duration-200">
         <DialogHeader className="gap-1.5">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-brand-500/10 text-brand-500">

@@ -27,6 +27,7 @@ import { DynamicFormModal, FormFieldSchema } from "@/shared/components/ui/dynami
 import { AddNotesModal } from "@/shared/components/ui/add-notes-modal"
 import { ProductDetailModal } from "@/features/products/components/product-detail-modal"
 import { BarcodeModal } from "@/features/products/components/barcode-modal"
+import { ConfirmModal } from "@/shared/components/ui/confirm-modal"
 
 export default function ProductsPage() {
   // Mutations for CRUD and admin actions
@@ -42,6 +43,7 @@ export default function ProductsPage() {
   const [isDetailsOpen, setIsDetailsOpen] = React.useState(false)
   const [isBarcodeOpen, setIsBarcodeOpen] = React.useState(false)
   const [isNotesOpen, setIsNotesOpen] = React.useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = React.useState(false)
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null)
 
   // Query filters state
@@ -328,12 +330,8 @@ export default function ProductsPage() {
             {/* Eliminar */}
             <button
               onClick={() => {
-                if (confirm(`¿Estás seguro de que deseas eliminar el producto "${row.name}"?`)) {
-                  deleteProductMutation.mutate(row.id, {
-                    onSuccess: () => toast.success("Producto eliminado correctamente"),
-                    onError: () => toast.error("Error al eliminar el producto"),
-                  })
-                }
+                setSelectedProduct(row)
+                setIsDeleteOpen(true)
               }}
               disabled={isDeleting}
               className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-all duration-150 active:scale-90 cursor-pointer disabled:opacity-50"
@@ -431,8 +429,33 @@ export default function ProductsPage() {
         isLoading={updateProductMutation.isPending}
         onSubmit={(values) => {
           if (!selectedProduct) return
+
+          // Filter to only send modified fields (dirty fields)
+          const patchPayload: Record<string, any> = {}
+          Object.keys(values).forEach((key) => {
+            const newValue = values[key]
+            const oldValue = (selectedProduct as any)[key]
+
+            // Treat null, undefined and "" as equivalent for comparison to avoid redundant updates
+            const isOldFalsy = oldValue === null || oldValue === undefined || oldValue === ""
+            const isNewFalsy = newValue === null || newValue === undefined || newValue === ""
+            if (isOldFalsy && isNewFalsy) return
+
+            if (newValue !== oldValue) {
+              patchPayload[key] = newValue
+            }
+          })
+
+          // If no fields were modified, just close the modal
+          if (Object.keys(patchPayload).length === 0) {
+            toast.info("No se realizaron modificaciones")
+            setIsEditOpen(false)
+            setSelectedProduct(null)
+            return
+          }
+
           updateProductMutation.mutate(
-            { id: selectedProduct.id, payload: values },
+            { id: selectedProduct.id, payload: patchPayload },
             {
               onSuccess: () => {
                 toast.success("Producto actualizado con éxito")
@@ -496,6 +519,35 @@ export default function ProductsPage() {
               },
             }
           )
+        }}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={() => {
+          setIsDeleteOpen(false)
+          setSelectedProduct(null)
+        }}
+        title="¿Eliminar producto?"
+        description={`Esta acción no se puede deshacer. Se eliminará de forma permanente el producto "${selectedProduct?.name || ""}" del catálogo.`}
+        confirmLabel="Eliminar Producto"
+        cancelLabel="Cancelar"
+        isLoading={deleteProductMutation.isPending}
+        onConfirm={() => {
+          if (!selectedProduct) return
+          deleteProductMutation.mutate(selectedProduct.id, {
+            onSuccess: () => {
+              toast.success("Producto eliminado correctamente")
+              setIsDeleteOpen(false)
+              setSelectedProduct(null)
+            },
+            onError: (err) => {
+              toast.error("Error al eliminar el producto", {
+                description: err instanceof Error ? err.message : "Intente nuevamente.",
+              })
+            },
+          })
         }}
       />
     </div>

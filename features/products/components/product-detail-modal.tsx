@@ -70,7 +70,7 @@ export function ProductDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md sm:max-w-lg rounded-xl bg-card border border-border/40 shadow-xl p-6 gap-6 duration-200">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg rounded-xl bg-card border border-border/40 shadow-xl p-4 sm:p-6 gap-5 sm:gap-6 duration-200 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="gap-1">
           <DialogTitle className="text-xl font-heading font-bold text-foreground leading-tight">
             {product.name}
@@ -83,9 +83,9 @@ export function ProductDetailModal({
         </DialogHeader>
 
         {/* Product Details Grid */}
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
           {/* Prices Section */}
-          <div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-lg border border-border/30">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 bg-muted/20 p-4 rounded-lg border border-border/30">
             <div>
               <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Precio Venta</span>
               <p className="text-xl font-mono font-bold text-brand-500 dark:text-brand-400 mt-0.5">

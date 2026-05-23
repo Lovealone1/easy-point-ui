@@ -118,7 +118,7 @@ export function DynamicFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md sm:max-w-lg rounded-xl bg-card border border-border/40 shadow-xl overflow-hidden p-7 gap-6 duration-200">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg rounded-xl bg-card border border-border/40 shadow-xl overflow-hidden p-5 sm:p-7 gap-5 sm:gap-6 duration-200">
         <DialogHeader className="gap-1">
           <DialogTitle className="text-xl font-heading font-semibold text-foreground">
             {title}
@@ -131,7 +131,7 @@ export function DynamicFormModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto p-2 -m-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[65vh] sm:max-h-[50vh] overflow-y-auto p-2 -m-2">
             {fields.map((field) => {
               const gridSpan = field.gridCols === 2 ? "sm:col-span-2" : "sm:col-span-1"
 

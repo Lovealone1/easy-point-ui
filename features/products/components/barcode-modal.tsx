@@ -177,7 +177,7 @@ export function BarcodeModal({ isOpen, onClose, product }: BarcodeModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-xs sm:max-w-md rounded-xl bg-card border border-border/40 shadow-xl p-6 gap-6 duration-200">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md rounded-xl bg-card border border-border/40 shadow-xl p-5 sm:p-6 gap-5 sm:gap-6 duration-200">
         <DialogHeader className="gap-1 flex flex-col items-center text-center">
           <DialogTitle className="text-lg font-heading font-bold text-foreground">
             {product.name}
@@ -190,7 +190,7 @@ export function BarcodeModal({ isOpen, onClose, product }: BarcodeModalProps) {
         </DialogHeader>
 
         {product.barcode ? (
-          <div className="flex flex-col items-center justify-center p-6 border border-border/40 rounded-lg bg-white text-zinc-950 shadow-inner select-none gap-4">
+          <div className="flex flex-col items-center justify-center p-4 sm:p-6 border border-border/40 rounded-lg bg-white text-zinc-950 shadow-inner select-none gap-4">
             <div className="flex flex-col items-center w-full">
               <div className="w-full flex justify-center bg-white p-2 rounded-lg">
                 <svg ref={barcodeRef} className="max-h-[100px] max-w-full object-contain" />

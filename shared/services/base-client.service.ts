@@ -29,7 +29,7 @@ export class BaseClientService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>
 
 
   async update(id: string | number, payload: UpdateDTO): Promise<T> {
-    const { data } = await apiClient.put<T>(`/${this.endpoint}/${id}`, payload);
+    const { data } = await apiClient.patch<T>(`/${this.endpoint}/${id}`, payload);
     return data;
   }
 
