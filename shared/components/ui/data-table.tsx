@@ -111,13 +111,13 @@ export function DataTable<T extends Record<string, any>>({
     <div className={cn("space-y-4", className)}>
       <div
         className={cn(
-          "overflow-hidden border border-border/30 bg-card/25 shadow-xs transition-all duration-300",
-          glassy ? "glassy-card rounded-2xl" : "rounded-2xl bg-card/45 dark:bg-zinc-950/40",
+          "overflow-hidden border border-border/30 shadow-xs transition-all duration-300",
+          glassy ? "glassy-card rounded-2xl" : "rounded-2xl bg-white dark:bg-zinc-950",
           wrapperClassName
         )}
       >
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/20 dark:bg-muted/10">
             <TableRow className="border-b border-border/30 hover:bg-transparent">
               {columns.map((col) => {
                 const isSorted = sortKey === col.key
@@ -158,7 +158,7 @@ export function DataTable<T extends Record<string, any>>({
               })}
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="bg-white dark:bg-zinc-950">
             {loading ? (
               // Loading Skeleton State
               Array.from({ length: pagination?.itemsPerPage || 5 }).map((_, rowIndex) => (
@@ -187,7 +187,8 @@ export function DataTable<T extends Record<string, any>>({
                   key={row.id || rowIndex}
                   onClick={() => onRowClick?.(row)}
                   className={cn(
-                    onRowClick && "cursor-pointer hover:bg-muted/40 transition-colors active:bg-muted/60"
+                    "bg-white dark:bg-zinc-950",
+                    onRowClick && "cursor-pointer hover:bg-brand-100/15 dark:hover:bg-brand-100/10 transition-colors active:bg-brand-100/25"
                   )}
                 >
                   {columns.map((col) => {
@@ -214,80 +215,46 @@ export function DataTable<T extends Record<string, any>>({
             )}
           </TableBody>
         </Table>
-      </div>
 
-      {/* Pagination Footer */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between px-2 py-1 select-none animate-in fade-in duration-300">
-          <div className="text-xs text-muted-foreground font-medium">
-            {pagination.totalItems ? (
-              <>
-                Mostrando <span className="font-semibold text-foreground">{data.length}</span> de{" "}
-                <span className="font-semibold text-foreground">{pagination.totalItems}</span> registros
-              </>
-            ) : (
-              `Página ${pagination.currentPage} de ${pagination.totalPages}`
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
-              disabled={pagination.currentPage === 1 || loading}
-              className="h-8 w-8 rounded-full border border-border/40 bg-card/45 hover:border-border/70 hover:bg-card/75 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <div className="flex items-center gap-1">
-              {pageNumbers.map((page, idx) => {
-                if (typeof page === "string") {
-                  return (
-                    <span
-                      key={`ellipsis-${idx}`}
-                      className="px-2 text-xs font-semibold text-muted-foreground/50 select-none"
-                    >
-                      {page}
-                    </span>
-                  )
-                }
-
-                const isActive = page === pagination.currentPage
-
-                return (
-                  <Button
-                    key={`page-${page}`}
-                    variant={isActive ? "default" : "outline"}
-                    size="icon-sm"
-                    onClick={() => pagination.onPageChange(page)}
-                    disabled={loading}
-                    className={cn(
-                      "h-8 w-8 text-xs font-semibold rounded-full transition-all duration-200 active:scale-90",
-                      isActive
-                        ? "bg-primary text-primary-foreground border-transparent hover:bg-primary/95 shadow-sm"
-                        : "border-border/40 bg-card/45 hover:border-border/70 hover:bg-card/75 text-muted-foreground hover:text-foreground dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50"
-                    )}
-                  >
-                    {page}
-                  </Button>
-                )
-              })}
+        {/* Pagination Footer */}
+        {pagination && pagination.totalPages > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border/30 bg-muted/20 dark:bg-muted/10 select-none animate-in fade-in duration-300">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground font-medium">
+              {pagination.totalItems !== undefined && (
+                <div>
+                  Total de registros: <span className="font-semibold text-foreground">{pagination.totalItems}</span>
+                </div>
+              )}
+              <div>
+                Página <span className="font-semibold text-foreground">{pagination.currentPage}</span> de{" "}
+                <span className="font-semibold text-foreground">{pagination.totalPages}</span>
+              </div>
             </div>
 
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
-              disabled={pagination.currentPage === pagination.totalPages || loading}
-              className="h-8 w-8 rounded-full border border-border/40 bg-card/45 hover:border-border/70 hover:bg-card/75 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1 || loading}
+                className="h-8 w-8 rounded-full border border-border/40 bg-white dark:bg-zinc-950 hover:border-border/70 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage >= pagination.totalPages || loading}
+                className="h-8 w-8 rounded-full border border-border/40 bg-white dark:bg-zinc-950 hover:border-border/70 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

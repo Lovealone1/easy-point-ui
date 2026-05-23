@@ -25,11 +25,18 @@ export interface NestApiResponse<T = unknown> {
  *
  * @template T - The item type inside the paginated list.
  */
-export interface PaginatedApiResponse<T = unknown> {
-  data: T[];
-  total: number;
+export interface PageMeta {
   page: number;
   limit: number;
+  itemCount: number;
+  pageCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface PaginatedApiResponse<T = unknown> {
+  data: T[];
+  meta: PageMeta;
   message?: string;
   statusCode: number;
 }

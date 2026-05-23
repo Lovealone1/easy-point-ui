@@ -9,7 +9,15 @@ import { cn } from '@/shared/lib/utils';
 
 export default function SidebarHeader() {
   const { organizationConfig, activeOrganization } = useAuthStore();
-  const { isSidebarCollapsed, toggleSidebar } = useUiStore();
+  const { isSidebarCollapsed, toggleSidebar, setMobileMenuOpen } = useUiStore();
+
+  const handleLogoClick = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setMobileMenuOpen(false);
+    } else {
+      toggleSidebar();
+    }
+  };
 
   const logoShortUrl = organizationConfig?.logoShortUrl;
   const logoUrl = organizationConfig?.logoUrl;
@@ -46,8 +54,8 @@ export default function SidebarHeader() {
   return (
     <div className="relative flex items-center justify-center h-16 border-b border-sidebar-border shrink-0 px-3">
       <div
-        onClick={isSidebarCollapsed ? toggleSidebar : undefined}
-        title={isSidebarCollapsed ? "Expandir barra lateral" : undefined}
+        onClick={handleLogoClick}
+        title={isSidebarCollapsed ? "Expandir barra lateral" : "Colapsar barra lateral"}
         className={cn(
           "cursor-pointer overflow-hidden flex items-center justify-center transition-all duration-300 ease-in-out",
           isSidebarCollapsed 

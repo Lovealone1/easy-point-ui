@@ -111,7 +111,7 @@ export function DataTableAction({
     <Button
       variant={defaultVariant}
       className={cn(
-        "h-9 px-4 gap-2 text-xs font-semibold select-none transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs border border-transparent",
+        "h-9 px-4 gap-2 text-xs font-semibold select-none transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs border border-transparent w-full sm:w-auto",
         shapeClass,
         actionType === "create" && !customBg && "bg-primary text-primary-foreground hover:bg-primary/90",
         (actionType === "export" || actionType === "import") && !customBg && "border-border/40 bg-card/45 text-muted-foreground hover:border-border/70 hover:bg-card/75 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50",

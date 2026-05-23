@@ -9,14 +9,15 @@ export interface DataTableSearchProps
   value: string
   onChange: (value: string) => void
   shortcutKey?: string // e.g. "k" (will trigger on Ctrl/Cmd+K) or "/"
+  shape?: "pill" | "md" | "sm"
 }
 
 export const DataTableSearch = React.forwardRef<
   HTMLInputElement,
   DataTableSearchProps
->(({ className, value, onChange, placeholder = "Buscar...", shortcutKey = "k", ...props }, ref) => {
+>(({ className, value, onChange, placeholder = "Buscar...", shortcutKey = "k", shape = "pill", ...props }, ref) => {
   const localRef = React.useRef<HTMLInputElement | null>(null)
-  
+
   // Combine internal and external ref
   const combinedRef = React.useCallback(
     (node: HTMLInputElement | null) => {
@@ -53,15 +54,29 @@ export const DataTableSearch = React.forwardRef<
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [shortcutKey])
 
+  const shapeClass = React.useMemo(() => {
+    switch (shape) {
+      case "pill":
+        return "rounded-full"
+      case "md":
+        return "rounded-[11px]"
+      case "sm":
+        return "rounded-[8px]"
+      default:
+        return "rounded-md"
+    }
+  }, [shape])
+
   return (
     <div
       className={cn(
-        "group relative flex h-11 w-full max-w-sm items-center rounded-full border border-border/40 bg-card/45 px-4 shadow-2xs backdrop-blur-md transition-all duration-200 hover:border-border/70 hover:bg-card/70 focus-within:border-primary focus-within:bg-background focus-within:ring-3 focus-within:ring-primary/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50 dark:focus-within:bg-zinc-950/80",
+        "group relative flex h-11 w-full items-center border border-border/40 bg-card/45 px-4 shadow-2xs backdrop-blur-md transition-all duration-200 hover:border-border/70 hover:bg-card/70 focus-within:border-primary focus-within:bg-background focus-within:ring-3 focus-within:ring-primary/15 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50 dark:focus-within:bg-zinc-950/80",
+        shapeClass,
         className
       )}
     >
       <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground/60 transition-colors group-focus-within:text-primary" />
-      
+
       <input
         ref={combinedRef}
         type="text"
@@ -88,7 +103,7 @@ export const DataTableSearch = React.forwardRef<
       ) : (
         shortcutKey && (
           <div className="pointer-events-none ml-2 hidden items-center gap-1 sm:flex">
-            <kbd className="inline-flex h-5 select-none items-center gap-0.5 rounded-full border border-border/40 bg-muted/60 px-2 font-mono text-[9px] font-medium text-muted-foreground/80">
+            <kbd className="inline-flex h-5 select-none items-center gap-0.5 rounded-[6px] border border-border/40 bg-muted/60 px-2 font-mono text-[9px] font-medium text-muted-foreground/80">
               {shortcutKey === "k" ? (
                 <>
                   <span className="text-[10px]">⌘</span>K

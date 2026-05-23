@@ -28,7 +28,7 @@ export function DataTableToolbar({
       {/* Search and Filters container (Left/Top) */}
       <div className="flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
         {searchSection && (
-          <div className="w-full sm:w-auto sm:min-w-[240px] md:min-w-[280px]">
+          <div className="w-full sm:w-[480px]">
             {searchSection}
           </div>
         )}
@@ -41,7 +41,7 @@ export function DataTableToolbar({
       </div>
 
       {/* Actions and Advanced buttons container (Right/Bottom) */}
-      <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap justify-end">
+      <div className="flex w-full flex-col items-stretch gap-2.5 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
         {actionSection}
         {children}
       </div>
