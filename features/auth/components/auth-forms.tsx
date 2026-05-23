@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/shared/components/ui/command';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
-import { requestOtp } from '@/shared/services/auth.service';
+import { requestOtp } from '@/features/auth/services/auth.service';
 import { TransitionCard } from './transition-card';
 import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
 

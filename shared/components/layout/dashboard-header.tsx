@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
-import { logout } from '@/shared/services/auth.service';
+import { logout } from '@/features/auth/services/auth.service';
 import { useRouter } from 'next/navigation';
 import { MODULES_CATALOG } from '@/shared/config/modules.config';
 import { AppIcon } from '@/shared/components/ui/app-icon';

@@ -15,7 +15,7 @@
 //   - No localStorage, no sessionStorage, ever.
 // ─────────────────────────────────────────────────────────────────────────────
 import { create } from 'zustand';
-import type { AuthUser, ActiveOrganization, LoginUser } from '@/shared/types/auth.types';
+import type { AuthUser, ActiveOrganization, LoginUser } from '@/features/auth/types/auth.types';
 import { apiClient } from '@/shared/services/api-client';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -240,12 +240,12 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       activeOrganization: org,
       ...(user && membership
         ? {
-            user: {
-              ...user,
-              orgRoles: membership.orgRoles,
-              permissions: membership.permissions,
-            },
-          }
+          user: {
+            ...user,
+            orgRoles: membership.orgRoles,
+            permissions: membership.permissions,
+          },
+        }
         : {}),
     });
   },

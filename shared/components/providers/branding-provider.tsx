@@ -4,8 +4,8 @@ import React, { useEffect } from 'react';
 import { useAuthStore, type OrganizationConfig } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
-import { getMe } from '@/shared/services/auth.service';
-import { getConfig } from '@/shared/services/organization-configs.service';
+import { getMe } from '@/features/auth/services/auth.service';
+import { getConfig } from '@/features/organization-configs/services/organization-configs.service';
 import { generateShades } from '@/shared/utils/color-shades';
 
 

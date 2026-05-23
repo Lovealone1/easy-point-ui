@@ -1,4 +1,4 @@
-import { apiClient } from './api-client';
+import { apiClient } from '@/shared/services/api-client';
 
 export interface UpdateOrganizationConfigPayload {
   primaryColor?: string | null;

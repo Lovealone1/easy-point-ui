@@ -2,7 +2,7 @@
 // lib/api/types.ts
 // Shared type contracts for the BFF authentication layer.
 // ─────────────────────────────────────────────────────────────────────────────
-import type { LoginUser } from '@/shared/types/auth.types';
+import type { LoginUser } from '@/features/auth/types/auth.types';
 
 // ---------------------------------------------------------------------------
 // Error types
