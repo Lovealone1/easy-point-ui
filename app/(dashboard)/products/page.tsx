@@ -12,6 +12,7 @@ import { DataTableToolbar } from "@/shared/components/ui/data-table-toolbar"
 import {
   useProducts,
   useProductCategories,
+  useCreateProduct,
   useUpdateProduct,
   useDeleteProduct,
   useToggleProductActive,
@@ -21,12 +22,27 @@ import { productsService } from "@/features/products/services/products.service"
 import type { Product } from "@/features/products/types/products.types"
 import { Pencil, Eye, Barcode, FileText, Trash2, Loader2 } from "lucide-react"
 
+// Global and product-specific modals
+import { DynamicFormModal, FormFieldSchema } from "@/shared/components/ui/dynamic-form-modal"
+import { AddNotesModal } from "@/shared/components/ui/add-notes-modal"
+import { ProductDetailModal } from "@/features/products/components/product-detail-modal"
+import { BarcodeModal } from "@/features/products/components/barcode-modal"
+
 export default function ProductsPage() {
   // Mutations for CRUD and admin actions
+  const createProductMutation = useCreateProduct()
   const deleteProductMutation = useDeleteProduct()
   const toggleProductActiveMutation = useToggleProductActive()
   const addProductNoteMutation = useAddProductNote()
   const updateProductMutation = useUpdateProduct()
+
+  // Modal state management
+  const [isCreateOpen, setIsCreateOpen] = React.useState(false)
+  const [isEditOpen, setIsEditOpen] = React.useState(false)
+  const [isDetailsOpen, setIsDetailsOpen] = React.useState(false)
+  const [isBarcodeOpen, setIsBarcodeOpen] = React.useState(false)
+  const [isNotesOpen, setIsNotesOpen] = React.useState(false)
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null)
 
   // Query filters state
   const [search, setSearch] = React.useState("")
@@ -68,6 +84,76 @@ export default function ProductsPage() {
       });
     }
     return map
+  }, [categoriesResponse])
+
+  const productFields = React.useMemo<FormFieldSchema[]>(() => {
+    return [
+      {
+        name: "name",
+        label: "Nombre del Producto",
+        type: "text",
+        placeholder: "Ej. Coca Cola 350ml",
+        required: true,
+        gridCols: 2,
+      },
+      {
+        name: "categoryId",
+        label: "Categoría",
+        type: "select",
+        placeholder: "Selecciona una categoría",
+        required: false,
+        options: categoriesResponse?.data.map((c) => ({ label: c.name, value: c.id })) || [],
+        gridCols: 1,
+      },
+      {
+        name: "isPurchased",
+        label: "Origen de Producto",
+        type: "boolean",
+        placeholder: "Activo si es comprado a proveedor, inactivo si es de elaboración propia",
+        required: false,
+        gridCols: 1,
+      },
+      {
+        name: "salePrice",
+        label: "Precio de Venta",
+        type: "number",
+        placeholder: "Ej. 1200",
+        required: true,
+        gridCols: 1,
+      },
+      {
+        name: "costPrice",
+        label: "Precio de Costo",
+        type: "number",
+        placeholder: "Ej. 800",
+        required: false,
+        gridCols: 1,
+      },
+      {
+        name: "sku",
+        label: "Código SKU",
+        type: "text",
+        placeholder: "Ej. COCA-350-GLS",
+        required: false,
+        gridCols: 1,
+      },
+      {
+        name: "barcode",
+        label: "Código de Barras",
+        type: "text",
+        placeholder: "Ej. 780000123456",
+        required: false,
+        gridCols: 1,
+      },
+      {
+        name: "description",
+        label: "Descripción del Producto",
+        type: "textarea",
+        placeholder: "Detalles del producto, empaque, ingredientes...",
+        required: false,
+        gridCols: 2,
+      },
+    ]
   }, [categoriesResponse])
 
   // Handle column header clicks for API sorting
@@ -192,9 +278,8 @@ export default function ProductsPage() {
             {/* Ver detalles */}
             <button
               onClick={() => {
-                toast.info(`Detalles del producto: ${row.name}`, {
-                  description: `ID: ${row.id} · SKU: ${row.sku || "Sin SKU"} · Código de barras: ${row.barcode || "Sin código"} · Notas: ${row.notes || "Sin notas"}`,
-                })
+                setSelectedProduct(row)
+                setIsDetailsOpen(true)
               }}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 active:scale-90 cursor-pointer"
               title="Ver detalles"
@@ -205,20 +290,12 @@ export default function ProductsPage() {
             {/* Editar */}
             <button
               onClick={() => {
-                const newName = prompt("Editar nombre del producto:", row.name)
-                if (newName !== null && newName.trim() !== "") {
-                  updateProductMutation.mutate(
-                    { id: row.id, payload: { name: newName } },
-                    {
-                      onSuccess: () => toast.success("Producto renombrado con éxito"),
-                      onError: () => toast.error("Error al renombrar el producto"),
-                    }
-                  )
-                }
+                setSelectedProduct(row)
+                setIsEditOpen(true)
               }}
               disabled={isEditing}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 active:scale-90 cursor-pointer disabled:opacity-50"
-              title="Editar nombre"
+              title="Editar"
             >
               {isEditing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Pencil className="h-3.5 w-3.5" />}
             </button>
@@ -226,24 +303,8 @@ export default function ProductsPage() {
             {/* Código de barras */}
             <button
               onClick={() => {
-                if (!row.barcode) {
-                  toast.warning("Este producto no posee un código de barras generado.")
-                  return
-                }
-                const barcodeUrl = productsService.getBarcodeUrl(row.id)
-                toast.info(`Código de Barras - ${row.sku || "EAN-13"}`, {
-                  description: (
-                    <div className="mt-2 flex flex-col items-center gap-2 select-none">
-                      <img
-                        src={barcodeUrl}
-                        alt="Código de barras"
-                        className="bg-white p-2 rounded-lg border border-border/40 object-contain w-44"
-                      />
-                      <span className="font-mono text-xs font-semibold">{row.barcode}</span>
-                    </div>
-                  ),
-                  duration: 8000,
-                })
+                setSelectedProduct(row)
+                setIsBarcodeOpen(true)
               }}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 active:scale-90 cursor-pointer"
               title="Ver código de barras"
@@ -254,16 +315,8 @@ export default function ProductsPage() {
             {/* Agregar nota */}
             <button
               onClick={() => {
-                const note = prompt("Ingresar nota administrativa para el producto:")
-                if (note !== null && note.trim() !== "") {
-                  addProductNoteMutation.mutate(
-                    { id: row.id, notes: note },
-                    {
-                      onSuccess: () => toast.success("Nota añadida correctamente"),
-                      onError: () => toast.error("Error al añadir la nota"),
-                    }
-                  )
-                }
+                setSelectedProduct(row)
+                setIsNotesOpen(true)
               }}
               disabled={isAddingNote}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 active:scale-90 cursor-pointer disabled:opacity-50"
@@ -312,11 +365,7 @@ export default function ProductsPage() {
             actionType="create"
             label="Nuevo Producto"
             shape="md"
-            onClick={() => {
-              toast.info("Creador de productos próximamente...", {
-                description: "Estamos implementando el formulario de creación.",
-              })
-            }}
+            onClick={() => setIsCreateOpen(true)}
           />
         }
       />
@@ -337,11 +386,117 @@ export default function ProductsPage() {
           itemsPerPage: 8,
         }}
         onRowClick={(row) => {
-          toast.info(`Fila seleccionada: ${row.name}`, {
-            description: `SKU: ${row.sku} · Precio de venta: ${formatCurrency(row.salePrice)}`,
-          })
+          setSelectedProduct(row)
+          setIsDetailsOpen(true)
         }}
         glassy={true}
+      />
+
+      {/* Product Creation Modal */}
+      <DynamicFormModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Nuevo Producto"
+        description="Completa la información para registrar un nuevo producto en el catálogo."
+        fields={productFields}
+        submitLabel="Crear Producto"
+        isLoading={createProductMutation.isPending}
+        onSubmit={(values) => {
+          createProductMutation.mutate(values as any, {
+            onSuccess: () => {
+              toast.success("Producto creado con éxito")
+              setIsCreateOpen(false)
+            },
+            onError: (err) => {
+              toast.error("Error al crear el producto", {
+                description: err instanceof Error ? err.message : "Intente nuevamente.",
+              })
+            },
+          })
+        }}
+      />
+
+      {/* Product Edition Modal */}
+      <DynamicFormModal
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false)
+          setSelectedProduct(null)
+        }}
+        title="Editar Producto"
+        description="Actualiza la información del producto seleccionado."
+        fields={productFields.filter((f) => f.name !== "sku")} // SKU is read-only / not allowed on updates
+        submitLabel="Guardar Cambios"
+        defaultValues={selectedProduct || undefined}
+        isLoading={updateProductMutation.isPending}
+        onSubmit={(values) => {
+          if (!selectedProduct) return
+          updateProductMutation.mutate(
+            { id: selectedProduct.id, payload: values },
+            {
+              onSuccess: () => {
+                toast.success("Producto actualizado con éxito")
+                setIsEditOpen(false)
+                setSelectedProduct(null)
+              },
+              onError: (err) => {
+                toast.error("Error al actualizar el producto", {
+                  description: err instanceof Error ? err.message : "Intente nuevamente.",
+                })
+              },
+            }
+          )
+        }}
+      />
+
+      {/* Product Details Modal */}
+      <ProductDetailModal
+        isOpen={isDetailsOpen}
+        onClose={() => {
+          setIsDetailsOpen(false)
+          setSelectedProduct(null)
+        }}
+        product={selectedProduct}
+      />
+
+      {/* Barcode Visualization Modal */}
+      <BarcodeModal
+        isOpen={isBarcodeOpen}
+        onClose={() => {
+          setIsBarcodeOpen(false)
+          setSelectedProduct(null)
+        }}
+        product={selectedProduct}
+      />
+
+      {/* Add Administrative Notes Modal */}
+      <AddNotesModal
+        isOpen={isNotesOpen}
+        onClose={() => {
+          setIsNotesOpen(false)
+          setSelectedProduct(null)
+        }}
+        title={`Agregar nota para: ${selectedProduct?.name || ""}`}
+        initialNote={selectedProduct?.notes || ""}
+        isLoading={addProductNoteMutation.isPending}
+        onSubmit={(note) => {
+          if (!selectedProduct) return
+          addProductNoteMutation.mutate(
+            { id: selectedProduct.id, notes: note },
+            {
+              onSuccess: () => {
+                toast.success("Nota guardada correctamente")
+                setIsNotesOpen(false)
+                setSelectedProduct(null)
+              },
+              onError: (err) => {
+                toast.error("Error al guardar la nota", {
+                  description: err instanceof Error ? err.message : "Intente nuevamente.",
+                })
+              },
+            }
+          )
+        }}
       />
     </div>
   )
