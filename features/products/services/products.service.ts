@@ -21,8 +21,8 @@ export class ProductsServiceClass extends BaseClientService<
    * Toggles the active status of a product.
    * Target: PATCH /products/:id/toggle-active
    */
-  async toggleActive(id: string, isActive: boolean): Promise<ApiResponse<Product>> {
-    const { data } = await apiClient.patch<ApiResponse<Product>>(
+  async toggleActive(id: string, isActive: boolean): Promise<Product> {
+    const { data } = await apiClient.patch<Product>(
       `/${this.endpoint}/${id}/toggle-active`,
       { isActive }
     )
@@ -33,8 +33,8 @@ export class ProductsServiceClass extends BaseClientService<
    * Appends an administrative note to the product.
    * Target: POST /products/:id/notes
    */
-  async addNote(id: string, notes: string): Promise<ApiResponse<Product>> {
-    const { data } = await apiClient.post<ApiResponse<Product>>(
+  async addNote(id: string, notes: string): Promise<Product> {
+    const { data } = await apiClient.post<Product>(
       `/${this.endpoint}/${id}/notes`,
       { notes }
     )

@@ -16,31 +16,31 @@ export class BaseClientService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>
   }
 
 
-  async getById(id: string | number): Promise<ApiResponse<T>> {
-    const { data } = await apiClient.get<ApiResponse<T>>(`/${this.endpoint}/${id}`);
+  async getById(id: string | number): Promise<T> {
+    const { data } = await apiClient.get<T>(`/${this.endpoint}/${id}`);
     return data;
   }
 
 
-  async create(payload: CreateDTO): Promise<ApiResponse<T>> {
-    const { data } = await apiClient.post<ApiResponse<T>>(`/${this.endpoint}`, payload);
+  async create(payload: CreateDTO): Promise<T> {
+    const { data } = await apiClient.post<T>(`/${this.endpoint}`, payload);
     return data;
   }
 
 
-  async update(id: string | number, payload: UpdateDTO): Promise<ApiResponse<T>> {
-    const { data } = await apiClient.put<ApiResponse<T>>(`/${this.endpoint}/${id}`, payload);
+  async update(id: string | number, payload: UpdateDTO): Promise<T> {
+    const { data } = await apiClient.put<T>(`/${this.endpoint}/${id}`, payload);
     return data;
   }
 
 
-  async patch(id: string | number, payload: Partial<UpdateDTO>): Promise<ApiResponse<T>> {
-    const { data } = await apiClient.patch<ApiResponse<T>>(`/${this.endpoint}/${id}`, payload);
+  async patch(id: string | number, payload: Partial<UpdateDTO>): Promise<T> {
+    const { data } = await apiClient.patch<T>(`/${this.endpoint}/${id}`, payload);
     return data;
   }
 
-  async delete(id: string | number): Promise<ApiResponse<void>> {
-    const { data } = await apiClient.delete<ApiResponse<void>>(`/${this.endpoint}/${id}`);
+  async delete(id: string | number): Promise<void> {
+    const { data } = await apiClient.delete<void>(`/${this.endpoint}/${id}`);
     return data;
   }
 }
