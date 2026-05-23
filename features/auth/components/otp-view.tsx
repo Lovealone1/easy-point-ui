@@ -12,7 +12,7 @@ import {
 } from "@/shared/components/ui/input-otp";
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
-import { verifyOtp } from '@/shared/services/auth.service';
+import { verifyOtp } from '@/features/auth/services/auth.service';
 import { VerifiedCard } from './verified-card';
 import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
 

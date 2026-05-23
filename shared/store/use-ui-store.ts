@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ThemeMode } from '@/shared/types/auth.types';
+import type { ThemeMode } from '@/features/auth/types/auth.types';
 
 
 interface UiState {

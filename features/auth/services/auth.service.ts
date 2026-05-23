@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// shared/services/auth.service.ts
+// features/auth/services/auth.service.ts
 //
 // Client-side service for the BFF auth routes.
 //
@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import type { ApiResponse, OtpRequestBody, OtpVerifyBody, VerifyOtpResponse } from '@/shared/api/types';
 import type { Intent } from '@/shared/api/types';
-import { apiClient } from './api-client';
+import { apiClient } from '@/shared/services/api-client';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
