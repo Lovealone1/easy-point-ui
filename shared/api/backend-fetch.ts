@@ -76,9 +76,11 @@ export async function backendFetch<T = unknown>(
 
   let serializedBody: BodyInit | undefined;
 
-  if (body instanceof FormData) {
+  const isFormData = body instanceof FormData || (body && typeof body === 'object' && body.constructor && body.constructor.name === 'FormData');
+
+  if (isFormData) {
     delete headers['Content-Type'];
-    serializedBody = body;
+    serializedBody = body as unknown as BodyInit;
   } else if (body !== undefined) {
     serializedBody = JSON.stringify(body);
   }

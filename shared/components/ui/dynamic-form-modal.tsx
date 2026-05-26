@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select"
 
-export type FormFieldType = "text" | "number" | "textarea" | "select" | "boolean"
+export type FormFieldType = "text" | "number" | "textarea" | "select" | "boolean" | "file"
 
 export interface FormFieldSchema {
   name: string
@@ -69,7 +69,7 @@ export function DynamicFormModal({
         if (defaultValues && defaultValues[f.name] !== undefined && defaultValues[f.name] !== null) {
           initialValues[f.name] = defaultValues[f.name]
         } else {
-          initialValues[f.name] = f.type === "boolean" ? false : ""
+          initialValues[f.name] = f.type === "boolean" ? false : f.type === "file" ? null : ""
         }
       })
       setValues(initialValues)
@@ -82,8 +82,14 @@ export function DynamicFormModal({
     fields.forEach((f) => {
       if (f.required) {
         const val = values[f.name]
-        if (val === undefined || val === null || String(val).trim() === "") {
-          newErrors[f.name] = `${f.label} es obligatorio`
+        if (f.type === "file") {
+          if (!val) {
+            newErrors[f.name] = `${f.label} es obligatorio`
+          }
+        } else {
+          if (val === undefined || val === null || String(val).trim() === "") {
+            newErrors[f.name] = `${f.label} es obligatorio`
+          }
         }
       }
       if (f.type === "number" && values[f.name] !== "" && values[f.name] !== undefined && values[f.name] !== null) {
@@ -308,6 +314,38 @@ export function DynamicFormModal({
                           }
                         }}
                         className="min-h-[80px]"
+                        aria-invalid={!!errors[field.name]}
+                      />
+                      {errors[field.name] && (
+                        <span className="text-xs text-destructive mt-0.5">
+                          {errors[field.name]}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* File Input */}
+                  {field.type === "file" && (
+                    <div className="flex flex-col gap-1.5">
+                      <Label
+                        htmlFor={field.name}
+                        className="text-xs font-bold text-muted-foreground/90"
+                      >
+                        {field.label}{" "}
+                        {field.required && <span className="text-destructive font-bold">*</span>}
+                      </Label>
+                      <Input
+                        id={field.name}
+                        type="file"
+                        accept={field.placeholder || "image/*"}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null
+                          setValues((prev) => ({ ...prev, [field.name]: file }))
+                          if (errors[field.name]) {
+                            setErrors((prev) => ({ ...prev, [field.name]: "" }))
+                          }
+                        }}
+                        className="file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:cursor-pointer"
                         aria-invalid={!!errors[field.name]}
                       />
                       {errors[field.name] && (
