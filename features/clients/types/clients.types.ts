@@ -5,6 +5,7 @@ export interface Client {
   email: string | null;
   phone: string | null;
   address: string | null;
+  creditLimit: number;
   notes: string | null;
   isActive: boolean;
   organizationId: string;
@@ -27,6 +28,7 @@ export interface CreateClientDTO {
   email?: string;
   phone?: string;
   address?: string;
+  creditLimit: number;
   notes?: string;
 }
 
