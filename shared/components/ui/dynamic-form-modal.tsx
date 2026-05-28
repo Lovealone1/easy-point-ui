@@ -251,6 +251,7 @@ export function DynamicFormModal({
                         {field.required && <span className="text-destructive font-bold">*</span>}
                       </Label>
                       <Select
+                        key={field.options?.length ? `select-${field.name}-${field.options.length}` : `select-${field.name}`}
                         value={values[field.name] || ""}
                         onValueChange={(val) => {
                           setValues((prev) => ({ ...prev, [field.name]: val }))
@@ -266,7 +267,7 @@ export function DynamicFormModal({
                           <SelectValue placeholder={field.placeholder || "Selecciona una opción"} />
                         </SelectTrigger>
                         <SelectContent className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg max-h-60 overflow-y-auto">
-                          {!field.required && (
+                          {!field.required && !field.options?.some(opt => opt.value === "none") && (
                             <SelectItem
                               value="none"
                               className="rounded-lg text-xs py-1.5 focus:bg-primary/10 focus:text-primary cursor-pointer text-muted-foreground/80 font-medium"
