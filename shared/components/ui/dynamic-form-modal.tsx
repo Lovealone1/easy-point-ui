@@ -33,6 +33,7 @@ export interface FormFieldSchema {
   required?: boolean
   options?: { label: string; value: string }[]
   gridCols?: 1 | 2 // Responsive: 1 or 2 columns layout on desktop
+  showIf?: (values: Record<string, any>) => boolean
 }
 
 interface DynamicFormModalProps {
@@ -61,25 +62,27 @@ export function DynamicFormModal({
   const [values, setValues] = React.useState<Record<string, any>>({})
   const [errors, setErrors] = React.useState<Record<string, string>>({})
 
+  const prevIsOpen = React.useRef(isOpen)
+
   // Initialize fields on open or change in defaults
   React.useEffect(() => {
-    if (isOpen) {
-      const initialValues: Record<string, any> = {}
+    if (isOpen && !prevIsOpen.current) {
+      const initialValues: Record<string, any> = defaultValues ? { ...defaultValues } : {}
       fields.forEach((f) => {
-        if (defaultValues && defaultValues[f.name] !== undefined && defaultValues[f.name] !== null) {
-          initialValues[f.name] = defaultValues[f.name]
-        } else {
+        if (initialValues[f.name] === undefined || initialValues[f.name] === null) {
           initialValues[f.name] = f.type === "boolean" ? false : f.type === "file" ? null : ""
         }
       })
       setValues(initialValues)
       setErrors({})
     }
+    prevIsOpen.current = isOpen
   }, [isOpen, defaultValues, fields])
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
     fields.forEach((f) => {
+      if (f.showIf && !f.showIf(values)) return
       if (f.required) {
         const val = values[f.name]
         if (f.type === "file") {
@@ -109,6 +112,7 @@ export function DynamicFormModal({
     // Pre-process values (mapping "none" option to null, convert numbers)
     const cleanedValues: Record<string, any> = {}
     fields.forEach((f) => {
+      if (f.showIf && !f.showIf(values)) return
       let val = values[f.name]
       if (val === "none") {
         cleanedValues[f.name] = null
@@ -139,6 +143,7 @@ export function DynamicFormModal({
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[65vh] sm:max-h-[50vh] overflow-y-auto p-2 -m-2">
             {fields.map((field) => {
+              if (field.showIf && !field.showIf(values)) return null
               const gridSpan = field.gridCols === 2 ? "sm:col-span-2" : "sm:col-span-1"
 
               return (
