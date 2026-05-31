@@ -391,10 +391,11 @@ interface CompleteSaleModalProps {
 
 const PAYMENT_OPTIONS: { label: string; value: SalePaymentMethod; icon: React.ElementType }[] = [
   { label: "Efectivo", value: "CASH", icon: Banknote },
-  { label: "Tarjeta", value: "CARD", icon: CreditCard },
-  { label: "Transferencia", value: "TRANSFER", icon: ArrowRightLeft },
-  { label: "Mixto", value: "MIXED", icon: BadgePercent },
-  { label: "Crédito", value: "CREDIT", icon: Receipt },
+  { label: "T. Crédito", value: "CREDIT_CARD", icon: CreditCard },
+  { label: "T. Débito", value: "DEBIT_CARD", icon: CreditCard },
+  { label: "Transferencia", value: "BANK_TRANSFER", icon: ArrowRightLeft },
+  { label: "Cheque", value: "CHECK", icon: Receipt },
+  { label: "Otro", value: "OTHER", icon: Tag },
 ]
 
 function CompleteSaleModal({ isOpen, onClose, sale, onConfirm, isLoading }: CompleteSaleModalProps) {
