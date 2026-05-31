@@ -1,12 +1,14 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { cn } from "@/shared/lib/utils"
 import { DataTable, type ColumnDef } from "@/shared/components/ui/data-table"
 import { DataTableSearch } from "@/shared/components/ui/data-table-search"
 import { DataTableFilter } from "@/shared/components/ui/data-table-filter"
 import { DataTableToolbar } from "@/shared/components/ui/data-table-toolbar"
+import { DataTableAction } from "@/shared/components/ui/data-table-action"
 import { ConfirmModal } from "@/shared/components/ui/confirm-modal"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/shared/components/ui/dialog"
 import { Button } from "@/shared/components/ui/button"
@@ -16,6 +18,7 @@ import {
   useCompleteSale,
 } from "@/features/sales/hooks/use-sales"
 import { useClients } from "@/features/clients/hooks/use-clients"
+import { useInventoryMovements } from "@/features/inventory-movements/hooks/use-inventory-movements"
 import type {
   Sale,
   SaleStatus,
@@ -156,6 +159,11 @@ function SaleDetailModal({
   isDeleting,
   isCompleting,
 }: SaleDetailModalProps) {
+  const { data: movementsResponse, isLoading: isLoadingMovements } = useInventoryMovements({
+    saleId: sale?.id,
+    limit: 100,
+  })
+
   if (!sale) return null
 
   return (
@@ -234,7 +242,12 @@ function SaleDetailModal({
               <Package className="h-3 w-3" /> Ítems de la venta
             </h4>
 
-            {sale.items && sale.items.length > 0 ? (
+            {isLoadingMovements ? (
+              <div className="h-20 flex items-center justify-center text-xs text-muted-foreground/60 gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
+                <span>Cargando ítems...</span>
+              </div>
+            ) : movementsResponse?.data && movementsResponse.data.length > 0 ? (
               <div className="space-y-2">
                 {/* Header */}
                 <div className="grid grid-cols-[1fr_60px_80px_80px] gap-2 px-2 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -243,22 +256,22 @@ function SaleDetailModal({
                   <span className="text-right">P. Unit.</span>
                   <span className="text-right">Subtotal</span>
                 </div>
-                {sale.items.map((item) => (
+                {movementsResponse.data.map((item) => (
                   <div
                     key={item.id}
                     className="grid grid-cols-[1fr_60px_80px_80px] gap-2 items-center px-2 py-2 rounded-lg bg-muted/20 border border-border/15 text-xs"
                   >
                     <span className="font-medium text-foreground truncate">
-                      {item.productName}
+                      {item.productName ?? "Producto desconocido"}
                     </span>
                     <span className="text-center text-muted-foreground font-semibold">
-                      {item.quantity}
+                      {Math.abs(item.quantity)}
                     </span>
                     <span className="text-right text-muted-foreground tabular-nums">
-                      {formatCurrency(item.unitPrice)}
+                      {formatCurrency(item.unitCost ?? 0)}
                     </span>
                     <span className="text-right font-semibold text-foreground tabular-nums">
-                      {formatCurrency(item.subtotal)}
+                      {formatCurrency(Math.abs(item.quantity) * (item.unitCost ?? 0))}
                     </span>
                   </div>
                 ))}
@@ -266,7 +279,7 @@ function SaleDetailModal({
             ) : (
               <div className="h-20 border border-dashed border-border/25 rounded-xl flex items-center justify-center text-xs text-muted-foreground/60 gap-2">
                 <Package className="h-4 w-4 opacity-40" />
-                <span>Los ítems se cargarán próximamente</span>
+                <span>No hay ítems registrados en esta venta</span>
               </div>
             )}
           </div>
@@ -525,6 +538,7 @@ const STATUS_FILTER_OPTIONS = [
 ]
 
 export default function SalesPage() {
+  const router = useRouter()
   // ─── Mutations ───────────────────────────────────────────────────────────
   const deleteSaleMutation = useDeleteSale()
   const completeSaleMutation = useCompleteSale()
@@ -801,6 +815,14 @@ export default function SalesPage() {
               placeholder="Todos"
             />
           </>
+        }
+        actionSection={
+          <DataTableAction
+            actionType="create"
+            label="Registrar Venta"
+            shape="md"
+            onClick={() => router.push("/sales/create")}
+          />
         }
       />
 
