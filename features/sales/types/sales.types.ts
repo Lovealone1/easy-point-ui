@@ -6,10 +6,11 @@ export type SaleStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 /** Método de pago registrado en la venta */
 export type SalePaymentMethod =
   | 'CASH'
-  | 'CARD'
-  | 'TRANSFER'
-  | 'MIXED'
-  | 'CREDIT';
+  | 'CREDIT_CARD'
+  | 'DEBIT_CARD'
+  | 'BANK_TRANSFER'
+  | 'CHECK'
+  | 'OTHER';
 
 // ─── Sub-entities ────────────────────────────────────────────────────────────
 
@@ -108,6 +109,14 @@ export interface CreateSaleDTO {
   amountPaid?: number;
   /** Código de la regla de descuento a aplicar */
   discountRuleCode?: string;
+  /** Código del descuento a aplicar a esta venta (coincide con backend) */
+  discountCode?: string;
+  /** Estado de la venta */
+  status?: SaleStatus;
+  /** Cuenta bancaria a acreditar si status = COMPLETED */
+  bankAccountId?: string;
+  /** Categoría de la transacción si status = COMPLETED */
+  categoryId?: string;
   /** Descuento manual sobre el total (valor absoluto en moneda local) */
   discountAmount?: number;
   /** Notas opcionales */
