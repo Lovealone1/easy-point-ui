@@ -45,6 +45,7 @@ export interface FindProductPurchasesParams {
   organizationId?: string;
   supplierId?: string;
   status?: PurchaseStatus;
+  search?: string;
 }
 
 export interface CreateProductPurchaseDTO {

@@ -48,6 +48,7 @@ export function useCreateProductPurchase() {
     mutationFn: (payload: CreateProductPurchaseDTO) => productPurchasesService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
     },
   });
 }
@@ -80,6 +81,7 @@ export function useAddProductPurchaseItems() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
     },
   });
 }
@@ -95,6 +97,7 @@ export function useDeleteProductPurchase() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.detail(String(id)) });
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
     },
   });
 }
