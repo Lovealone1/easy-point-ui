@@ -29,19 +29,29 @@ export function ProductStockCard({ stock, onEditMinQuantity }: ProductStockCardP
   // Fetch product information using product id
   const { data: product, isLoading: isProductLoading, isError: isProductError } = useProduct(stock.productId)
 
-  const isLowStock = stock.quantity <= stock.minQuantity
+  const qty = Number(stock.quantity)
+  const minQty = Number(stock.minQuantity)
+
+  const isOutOfStock = qty === 0
+  const isLowStock = minQty > 0 && qty <= minQty && qty > 0
 
   return (
     <div className={cn(
       "flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-300 gap-4 w-full group relative overflow-hidden",
-      isLowStock 
-        ? "border-destructive/30 hover:border-destructive/50 hover:shadow-destructive/5 shadow-sm" 
-        : "border-border hover:border-brand-500/30 hover:shadow-brand-500/5"
+      isOutOfStock
+        ? "border-destructive/30 hover:border-destructive/50 hover:shadow-destructive/5 shadow-sm"
+        : isLowStock
+          ? "border-brand-500/30 hover:border-brand-500/50 hover:shadow-brand-500/5 shadow-sm bg-brand-50/5 dark:bg-brand-950/5"
+          : "border-border hover:border-brand-500/30 hover:shadow-brand-500/5"
     )}>
       {/* Decorative vertical bar for alerts */}
       <div className={cn(
         "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
-        isLowStock ? "bg-destructive" : "bg-transparent group-hover:bg-brand-500"
+        isOutOfStock
+          ? "bg-destructive"
+          : isLowStock
+            ? "bg-brand-500/60"
+            : "bg-transparent group-hover:bg-brand-500"
       )} />
 
       {/* Left: Product Information */}
@@ -115,9 +125,15 @@ export function ProductStockCard({ stock, onEditMinQuantity }: ProductStockCardP
 
       {/* Right: Quantities & Actions */}
       <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto shrink-0 border-t sm:border-t-0 border-border/40 pt-3 sm:pt-0 pl-1 sm:pl-0">
-        {/* Alerts if low stock */}
-        {isLowStock && (
+        {/* Alerts if out of stock / low stock */}
+        {isOutOfStock && (
           <span className="bg-destructive/10 text-destructive border border-destructive/20 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 select-none animate-pulse">
+            <AlertTriangle className="h-3 w-3 shrink-0" />
+            Sin Stock
+          </span>
+        )}
+        {isLowStock && (
+          <span className="bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 select-none">
             <AlertTriangle className="h-3 w-3 shrink-0" />
             Stock Bajo
           </span>
@@ -131,9 +147,13 @@ export function ProductStockCard({ stock, onEditMinQuantity }: ProductStockCardP
             </span>
             <span className={cn(
               "text-2xl font-black font-mono leading-none mt-1.5",
-              isLowStock ? "text-destructive" : "text-emerald-500 dark:text-emerald-400"
+              isOutOfStock 
+                ? "text-destructive" 
+                : isLowStock 
+                  ? "text-brand-500 dark:text-brand-400" 
+                  : "text-emerald-500 dark:text-emerald-400"
             )}>
-              {Number(stock.quantity)}
+              {qty}
             </span>
           </div>
 
