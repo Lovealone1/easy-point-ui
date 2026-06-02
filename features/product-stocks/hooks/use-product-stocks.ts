@@ -3,6 +3,7 @@ import { productStocksService } from "../services/product-stocks.service"
 import type {
   FindProductStocksParams,
   CreateProductStockDTO,
+  UpdateProductStockDTO,
 } from "../types/product-stocks.types"
 
 export const productStockKeys = {
@@ -44,6 +45,22 @@ export function useCreateProductStock() {
   return useMutation({
     mutationFn: (payload: CreateProductStockDTO) => productStocksService.create(payload),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productStockKeys.lists() })
+    },
+  })
+}
+
+/**
+ * Hook to update an existing product stock record.
+ */
+export function useUpdateProductStock() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateProductStockDTO }) =>
+      productStocksService.update(id, payload),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: productStockKeys.detail(variables.id) })
       queryClient.invalidateQueries({ queryKey: productStockKeys.lists() })
     },
   })

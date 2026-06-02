@@ -2,12 +2,13 @@ import { BaseClientService } from "@/shared/services/base-client.service"
 import type {
   ProductStock,
   CreateProductStockDTO,
+  UpdateProductStockDTO,
 } from "../types/product-stocks.types"
 
 export class ProductStocksServiceClass extends BaseClientService<
   ProductStock,
   CreateProductStockDTO,
-  never // We don't have update via PATCH for stocks in the requested scope
+  UpdateProductStockDTO
 > {
   constructor() {
     super("/product-stocks")

@@ -26,3 +26,9 @@ export interface CreateProductStockDTO {
   location?: string;
   minQuantity?: number;
 }
+
+export interface UpdateProductStockDTO {
+  location?: string;
+  minQuantity?: number;
+}
+
