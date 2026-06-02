@@ -34,7 +34,7 @@ export function DataTableToolbar({
         )}
         
         {filterSection && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {filterSection}
           </div>
         )}

@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { inventoryMovementsService } from "../services/inventory-movements.service"
+import type { CreateMovementPayload } from "../services/inventory-movements.service"
 import type {
   FindInventoryMovementsParams,
 } from "../types/inventory-movements.types"
@@ -17,5 +18,53 @@ export function useInventoryMovements(params: FindInventoryMovementsParams = {})
     queryKey: inventoryMovementKeys.list(params),
     queryFn: () => inventoryMovementsService.getAll(params as Record<string, any>),
     placeholderData: (previousData) => previousData,
+  })
+}
+
+export function useCreateAdjustmentMovement() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: CreateMovementPayload) =>
+      inventoryMovementsService.createAdjustment(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryMovementKeys.all })
+      queryClient.invalidateQueries({ queryKey: ["product-stocks"] })
+    },
+  })
+}
+
+export function useCreateWasteMovement() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: CreateMovementPayload) =>
+      inventoryMovementsService.createWaste(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryMovementKeys.all })
+      queryClient.invalidateQueries({ queryKey: ["product-stocks"] })
+    },
+  })
+}
+
+export function useCreateTestsMovement() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: CreateMovementPayload) =>
+      inventoryMovementsService.createTests(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryMovementKeys.all })
+      queryClient.invalidateQueries({ queryKey: ["product-stocks"] })
+    },
+  })
+}
+
+export function useCreateProductionMovement() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: CreateMovementPayload) =>
+      inventoryMovementsService.createProduction(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: inventoryMovementKeys.all })
+      queryClient.invalidateQueries({ queryKey: ["product-stocks"] })
+    },
   })
 }

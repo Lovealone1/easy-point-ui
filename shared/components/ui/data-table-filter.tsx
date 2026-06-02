@@ -22,6 +22,7 @@ export interface DataTableFilterProps {
   onChange: (value: string) => void
   options: DataTableFilterOption[]
   className?: string
+  triggerClassName?: string
   placeholder?: string
   showIcon?: boolean
   shape?: "pill" | "md" | "sm"
@@ -33,6 +34,7 @@ export function DataTableFilter({
   onChange,
   options,
   className,
+  triggerClassName,
   placeholder = "Todos",
   showIcon = false,
   shape = "md",
@@ -63,10 +65,11 @@ export function DataTableFilter({
           size="sm"
           className={cn(
             "h-9 px-3.5 border border-border/40 bg-card/45 hover:border-border/70 hover:bg-card/75 shadow-2xs backdrop-blur-md text-xs font-medium text-muted-foreground transition-all duration-200 data-[placeholder=false]:text-foreground dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50",
-            shapeClass
+            shapeClass,
+            triggerClassName
           )}
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-1 items-center gap-1.5">
             {showIcon && <Filter className="h-3 w-3 shrink-0 text-muted-foreground/60" />}
             <span className="text-muted-foreground/75 font-normal">{title}:</span>
             <SelectValue placeholder={placeholder}>

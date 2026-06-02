@@ -1042,7 +1042,7 @@ export default function ProductPurchasesPage() {
           />
         }
         filterSection={
-          <>
+          <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:w-auto sm:flex-wrap sm:gap-2">
             {/* Status filter */}
             <DataTableFilter
               title="Estado"
@@ -1050,6 +1050,8 @@ export default function ProductPurchasesPage() {
               onChange={setStatusFilter}
               options={STATUS_FILTER_OPTIONS}
               placeholder="Todos"
+              className="w-full sm:w-auto"
+              triggerClassName="w-full sm:w-auto"
             />
 
             {/* Supplier filter */}
@@ -1059,8 +1061,10 @@ export default function ProductPurchasesPage() {
               onChange={setSupplierFilter}
               options={supplierFilterOptions}
               placeholder="Todos"
+              className="w-full sm:w-auto"
+              triggerClassName="w-full sm:w-auto"
             />
-          </>
+          </div>
         }
         actionSection={
           <DataTableAction
