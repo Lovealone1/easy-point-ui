@@ -20,7 +20,7 @@ export default function ProductStocksPage() {
   const [search, setSearch] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
-  
+
   // Modals state
   const [isInitializeOpen, setIsInitializeOpen] = React.useState(false)
   const [isEditOpen, setIsEditOpen] = React.useState(false)
@@ -40,19 +40,19 @@ export default function ProductStocksPage() {
   }, [debouncedSearch])
 
   // Fetch stocks: fetch up to 100 records for client-side search and mapping
-  const { 
-    data: stocksResponse, 
-    isLoading: isStocksLoading, 
+  const {
+    data: stocksResponse,
+    isLoading: isStocksLoading,
     error: stocksError,
-    refetch: refetchStocks 
+    refetch: refetchStocks
   } = useProductStocks({
     limit: 100,
     orderBy: "updatedAt",
     order: "DESC",
   })
-  
+
   // Fetch active products (limit 100) to match names/SKUs for local filtering
-  const { 
+  const {
     data: productsResponse,
     isLoading: isProductsLoading
   } = useProducts({ limit: 100, isActive: true })
@@ -78,10 +78,10 @@ export default function ProductStocksPage() {
   const productMap = React.useMemo(() => {
     const map: Record<string, { name: string; sku: string; barcode: string }> = {}
     products.forEach((p) => {
-      map[p.id] = { 
-        name: p.name, 
-        sku: p.sku || "", 
-        barcode: p.barcode || "" 
+      map[p.id] = {
+        name: p.name,
+        sku: p.sku || "",
+        barcode: p.barcode || ""
       }
     })
     return map
@@ -133,7 +133,7 @@ export default function ProductStocksPage() {
           />
         }
         actionSection={
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="grid grid-cols-[auto_1fr] gap-2 w-full sm:flex sm:items-center sm:w-auto">
             <Button
               variant="outline"
               size="icon"
@@ -148,6 +148,7 @@ export default function ProductStocksPage() {
               actionType="create"
               label="Inicializar Stock"
               shape="md"
+              className="w-full sm:w-auto min-w-0"
               onClick={() => setIsInitializeOpen(true)}
             />
           </div>
@@ -159,8 +160,8 @@ export default function ProductStocksPage() {
         // Skeleton List loading state
         <div className="space-y-4">
           {Array.from({ length: 6 }).map((_, idx) => (
-            <div 
-              key={`stock-skeleton-${idx}`} 
+            <div
+              key={`stock-skeleton-${idx}`}
               className="h-24 w-full rounded-xl border border-border bg-card animate-pulse flex items-center justify-between p-5 gap-4"
             >
               <div className="flex items-center gap-4 flex-1">
@@ -186,9 +187,9 @@ export default function ProductStocksPage() {
           <p className="text-sm text-center max-w-md opacity-90">
             Hubo un problema de red o permisos al conectarse con el servidor. Por favor, recarga la página.
           </p>
-          <Button 
-            variant="outline" 
-            onClick={() => refetchStocks()} 
+          <Button
+            variant="outline"
+            onClick={() => refetchStocks()}
             className="mt-2 border-destructive/30 hover:bg-destructive/10 text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             Reintentar
@@ -205,13 +206,13 @@ export default function ProductStocksPage() {
               {search.trim() ? "No se encontraron resultados" : "Inventario sin existencias"}
             </h3>
             <p className="text-xs text-muted-foreground/90 max-w-sm">
-              {search.trim() 
-                ? "Prueba con términos diferentes o limpia el filtro de búsqueda." 
+              {search.trim()
+                ? "Prueba con términos diferentes o limpia el filtro de búsqueda."
                 : "No se han registrado existencias. Inicializa un producto para comenzar a monitorear su stock."}
             </p>
           </div>
           {!search.trim() && (
-            <Button 
+            <Button
               onClick={() => setIsInitializeOpen(true)}
               className="bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs"
             >
