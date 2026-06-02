@@ -14,7 +14,7 @@ interface SidebarMenuProps {
 
 type CategoryType = ModuleItem['category'];
 
-const CATEGORIES: CategoryType[] = ['Comercial', 'Inventario', 'Operaciones', 'Finanzas', 'Administración'];
+const CATEGORIES: CategoryType[] = ['Comercial', 'Productos', 'Insumos', 'Operaciones', 'Finanzas', 'Administración'];
 
 export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
   const pathname = usePathname();
