@@ -37,7 +37,7 @@ export function ProductStockCard({ stock, onEditMinQuantity }: ProductStockCardP
 
   return (
     <div className={cn(
-      "flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-300 gap-4 w-full group relative overflow-hidden",
+      "flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 px-5 rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-300 gap-4 w-full group relative overflow-hidden",
       isOutOfStock
         ? "border-destructive/30 hover:border-destructive/50 hover:shadow-destructive/5 shadow-sm"
         : isLowStock
@@ -151,7 +151,7 @@ export function ProductStockCard({ stock, onEditMinQuantity }: ProductStockCardP
                 ? "text-destructive" 
                 : isLowStock 
                   ? "text-brand-500 dark:text-brand-400" 
-                  : "text-emerald-500 dark:text-emerald-400"
+                  : "text-brand-600 dark:text-brand-400"
             )}>
               {qty}
             </span>
