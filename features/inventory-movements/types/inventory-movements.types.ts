@@ -38,4 +38,5 @@ export interface FindInventoryMovementsParams {
   type?: MovementType;
   saleId?: string;
   productionId?: string;
+  productPurchaseId?: string;
 }

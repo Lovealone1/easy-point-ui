@@ -12,7 +12,7 @@ export interface ModuleItem {
   name: string;
   path: string;
   icon: string;
-  category: 'Comercial' | 'Inventario' | 'Operaciones' | 'Finanzas' | 'Administración' | 'General';
+  category: 'Comercial' | 'Productos' | 'Insumos' | 'Operaciones' | 'Finanzas' | 'Administración' | 'General';
   /** Whether this module has a real page behind it. Unavailable modules are
    *  rendered as disabled items with a "Próximamente" badge. */
   available: boolean;
@@ -58,13 +58,13 @@ export const MODULES_CATALOG: ModuleItem[] = [
     available: true,
   },
 
-  // ── Inventario ────────────────────────────────────────────────────────────
+  // ── Productos ─────────────────────────────────────────────────────────────
   {
     id: 'inventory-movements',
     name: 'Movimientos de Inventario',
     path: '/inventory-movements',
     icon: 'sync-alt-rounded',
-    category: 'Inventario',
+    category: 'Productos',
     available: true,
   },
   {
@@ -72,7 +72,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Categorías de Productos',
     path: '/product-categories',
     icon: 'category-rounded',
-    category: 'Inventario',
+    category: 'Productos',
     available: true,
   },
   {
@@ -80,7 +80,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Compras de Productos',
     path: '/product-purchases',
     icon: 'shopping-cart-rounded',
-    category: 'Inventario',
+    category: 'Productos',
     available: true,
   },
   {
@@ -88,7 +88,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Stock de Productos',
     path: '/product-stocks',
     icon: 'inventory-2-rounded',
-    category: 'Inventario',
+    category: 'Productos',
     available: true,
   },
   {
@@ -96,7 +96,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Productos',
     path: '/products',
     icon: 'inventory-rounded',
-    category: 'Inventario',
+    category: 'Productos',
     available: true,
   },
   {
@@ -104,15 +104,17 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Proveedores',
     path: '/suppliers',
     icon: 'local-shipping-rounded',
-    category: 'Inventario',
+    category: 'Productos',
     available: true,
   },
+
+  // ── Insumos ───────────────────────────────────────────────────────────────
   {
     id: 'supplies',
     name: 'Insumos',
     path: '/supplies',
     icon: 'kitchen-rounded',
-    category: 'Inventario',
+    category: 'Insumos',
     available: true,
   },
   {
@@ -120,7 +122,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Movimientos de Insumos',
     path: '/supply-movements',
     icon: 'swap-horiz-rounded',
-    category: 'Inventario',
+    category: 'Insumos',
     available: true,
   },
   {
@@ -128,7 +130,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Compras de Insumos',
     path: '/supply-purchases',
     icon: 'shopping-bag',
-    category: 'Inventario',
+    category: 'Insumos',
     available: true,
   },
   {
@@ -136,7 +138,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Stock de Insumos',
     path: '/supply-stocks',
     icon: 'shelves-rounded',
-    category: 'Inventario',
+    category: 'Insumos',
     available: true,
   },
   {
@@ -144,7 +146,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     name: 'Entradas de Stock Insumos',
     path: '/supply-stocks-entries',
     icon: 'input-rounded',
-    category: 'Inventario',
+    category: 'Insumos',
     available: true,
   },
 

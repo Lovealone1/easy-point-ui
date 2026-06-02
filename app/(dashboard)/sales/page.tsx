@@ -128,12 +128,12 @@ function SaleStatusBadge({ status }: { status: SaleStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide",
+        "inline-flex items-center justify-center gap-1 text-[10px] font-bold py-0.5 rounded-full border uppercase tracking-wide w-[96px] shrink-0",
         config.className
       )}
     >
-      <Icon className="h-2.5 w-2.5" />
-      {config.label}
+      <Icon className="h-2.5 w-2.5 shrink-0" />
+      <span>{config.label}</span>
     </span>
   )
 }
