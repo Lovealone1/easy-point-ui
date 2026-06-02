@@ -119,7 +119,7 @@ export default function ProductStocksPage() {
   const isLoading = isStocksLoading || isProductsLoading
 
   return (
-    <div className="space-y-4 p-1">
+    <div className="space-y-6 p-1">
 
       {/* Toolbar: Search input + Initialize button */}
       <DataTableToolbar className="pb-1"
@@ -234,7 +234,7 @@ export default function ProductStocksPage() {
           </div>
 
           {/* Client-side Pagination Footer */}
-          {totalPages > 1 && (
+          {totalItems > 0 && (
             <div className="flex items-center justify-between px-5 py-3 border border-border/30 bg-muted/20 dark:bg-muted/10 rounded-2xl select-none mt-6 animate-in fade-in duration-300">
               <div className="flex items-center gap-4 text-xs text-muted-foreground font-medium">
                 <div>
@@ -242,7 +242,7 @@ export default function ProductStocksPage() {
                 </div>
                 <div>
                   Página <span className="font-semibold text-foreground">{page}</span> de{" "}
-                  <span className="font-semibold text-foreground">{totalPages}</span>
+                  <span className="font-semibold text-foreground">{totalPages || 1}</span>
                 </div>
               </div>
 
