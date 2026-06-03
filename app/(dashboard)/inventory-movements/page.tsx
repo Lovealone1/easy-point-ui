@@ -151,7 +151,8 @@ export default function InventoryMovementsPage() {
     {
       key: "id",
       header: "ID / Folio",
-      className: "w-[120px]",
+      className: "w-[140px] pr-8",
+      headerClassName: "pr-8",
       render: (row) => (
         <span className="font-mono text-[11px] font-bold text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded">
           #{row.id.slice(-8).toUpperCase()}
@@ -162,9 +163,10 @@ export default function InventoryMovementsPage() {
       key: "createdAt",
       header: "Fecha",
       sortable: true,
-      className: "w-[160px]",
+      className: "w-[180px] pr-8",
+      headerClassName: "pr-8",
       render: (row) => (
-        <div className="flex flex-col gap-0.5 text-xs">
+        <div className="flex flex-col gap-0.5 text-xs text-left">
           <span className="font-medium text-foreground">
             {new Date(row.createdAt).toLocaleDateString("es-MX", {
               day: "2-digit",
@@ -184,8 +186,10 @@ export default function InventoryMovementsPage() {
     {
       key: "productId",
       header: "Producto",
+      className: "w-[260px] pr-8",
+      headerClassName: "pr-8",
       render: (row) => (
-        <span className="text-xs font-semibold text-foreground truncate max-w-[200px] block">
+        <span className="text-xs font-semibold text-foreground truncate max-w-[220px] block text-left">
           {row.productName || productMap[row.productId] || "Cargando..."}
         </span>
       ),
@@ -193,11 +197,12 @@ export default function InventoryMovementsPage() {
     {
       key: "stockId",
       header: "Ubicación",
-      className: "w-[120px]",
+      className: "w-[180px] pr-8",
+      headerClassName: "pr-8",
       render: (row) => {
         const locationName = stockMap[row.stockId] || "Principal"
         return (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground justify-start">
             <MapPin className="h-3 w-3 shrink-0 text-brand-500" />
             <span className="truncate">{locationName}</span>
           </div>
@@ -207,7 +212,8 @@ export default function InventoryMovementsPage() {
     {
       key: "type",
       header: "Tipo",
-      className: "w-[130px]",
+      className: "w-[150px] pr-8",
+      headerClassName: "pr-8",
       render: (row) => {
         const cfg = MOVEMENT_TYPE_CONFIG[row.type]
         if (!cfg) return <span className="text-xs uppercase">{row.type}</span>
@@ -224,8 +230,8 @@ export default function InventoryMovementsPage() {
     {
       key: "quantity",
       header: "Cantidad",
-      className: "w-[110px]",
-      align: "right",
+      className: "w-[150px] pr-8",
+      headerClassName: "pr-8",
       render: (row) => {
         const numQty = Number(row.quantity)
         
@@ -242,7 +248,12 @@ export default function InventoryMovementsPage() {
         const sign = isNegative ? "-" : "+"
 
         return (
-          <span className="font-mono font-bold text-xs tabular-nums text-right block pr-3 text-muted-foreground">
+          <span className={cn(
+            "font-mono font-bold text-xs tabular-nums text-left block",
+            isNegative 
+              ? "text-brand-400 dark:text-brand-500" 
+              : "text-brand-600 dark:text-brand-300"
+          )}>
             {sign}{displayQty}
           </span>
         )
@@ -251,8 +262,10 @@ export default function InventoryMovementsPage() {
     {
       key: "reason",
       header: "Motivo / Comentarios",
+      className: "min-w-[200px] flex-1 pr-4",
+      headerClassName: "pr-4",
       render: (row) => (
-        <span className="text-xs text-muted-foreground/80 line-clamp-1 max-w-[240px]" title={row.reason || ""}>
+        <span className="text-xs text-muted-foreground/80 line-clamp-1 max-w-[280px] text-left block" title={row.reason || ""}>
           {row.reason || <span className="italic text-muted-foreground/40">—</span>}
         </span>
       ),
@@ -272,17 +285,28 @@ export default function InventoryMovementsPage() {
             shape="md"
           />
         }
+        filterSection={
+          <DataTableFilter
+            title="Tipo"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            options={TYPE_FILTER_OPTIONS}
+            placeholder="Todos"
+            className="hidden sm:flex w-[110px] shrink-0"
+            triggerClassName="w-full"
+          />
+        }
         actionSection={
           <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
-            {/* Type filter dropdown */}
+            {/* Type filter dropdown (Mobile only) */}
             <DataTableFilter
               title="Tipo"
               value={typeFilter}
               onChange={setTypeFilter}
               options={TYPE_FILTER_OPTIONS}
               placeholder="Todos"
-              className="w-[110px] shrink-0 sm:flex-none"
-              triggerClassName="w-full sm:w-auto"
+              className="w-[110px] shrink-0 sm:hidden"
+              triggerClassName="w-full"
             />
 
             {/* Refetch button */}

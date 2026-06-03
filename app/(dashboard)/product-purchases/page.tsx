@@ -159,10 +159,15 @@ function PurchaseDetailModal({
   purchase,
   supplierMap,
 }: PurchaseDetailModalProps) {
-  const { data: movementsResponse, isLoading: isLoadingMovements } = useInventoryMovements({
-    productPurchaseId: purchase?.id,
-    limit: 100,
-  })
+  const { data: movementsResponse, isLoading: isLoadingMovements } = useInventoryMovements(
+    {
+      productPurchaseId: purchase?.id,
+      limit: 100,
+    },
+    {
+      enabled: !!purchase?.id,
+    }
+  )
 
   if (!purchase) return null
 
@@ -534,10 +539,15 @@ function AddPurchaseItemsModal({ isOpen, onClose, purchase, onConfirm, isLoading
   }, [productsRes])
 
   // Fetch existing items for this purchase
-  const { data: movementsResponse, isLoading: isLoadingMovements } = useInventoryMovements({
-    productPurchaseId: purchase?.id,
-    limit: 100,
-  })
+  const { data: movementsResponse, isLoading: isLoadingMovements } = useInventoryMovements(
+    {
+      productPurchaseId: purchase?.id,
+      limit: 100,
+    },
+    {
+      enabled: !!purchase?.id,
+    }
+  )
 
   React.useEffect(() => {
     if (!isOpen) {

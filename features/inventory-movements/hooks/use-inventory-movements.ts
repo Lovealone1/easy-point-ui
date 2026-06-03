@@ -13,11 +13,15 @@ export const inventoryMovementKeys = {
   detail: (id: string) => [...inventoryMovementKeys.details(), id] as const,
 }
 
-export function useInventoryMovements(params: FindInventoryMovementsParams = {}) {
+export function useInventoryMovements(
+  params: FindInventoryMovementsParams = {},
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: inventoryMovementKeys.list(params),
     queryFn: () => inventoryMovementsService.getAll(params as Record<string, any>),
     placeholderData: (previousData) => previousData,
+    enabled: options?.enabled,
   })
 }
 

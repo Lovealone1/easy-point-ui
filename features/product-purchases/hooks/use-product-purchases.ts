@@ -49,6 +49,8 @@ export function useCreateProductPurchase() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
+      queryClient.invalidateQueries({ queryKey: ["product-stocks"] });
+      queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
     },
   });
 }
@@ -65,6 +67,9 @@ export function useCompleteProductPurchase() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
+      queryClient.invalidateQueries({ queryKey: ["product-stocks"] });
+      queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
     },
   });
 }
@@ -82,6 +87,7 @@ export function useAddProductPurchaseItems() {
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
+      queryClient.invalidateQueries({ queryKey: ["product-stocks"] });
     },
   });
 }
@@ -98,6 +104,8 @@ export function useDeleteProductPurchase() {
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.detail(String(id)) });
       queryClient.invalidateQueries({ queryKey: productPurchaseKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ["inventory-movements"] });
+      queryClient.invalidateQueries({ queryKey: ["product-stocks"] });
+      queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
     },
   });
 }
