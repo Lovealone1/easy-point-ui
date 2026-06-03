@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation"
+
+/**
+ * /supply-stocks-entries is now unified inside /supply-stocks (Lotes tab).
+ * Redirect permanently so any saved bookmark or old link still works.
+ */
 export default function SupplyStocksEntriesPage() {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold">Entradas de Stock Insumos</h1>
-    </div>
-  );
+  redirect("/supply-stocks")
 }
