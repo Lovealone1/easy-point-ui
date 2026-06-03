@@ -141,14 +141,7 @@ export const MODULES_CATALOG: ModuleItem[] = [
     category: 'Insumos',
     available: true,
   },
-  {
-    id: 'supply-stocks-entries',
-    name: 'Entradas de Stock Insumos',
-    path: '/supply-stocks-entries',
-    icon: 'input-rounded',
-    category: 'Insumos',
-    available: true,
-  },
+
 
   // ── Operaciones ───────────────────────────────────────────────────────────
   {
