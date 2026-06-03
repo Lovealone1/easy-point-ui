@@ -14,11 +14,15 @@ export const supplyMovementKeys = {
 /**
  * Hook to retrieve a list of supply movements.
  */
-export function useSupplyMovements(params: FindSupplyMovementsParams = {}) {
+export function useSupplyMovements(
+  params: FindSupplyMovementsParams = {},
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: supplyMovementKeys.list(params),
     queryFn: () => supplyMovementsService.getAll(params as Record<string, any>),
     placeholderData: (previousData) => previousData,
+    enabled: options?.enabled,
   })
 }
 
