@@ -12,6 +12,8 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -235,9 +237,21 @@ export function DataTable<T extends Record<string, any>>({
               <Button
                 variant="outline"
                 size="icon-sm"
+                onClick={() => pagination.onPageChange(1)}
+                disabled={pagination.currentPage === 1 || loading}
+                className="h-8 w-8 rounded-full border border-border/40 bg-white dark:bg-zinc-950 hover:border-border/70 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+                title="Primera página"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon-sm"
                 onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
                 disabled={pagination.currentPage === 1 || loading}
                 className="h-8 w-8 rounded-full border border-border/40 bg-white dark:bg-zinc-950 hover:border-border/70 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+                title="Página anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -248,8 +262,20 @@ export function DataTable<T extends Record<string, any>>({
                 onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
                 disabled={pagination.currentPage >= pagination.totalPages || loading}
                 className="h-8 w-8 rounded-full border border-border/40 bg-white dark:bg-zinc-950 hover:border-border/70 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+                title="Página siguiente"
               >
                 <ChevronRight className="h-4 w-4" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={() => pagination.onPageChange(pagination.totalPages)}
+                disabled={pagination.currentPage >= pagination.totalPages || loading}
+                className="h-8 w-8 rounded-full border border-border/40 bg-white dark:bg-zinc-950 hover:border-border/70 hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
+                title="Última página"
+              >
+                <ChevronsRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
