@@ -21,3 +21,16 @@ export interface FindTransactionCategoriesParams {
   type?: TransactionCategoryType;
   isActive?: boolean;
 }
+
+export interface CreateTransactionCategoryDTO {
+  name: string;
+  description?: string;
+  type: TransactionCategoryType;
+}
+
+export interface UpdateTransactionCategoryDTO {
+  name?: string;
+  description?: string;
+  type?: TransactionCategoryType;
+  isActive?: boolean;
+}
