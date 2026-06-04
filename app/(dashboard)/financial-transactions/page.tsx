@@ -241,11 +241,10 @@ export default function FinancialTransactionsPage() {
         const isCredit = row.type === "CREDIT"
         return (
           <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border transition-all ${
-              isCredit
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-            }`}
+            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border transition-all ${isCredit
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+              }`}
           >
             {isCredit ? (
               <ArrowUpRight className="h-3 w-3 text-emerald-500" />
@@ -329,10 +328,10 @@ export default function FinancialTransactionsPage() {
   }, [response, selectedTx])
 
   return (
-    <div className="-mt-2 sm:-mt-3.5 space-y-2.5">
+    <div className="sm:-mt-2 space-y-5">
       {/* Control Header: Filters + Create Button */}
       <DataTableToolbar
-        className="pb-1.5"
+        className="pb-2.5"
         searchSection={
           <DataTableSearch
             value={search}
@@ -439,7 +438,7 @@ export default function FinancialTransactionsPage() {
           setIsDetailsOpen(true)
         }}
         glassy={true}
-        className="hidden sm:block"
+        className="hidden sm:block [&_td]:py-3"
       />
 
       {/* Mobile Card List View */}
@@ -487,15 +486,14 @@ export default function FinancialTransactionsPage() {
 
                   <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border select-none ${
-                        isCredit
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                          : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-                      }`}
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border select-none ${isCredit
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                        }`}
                     >
                       {TRANSACTION_TYPE_LABELS[row.type] || row.type}
                     </span>
-                    
+
                     {/* Action Dropdown per row */}
                     <Popover>
                       <PopoverTrigger
@@ -574,7 +572,7 @@ export default function FinancialTransactionsPage() {
             )
           })
         )}
-        
+
         {/* Mobile Pagination */}
         {response?.meta && response.meta.pageCount > 1 && (
           <div className="flex items-center justify-between px-3 py-2.5 glassy-card rounded-xl border border-border/30 bg-muted/10">
