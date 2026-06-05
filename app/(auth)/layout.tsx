@@ -58,7 +58,7 @@ export default function AuthLayout({
           />
         </header>
         <main className="flex-1 flex items-center justify-center p-8 sm:p-12 lg:p-16">
-          <div className="w-full max-w-md mx-auto">
+          <div className="w-full max-w-lg mx-auto">
             {children}
           </div>
         </main>
