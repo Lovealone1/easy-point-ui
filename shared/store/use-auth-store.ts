@@ -33,11 +33,16 @@ export interface OrganizationConfig {
   currency?: string;
   language?: string;
   dateFormat?: string;
+  taxId?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  receiptFooter?: string | null;
   organizationName: string;
   organizationEmail: string | null;
   plan: string;
   planActiveUntil: string | null;
   organizationIsActive: boolean;
+  organizationCreatedAt?: string;
 }
 
 interface AuthState {

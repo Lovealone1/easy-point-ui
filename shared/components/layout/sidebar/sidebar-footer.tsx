@@ -39,15 +39,23 @@ export default function SidebarFooter() {
           href="/organization-config"
           className={cn(
             "flex items-center text-xs font-medium rounded-lg transition-colors hover:bg-muted/50",
-            isSidebarCollapsed ? "justify-center px-0 py-2.5 w-full" : "gap-3 px-3 py-2",
+            isSidebarCollapsed
+              ? "justify-center px-0 py-2.5 w-full"
+              : "gap-3 px-3 py-2 border-l-[3px]",
             pathname === '/organization-config'
-              ? "bg-brand-500/10 text-brand-500 font-semibold"
-              : "text-muted-foreground hover:text-foreground"
+              ? cn(
+                  "bg-brand-500/10 text-brand-500 font-semibold",
+                  !isSidebarCollapsed && "border-brand-500"
+                )
+              : cn(
+                  "text-muted-foreground hover:text-foreground",
+                  !isSidebarCollapsed && "border-transparent"
+                )
           )}
-          title="Ajustes de Marca"
+          title="Ajustes"
         >
           <Settings className="h-4 w-4 shrink-0" />
-          {!isSidebarCollapsed && <span className="truncate">Ajustes de Marca</span>}
+          {!isSidebarCollapsed && <span className="truncate">Ajustes</span>}
         </Link>
 
         <Link

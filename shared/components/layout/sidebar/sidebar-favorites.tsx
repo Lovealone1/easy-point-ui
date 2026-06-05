@@ -71,10 +71,16 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
                   "flex items-center text-xs font-medium rounded-lg transition-colors",
                   isSidebarCollapsed
                     ? "justify-center px-0 py-2.5 w-full"
-                    : "gap-3 px-3 py-2 flex-1 min-w-0",
+                    : "gap-3 px-3 py-2 flex-1 min-w-0 border-l-[3px]",
                   isActive
-                    ? "bg-brand-500/10 text-brand-500 font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? cn(
+                        "bg-brand-500/10 text-brand-500 font-semibold",
+                        !isSidebarCollapsed && "border-brand-500"
+                      )
+                    : cn(
+                        "text-muted-foreground hover:text-foreground",
+                        !isSidebarCollapsed && "border-transparent"
+                      )
                 )}
                 title={isSidebarCollapsed ? mod.name : undefined}
               >

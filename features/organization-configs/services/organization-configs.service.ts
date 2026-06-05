@@ -11,6 +11,8 @@ export interface UpdateOrganizationConfigPayload {
   address?: string | null;
   phone?: string | null;
   receiptFooter?: string | null;
+  organizationName?: string;
+  organizationEmail?: string | null;
 }
 
 export async function getConfig(): Promise<any> {
