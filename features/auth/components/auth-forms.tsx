@@ -115,7 +115,7 @@ export function AuthForms() {
         setError(res.error.message);
         return;
       }
-      setPendingVerification(emailRegister, 'register', { firstName, lastName, phone });
+      setPendingVerification(emailRegister, 'register', { firstName, lastName, phoneNumber: phone });
       setIsTransitioning(true);
       setTimeout(() => {
         router.push('/auth/otp');
@@ -161,7 +161,7 @@ export function AuthForms() {
             </button>
           </div>
 
-          <div className="relative overflow-hidden w-full">
+          <div className="relative overflow-hidden w-full -mx-1.5 px-1.5">
             <div
               className="flex transition-transform duration-500 ease-in-out w-[200%]"
               style={{

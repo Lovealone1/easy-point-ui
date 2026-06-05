@@ -52,12 +52,17 @@ export async function POST(
     );
   }
 
-  const { email, code, intent } = payload as OtpVerifyBody;
+  const { email, code, intent, userInfo, invitationToken } = payload as OtpVerifyBody & {
+    userInfo?: any;
+    invitationToken?: string;
+  };
 
-  const nestBody: NestVerifyBody = {
+  const nestBody: NestVerifyBody & { userInfo?: any; invitationToken?: string } = {
     email,
     otp: code,            // BFF rename: `code` → `otp` (NestJS DTO field name)
     intent: intent.toUpperCase(),
+    userInfo,
+    invitationToken,
   };
 
   // ── 2. Forward to NestJS ───────────────────────────────────────────────────

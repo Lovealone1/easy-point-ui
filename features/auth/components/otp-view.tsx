@@ -10,7 +10,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/shared/components/ui/input-otp";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { verifyOtp } from '@/features/auth/services/auth.service';
 import { VerifiedCard } from './verified-card';
@@ -25,9 +25,12 @@ export function OtpView() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') || undefined;
 
   const pendingVerificationEmail = useAuthStore((s) => s.pendingVerificationEmail);
   const pendingIntent = useAuthStore((s) => s.pendingIntent);
+  const pendingRegistrationData = useAuthStore((s) => s.pendingRegistrationData);
   const setUserFromLogin = useAuthStore((s) => s.setUserFromLogin);
   const setPendingVerification = useAuthStore((s) => s.setPendingVerification);
   const clearSession = useAuthStore((s) => s.clearSession);
@@ -58,7 +61,13 @@ export function OtpView() {
     setIsVerifying(true);
 
     try {
-      const res = await verifyOtp(pendingVerificationEmail, code, pendingIntent);
+      const res = await verifyOtp(
+        pendingVerificationEmail,
+        code,
+        pendingIntent,
+        pendingRegistrationData || undefined,
+        token
+      );
 
       if (res.error) {
         setError(res.error.message);

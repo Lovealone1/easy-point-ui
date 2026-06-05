@@ -84,7 +84,7 @@ interface AuthState {
   pendingRegistrationData: {
     firstName: string;
     lastName: string;
-    phone?: string;
+    phoneNumber?: string;
   } | null;
 
   /**
@@ -147,7 +147,7 @@ interface AuthState {
   setPendingVerification: (
     email: string,
     intent: 'login' | 'register',
-    registrationData?: { firstName: string; lastName: string; phone?: string },
+    registrationData?: { firstName: string; lastName: string; phoneNumber?: string },
   ) => void;
 
   /** @deprecated use setPendingVerification instead. Kept for backward compat. */
