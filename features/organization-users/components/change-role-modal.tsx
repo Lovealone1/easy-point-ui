@@ -4,6 +4,7 @@ import { Button } from "@/shared/components/ui/button"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/shared/components/ui/select"
 import { Label } from "@/shared/components/ui/label"
 import { useUpdateOrganizationUserRole } from "../hooks/use-organization-users"
+import { useRoles } from "../../roles/hooks/use-roles"
 import type { OrganizationUser, Role } from "../types/organization-users.types"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
@@ -14,22 +15,47 @@ interface ChangeRoleModalProps {
   user: OrganizationUser | null
 }
 
-const ROLES: { value: Role; label: string; description: string }[] = [
-  { value: "OWNER", label: "Propietario", description: "Acceso total a la organización (solo puede haber uno)." },
-  { value: "ADMINISTRATOR", label: "Administrador", description: "Acceso a la mayoría de las configuraciones y módulos." },
-  { value: "MANAGER", label: "Gerente", description: "Acceso a la operación diaria y reportes." },
-  { value: "USER", label: "Usuario Regular", description: "Acceso básico a las operaciones." },
-]
+const roleStaticInfo: Record<string, { label: string; description: string }> = {
+  OWNER: { label: "Propietario", description: "Acceso total a la organización (solo puede haber uno)." },
+  ADMINISTRATOR: { label: "Administrador", description: "Acceso a la mayoría de las configuraciones y módulos." },
+  MANAGER: { label: "Gerente", description: "Acceso a la operación diaria y reportes." },
+  USER: { label: "Usuario Regular", description: "Acceso básico a las operaciones." },
+}
 
 export function ChangeRoleModal({ isOpen, onClose, user }: ChangeRoleModalProps) {
   const [selectedRole, setSelectedRole] = React.useState<Role | "">("")
   const updateRoleMutation = useUpdateOrganizationUserRole()
+  
+  // Dynamic Roles consumption
+  const { data: rolesResponse } = useRoles({ limit: 100 })
+  const roles = rolesResponse?.data ?? []
 
   React.useEffect(() => {
     if (isOpen && user) {
       setSelectedRole(user.role)
     }
   }, [isOpen, user])
+
+  const rolesList = React.useMemo(() => {
+    if (roles.length > 0) {
+      return roles.map((r) => {
+        const info = roleStaticInfo[r.name] || {
+          label: r.name,
+          description: r.description || "Rol personalizado creado por la organización.",
+        }
+        return {
+          value: r.name as Role,
+          label: info.label,
+          description: info.description,
+        }
+      })
+    }
+    return Object.entries(roleStaticInfo).map(([key, val]) => ({
+      value: key as Role,
+      label: val.label,
+      description: val.description,
+    }))
+  }, [roles])
 
   const handleSave = () => {
     if (!user || !selectedRole) return
@@ -69,7 +95,7 @@ export function ChangeRoleModal({ isOpen, onClose, user }: ChangeRoleModalProps)
               <SelectValue placeholder="Selecciona un rol" />
             </SelectTrigger>
             <SelectContent>
-              {ROLES.map((r) => (
+              {rolesList.map((r) => (
                 <SelectItem key={r.value} value={r.value}>
                   <div className="flex flex-col">
                     <span className="font-medium">{r.label}</span>

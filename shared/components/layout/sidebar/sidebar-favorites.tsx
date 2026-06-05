@@ -74,13 +74,13 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
                     : "gap-3 px-3 py-2 flex-1 min-w-0 border-l-[3px]",
                   isActive
                     ? cn(
-                        "bg-brand-500/10 text-brand-500 font-semibold",
-                        !isSidebarCollapsed && "border-brand-500"
-                      )
+                      "bg-brand-500/10 text-brand-500 font-semibold",
+                      !isSidebarCollapsed && "border-brand-500"
+                    )
                     : cn(
-                        "text-muted-foreground hover:text-foreground",
-                        !isSidebarCollapsed && "border-transparent"
-                      )
+                      "text-muted-foreground hover:text-foreground",
+                      !isSidebarCollapsed && "border-transparent"
+                    )
                 )}
                 title={isSidebarCollapsed ? mod.name : undefined}
               >
@@ -91,7 +91,7 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
                     isActive ? "text-brand-500" : "text-brand-400 group-hover:text-brand-500"
                   )}
                 />
-                
+
                 {!isSidebarCollapsed && (
                   <span className="truncate animate-fade-in">{mod.name}</span>
                 )}
