@@ -18,7 +18,7 @@ import { apiClient } from '@/shared/services/api-client';
 export interface RegisterPayload {
   firstName: string;
   lastName: string;
-  phone?: string;
+  phoneNumber?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -64,8 +64,16 @@ export async function verifyOtp(
   email: string,
   code: string,
   intent: Intent,
+  userInfo?: RegisterPayload,
+  invitationToken?: string,
 ): Promise<ApiResponse<VerifyOtpResponse>> {
-  const body: OtpVerifyBody = { email, code, intent };
+  const body: OtpVerifyBody & { userInfo?: RegisterPayload; invitationToken?: string } = {
+    email,
+    code,
+    intent,
+    userInfo,
+    invitationToken,
+  };
   return post<VerifyOtpResponse>('/api/auth/verify-otp', body);
 }
 
