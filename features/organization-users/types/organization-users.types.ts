@@ -28,7 +28,6 @@ export interface FindOrganizationUsersParams {
 
 export interface CreateOrganizationUserDTO {
   userId: string;
-  organizationId: string;
   role?: Role;
 }
 
