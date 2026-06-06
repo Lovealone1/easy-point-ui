@@ -1,7 +1,7 @@
 import { BaseClientService } from "@/shared/services/base-client.service"
-import type { Role } from "../types/roles.types"
+import type { Role, CreateRoleDto, UpdateRoleDto } from "../types/roles.types"
 
-export class RolesServiceClass extends BaseClientService<Role> {
+export class RolesServiceClass extends BaseClientService<Role, CreateRoleDto, UpdateRoleDto> {
   constructor() {
     super("/roles")
   }

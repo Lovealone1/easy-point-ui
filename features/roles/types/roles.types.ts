@@ -7,3 +7,13 @@ export interface Role {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreateRoleDto {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateRoleDto {
+  name?: string;
+  description?: string;
+}
