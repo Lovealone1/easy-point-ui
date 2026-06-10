@@ -23,6 +23,9 @@ import {
   Building2,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { rolesService } from '@/features/roles/services/roles.service';
+import { roleKeys } from '@/features/roles/hooks/use-roles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -86,6 +89,8 @@ function segmentToLabel(segment: string): string {
     pos: 'Punto de Venta',
     finances: 'Finanzas',
     operations: 'Operaciones',
+    roles: 'Roles',
+    permissions: 'Permisos',
   };
 
   // Check if it matches a module name
@@ -337,6 +342,16 @@ function Breadcrumbs() {
   // Build segments: split path, remove empty strings
   const segments = pathname.split('/').filter(Boolean);
 
+  // If we are on a roles dynamic route, fetch the role name dynamically
+  const isRolePath = segments[0] === 'roles';
+  const roleId = isRolePath && segments[1] ? segments[1] : '';
+
+  const { data: role } = useQuery({
+    queryKey: roleKeys.detail(roleId),
+    queryFn: () => rolesService.getById(roleId),
+    enabled: !!roleId && roleId !== 'create',
+  });
+
   // Determine the leaf module for the pin button
   const leafSegment = segments[segments.length - 1];
   const leafMod = leafSegment
@@ -377,9 +392,13 @@ function Breadcrumbs() {
   }
 
   // Leaf label (for mobile compact view)
-  const leafLabel = leafMod
+  let leafLabel = leafMod
     ? leafMod.name
     : segmentToLabel(leafSegment ?? '');
+
+  if (isRolePath && segments.length > 1 && leafSegment === roleId && role) {
+    leafLabel = role.name;
+  }
 
   return (
     <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 overflow-hidden w-full">
@@ -459,13 +478,22 @@ function Breadcrumbs() {
           }
 
           // Fallback for non-catalog segments
-          const label = segmentToLabel(segment);
+          let label = segmentToLabel(segment);
+          if (isRolePath && idx === 1 && role) {
+            label = role.name;
+          }
+
+          const isRoleSegmentNonClickable = isRolePath && idx === 1;
+
           return (
             <span key={href} className="flex items-center gap-1.5 min-w-0">
               {idx > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />}
-              {isLast ? (
+              {isLast || isRoleSegmentNonClickable ? (
                 <span
-                  className="text-[15px] font-semibold text-brand-500 truncate"
+                  className={cn(
+                    "text-[15px] truncate select-none",
+                    isLast ? "font-semibold text-brand-500" : "font-medium text-muted-foreground/75"
+                  )}
                   style={{ letterSpacing: '-0.12px' }}
                 >
                   {label}
