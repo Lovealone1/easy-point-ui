@@ -32,17 +32,25 @@ export interface AuthUser {
   avatarUrl?: string;
   /**
    * Global platform role returned by NestJS JWT payload.
-   * Values: 'SUPER_ADMIN' | 'USER' (from GlobalRole enum in Prisma)
+   * Values: 'ADMIN' | 'MODERATOR' | 'USER' (from GlobalRole enum in Prisma)
    */
   globalRole: 'ADMIN' | 'MODERATOR' | 'USER' | null;
   /**
-   * Org-scoped roles — populated after the user selects an organization.
+   * Active org-scoped role name — populated after the user selects an organization.
+   * e.g. 'OWNER' | 'ADMINISTRATOR' | 'CAJERO' | ...
+   * Null until setActiveOrganization is called.
+   */
+  orgRole: string | null;
+  /**
+   * Org-scoped roles — kept as array to leave the door open for multi-role
+   * support in the future. For now always contains at most one entry.
    * Empty until setActiveOrganization is called and org data is fetched.
    */
   orgRoles: string[];
   /**
-   * Granular permissions for the active organization.
-   * Empty until org membership data is fetched.
+   * Granular permission keys for the active organization role.
+   * e.g. ['sales:create', 'inventory:read', 'employees:view_salary']
+   * Empty until org membership data is fetched from /auth/me.
    */
   permissions: string[];
 }

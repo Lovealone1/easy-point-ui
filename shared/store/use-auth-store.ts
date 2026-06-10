@@ -192,6 +192,7 @@ function makeBlankUser(loginUser: LoginUser): AuthUser {
     lastName: null,
     fullName: null,
     globalRole: null,
+    orgRole: null,
     orgRoles: [],
     permissions: [],
   };
@@ -247,6 +248,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         ? {
           user: {
             ...user,
+            // Convenience singular — the role name currently active in this org.
+            // e.g. 'OWNER', 'ADMINISTRATOR', 'CAJERO'
+            orgRole: membership.orgRoles[0] ?? null,
             orgRoles: membership.orgRoles,
             permissions: membership.permissions,
           },

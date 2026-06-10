@@ -150,7 +150,7 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
             const firstOrg = data.organizations[0];
             setActiveOrganization(
               { id: firstOrg.id, name: firstOrg.name, slug: firstOrg.slug },
-              { orgRoles: [firstOrg.role], permissions: [] }
+              { orgRoles: [firstOrg.role], permissions: firstOrg.permissions ?? [] }
             );
             if (firstOrg.config) {
               setOrganizationConfig(firstOrg.config);
