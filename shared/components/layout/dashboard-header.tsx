@@ -91,6 +91,8 @@ function segmentToLabel(segment: string): string {
     operations: 'Operaciones',
     roles: 'Roles',
     permissions: 'Permisos',
+    admin: 'Admin',
+    organizations: 'Organizaciones',
   };
 
   // Check if it matches a module name
