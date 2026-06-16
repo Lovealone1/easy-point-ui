@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useAuthStore, type OrganizationConfig } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
@@ -35,6 +36,12 @@ export function applyBrandingToDOM(
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
+
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+    resetBrandingDOM();
+    return;
+  }
+
   const primaryColor = config.primaryColor || '#8b1fc1';
   const shades = generateShades(primaryColor);
 
@@ -92,6 +99,7 @@ export function useAuthBrandingReset(): void {
 }
 
 export default function BrandingProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const {
     user,
     profileHydrated,
@@ -222,11 +230,16 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
   }, [activeOrganization, setTheme]);
 
   useEffect(() => {
+    if (pathname?.startsWith('/admin')) {
+      resetBrandingDOM();
+      return;
+    }
+
     if (!organizationConfig) return;
 
     const { hasUserSetTheme } = useUiStore.getState();
     applyBrandingToDOM(organizationConfig, setTheme, !hasUserSetTheme);
-  }, [organizationConfig, setTheme]);
+  }, [pathname, organizationConfig, setTheme]);
 
   if (isLoadingSession || !user || !profileHydrated) {
     return (
