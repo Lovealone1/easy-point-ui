@@ -5,6 +5,8 @@ export const organizationAdminKeys = {
   all: ['organizations-admin'] as const,
   lists: () => [...organizationAdminKeys.all, 'list'] as const,
   list: (params: Record<string, any>) => [...organizationAdminKeys.lists(), params] as const,
+  details: () => [...organizationAdminKeys.all, 'detail'] as const,
+  detail: (id: string) => [...organizationAdminKeys.details(), id] as const,
 };
 
 export function useOrganizationsAdmin(params: Record<string, any> = {}) {
@@ -12,6 +14,14 @@ export function useOrganizationsAdmin(params: Record<string, any> = {}) {
     queryKey: organizationAdminKeys.list(params),
     queryFn: () => organizationsAdminService.getAll(params),
     placeholderData: (previousData) => previousData,
+  });
+}
+
+export function useOrganizationAdmin(id: string) {
+  return useQuery({
+    queryKey: organizationAdminKeys.detail(id),
+    queryFn: () => organizationsAdminService.getById(id),
+    enabled: !!id,
   });
 }
 
