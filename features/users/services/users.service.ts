@@ -14,6 +14,22 @@ export class UsersServiceClass extends BaseClientService<User, any, UpdateUserDT
     const { data } = await apiClient.patch<User>(`/${this.endpoint}/${id}/role`, { globalRole: role });
     return data;
   }
+
+  /**
+   * Solicita un código OTP para cambiar el correo electrónico del usuario
+   */
+  async requestEmailOtp(id: string, newEmail: string): Promise<{ message: string }> {
+    const { data } = await apiClient.post<{ message: string }>(`/${this.endpoint}/${id}/email/request-otp`, { newEmail });
+    return data;
+  }
+
+  /**
+   * Verifica el OTP y actualiza el correo electrónico del usuario
+   */
+  async verifyEmailOtp(id: string, newEmail: string, otp: string): Promise<User> {
+    const { data } = await apiClient.patch<User>(`/${this.endpoint}/${id}/email`, { newEmail, otp });
+    return data;
+  }
 }
 
 export const usersService = new UsersServiceClass();

@@ -13,8 +13,11 @@ import {
   useUpdateUser,
   useUpdateUserRole,
   useDeleteUser,
+  useRequestUserEmailOtp,
+  useVerifyUserEmailOtp,
 } from '@/features/users/hooks/use-users';
 import type { User, GlobalRole } from '@/features/users/types/users.types';
+import { Input } from '@/shared/components/ui/input';
 import {
   Pencil,
   Shield,
@@ -55,15 +58,25 @@ export default function AdminUsersPage() {
   const updateUserMutation = useUpdateUser();
   const updateRoleMutation = useUpdateUserRole();
   const deleteUserMutation = useDeleteUser();
+  const requestEmailOtpMutation = useRequestUserEmailOtp();
+  const verifyEmailOtpMutation = useVerifyUserEmailOtp();
 
   // Modals Visibility and Selected Record State
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isRoleOpen, setIsRoleOpen] = React.useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
+  const [isEmailOpen, setIsEmailOpen] = React.useState(false);
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
 
   // Custom role state
   const [roleValue, setRoleValue] = React.useState<GlobalRole>('USER');
+
+  // Custom email change states
+  const [emailStep, setEmailStep] = React.useState<1 | 2>(1);
+  const [newEmailValue, setNewEmailValue] = React.useState('');
+  const [otpValue, setOtpValue] = React.useState('');
+  const [emailError, setEmailError] = React.useState('');
+  const [otpError, setOtpError] = React.useState('');
 
   // Query Filters state
   const [search, setSearch] = React.useState('');
@@ -278,11 +291,14 @@ export default function AdminUsersPage() {
     {
       key: 'acciones',
       header: 'Acciones',
-      className: 'w-[140px]',
+      className: 'w-[170px]',
       render: (row) => {
         const isEditing = updateUserMutation.isPending && updateUserMutation.variables?.id === row.id;
         const isRoleUpdating = updateRoleMutation.isPending && updateRoleMutation.variables?.id === row.id;
         const isDeleting = deleteUserMutation.isPending && deleteUserMutation.variables === row.id;
+        const isEmailRequesting = requestEmailOtpMutation.isPending && requestEmailOtpMutation.variables?.id === row.id;
+        const isEmailVerifying = verifyEmailOtpMutation.isPending && verifyEmailOtpMutation.variables?.id === row.id;
+        const isEmailPending = isEmailRequesting || isEmailVerifying;
 
         return (
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -292,7 +308,7 @@ export default function AdminUsersPage() {
                 setSelectedUser(row);
                 setIsEditOpen(true);
               }}
-              disabled={isEditing}
+              disabled={isEditing || isEmailPending}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 active:scale-90 cursor-pointer disabled:opacity-50"
               title="Editar perfil"
             >
@@ -303,6 +319,25 @@ export default function AdminUsersPage() {
               )}
             </button>
 
+            {/* Cambiar Email */}
+            <button
+              onClick={() => {
+                setSelectedUser(row);
+                setNewEmailValue(row.email);
+                setEmailStep(1);
+                setIsEmailOpen(true);
+              }}
+              disabled={isEditing || isEmailPending}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-brand-500 hover:bg-brand-500/10 transition-all duration-150 active:scale-90 cursor-pointer disabled:opacity-50"
+              title="Modificar correo electrónico"
+            >
+              {isEmailPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Mail className="h-3.5 w-3.5" />
+              )}
+            </button>
+
             {/* Asignar Rol */}
             <button
               onClick={() => {
@@ -310,7 +345,7 @@ export default function AdminUsersPage() {
                 setRoleValue(row.globalRole);
                 setIsRoleOpen(true);
               }}
-              disabled={isRoleUpdating}
+              disabled={isRoleUpdating || isEmailPending}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-brand-500 hover:bg-brand-500/10 transition-all duration-150 active:scale-90 cursor-pointer disabled:opacity-50"
               title="Cambiar rol global"
             >
@@ -327,7 +362,7 @@ export default function AdminUsersPage() {
                 setSelectedUser(row);
                 setIsDeleteOpen(true);
               }}
-              disabled={isDeleting}
+              disabled={isDeleting || isEmailPending}
               className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-all duration-150 active:scale-90 cursor-pointer disabled:opacity-50"
               title="Eliminar usuario"
             >
@@ -432,6 +467,101 @@ export default function AdminUsersPage() {
         });
       },
     });
+  };
+
+  const handleEmailClose = () => {
+    setIsEmailOpen(false);
+    setSelectedUser(null);
+    setNewEmailValue('');
+    setOtpValue('');
+    setEmailError('');
+    setOtpError('');
+    setEmailStep(1);
+  };
+
+  const handleEmailRequestSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    const trimmedEmail = newEmailValue.trim();
+    if (!trimmedEmail) {
+      setEmailError('El correo electrónico es obligatorio');
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(trimmedEmail)) {
+      setEmailError('Formato de correo electrónico inválido');
+      return;
+    }
+
+    if (trimmedEmail.toLowerCase() === selectedUser.email.toLowerCase()) {
+      setEmailError('El nuevo correo debe ser diferente al actual');
+      return;
+    }
+
+    requestEmailOtpMutation.mutate(
+      { id: selectedUser.id, newEmail: trimmedEmail },
+      {
+        onSuccess: () => {
+          toast.success(`Código OTP enviado al correo: ${trimmedEmail}`);
+          setEmailStep(2);
+        },
+        onError: (err) => {
+          toast.error('Error al solicitar código OTP', {
+            description: err instanceof Error ? err.message : 'Intente nuevamente.',
+          });
+        },
+      }
+    );
+  };
+
+  const handleEmailVerifySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    const trimmedEmail = newEmailValue.trim();
+    const trimmedOtp = otpValue.trim();
+
+    if (trimmedOtp.length !== 6) {
+      setOtpError('El código OTP debe ser de 6 dígitos');
+      return;
+    }
+
+    verifyEmailOtpMutation.mutate(
+      { id: selectedUser.id, newEmail: trimmedEmail, otp: trimmedOtp },
+      {
+        onSuccess: () => {
+          toast.success('Correo electrónico actualizado con éxito', {
+            description: 'Las sesiones activas del usuario se han cerrado por seguridad.',
+          });
+          handleEmailClose();
+          refetch();
+        },
+        onError: (err) => {
+          toast.error('Error al cambiar correo electrónico', {
+            description: err instanceof Error ? err.message : 'Verifique el código e intente de nuevo.',
+          });
+        },
+      }
+    );
+  };
+
+  const handleResendOtp = () => {
+    if (!selectedUser) return;
+    const trimmedEmail = newEmailValue.trim();
+    requestEmailOtpMutation.mutate(
+      { id: selectedUser.id, newEmail: trimmedEmail },
+      {
+        onSuccess: () => {
+          toast.success(`Código OTP reenviado a: ${trimmedEmail}`);
+        },
+        onError: (err) => {
+          toast.error('Error al reenviar código OTP', {
+            description: err instanceof Error ? err.message : 'Intente nuevamente.',
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -603,6 +733,131 @@ export default function AdminUsersPage() {
         isLoading={deleteUserMutation.isPending}
         variant="danger"
       />
+
+      {/* Global Email Change Modal */}
+      <Dialog open={isEmailOpen} onOpenChange={(open) => !open && handleEmailClose()}>
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md rounded-xl bg-card border border-border/40 shadow-xl p-6 gap-6">
+          <DialogHeader className="gap-1">
+            <DialogTitle className="text-xl font-heading font-semibold text-foreground">
+              Modificar Correo Electrónico
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {emailStep === 1
+                ? `Ingresa la nueva dirección de correo para ${selectedUser?.email}. Se enviará un código OTP de verificación.`
+                : `Ingresa el código OTP de 6 dígitos enviado a ${newEmailValue} para confirmar el cambio.`
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          {emailStep === 1 ? (
+            <form onSubmit={handleEmailRequestSubmit} className="space-y-5">
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="new-email" className="text-xs font-bold text-muted-foreground/90">
+                    Nuevo Correo Electrónico <span className="text-destructive font-bold">*</span>
+                  </Label>
+                  <Input
+                    id="new-email"
+                    type="email"
+                    placeholder="Ej. usuario.nuevo@correo.com"
+                    value={newEmailValue}
+                    onChange={(e) => {
+                      setNewEmailValue(e.target.value);
+                      setEmailError('');
+                    }}
+                    disabled={requestEmailOtpMutation.isPending}
+                    className="h-10 text-sm"
+                  />
+                  {emailError && (
+                    <span className="text-xs text-destructive mt-0.5">{emailError}</span>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0 mt-6 border-t border-border/40 pt-4 flex flex-row items-center justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleEmailClose}
+                  disabled={requestEmailOtpMutation.isPending}
+                  className="px-4 py-2 hover:bg-muted/50 rounded-lg text-xs font-semibold cursor-pointer"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={requestEmailOtpMutation.isPending}
+                  className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {requestEmailOtpMutation.isPending && (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  )}
+                  Enviar Código OTP
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : (
+            <form onSubmit={handleEmailVerifySubmit} className="space-y-5">
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="email-otp" className="text-xs font-bold text-muted-foreground/90">
+                    Código OTP de Verificación <span className="text-destructive font-bold">*</span>
+                  </Label>
+                  <Input
+                    id="email-otp"
+                    type="text"
+                    maxLength={6}
+                    placeholder="Ej. 123456"
+                    value={otpValue}
+                    onChange={(e) => {
+                      setOtpValue(e.target.value.replace(/\D/g, ''));
+                      setOtpError('');
+                    }}
+                    disabled={verifyEmailOtpMutation.isPending}
+                    className="h-10 text-center text-lg tracking-widest font-bold"
+                  />
+                  {otpError && (
+                    <span className="text-xs text-destructive mt-0.5">{otpError}</span>
+                  )}
+                </div>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={requestEmailOtpMutation.isPending || verifyEmailOtpMutation.isPending}
+                    className="text-xs text-brand-500 hover:text-brand-600 hover:underline font-semibold disabled:opacity-50"
+                  >
+                    {requestEmailOtpMutation.isPending ? 'Enviando código...' : '¿No recibiste el código? Reenviar OTP'}
+                  </button>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0 mt-6 border-t border-border/40 pt-4 flex flex-row items-center justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEmailStep(1)}
+                  disabled={verifyEmailOtpMutation.isPending}
+                  className="px-4 py-2 hover:bg-muted/50 rounded-lg text-xs font-semibold cursor-pointer"
+                >
+                  Volver
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={verifyEmailOtpMutation.isPending}
+                  className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {verifyEmailOtpMutation.isPending && (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  )}
+                  Confirmar Cambio
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
