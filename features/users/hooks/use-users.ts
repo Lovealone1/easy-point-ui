@@ -60,3 +60,22 @@ export function useDeleteUser() {
     },
   });
 }
+
+export function useRequestUserEmailOtp() {
+  return useMutation({
+    mutationFn: ({ id, newEmail }: { id: string; newEmail: string }) =>
+      usersService.requestEmailOtp(id, newEmail),
+  });
+}
+
+export function useVerifyUserEmailOtp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, newEmail, otp }: { id: string; newEmail: string; otp: string }) =>
+      usersService.verifyEmailOtp(id, newEmail, otp),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(String(variables.id)) });
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+  });
+}
