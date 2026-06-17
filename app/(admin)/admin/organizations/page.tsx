@@ -1,9 +1,34 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useOrganizationsAdmin } from '@/features/organization/hooks/use-organizations-admin';
-import { AppIcon } from '@/shared/components/ui/app-icon';
+import {
+  useOrganizationsAdmin,
+  useCreateOrganization,
+  useUpdateOrganization,
+  useUpdateOrganizationPlan,
+  useDeleteOrganization,
+} from '@/features/organization/hooks/use-organizations-admin';
+import type { Organization, Plan, OrganizationStatus } from '@/features/organization/types/organization.types';
 import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Button } from '@/shared/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/shared/components/ui/dialog';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select';
+import { ConfirmModal } from '@/shared/components/ui/confirm-modal';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -17,12 +42,40 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  Plus,
+  Edit,
+  Trash2,
+  CalendarCheck,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
 export default function AdminOrganizationsPage() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Modals visibility state
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isPlanOpen, setIsPlanOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
+
+  // Form Fields
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [slug, setSlug] = useState('');
+  const [status, setStatus] = useState<OrganizationStatus>('ACTIVE');
+  const [orgPlan, setOrgPlan] = useState<Plan>('FREE');
+  const [planActiveUntil, setPlanActiveUntil] = useState('');
+  
+  // Validation Errors
+  const [detailErrors, setDetailErrors] = useState<Record<string, string>>({});
+  const [planErrors, setPlanErrors] = useState<Record<string, string>>({});
+
+  // Mutations
+  const createMutation = useCreateOrganization();
+  const updateMutation = useUpdateOrganization();
+  const updatePlanMutation = useUpdateOrganizationPlan();
+  const deleteMutation = useDeleteOrganization();
 
   // Debounce search input
   useEffect(() => {
@@ -94,20 +147,166 @@ export default function AdminOrganizationsPage() {
     }
   };
 
+  // Click Handlers for Modals
+  const handleCreateClick = () => {
+    setSelectedOrg(null);
+    setName('');
+    setEmail('');
+    setSlug('');
+    setStatus('ACTIVE');
+    setDetailErrors({});
+    setIsFormOpen(true);
+  };
+
+  const handleEditClick = (org: Organization) => {
+    setSelectedOrg(org);
+    setName(org.name);
+    setEmail(org.email || '');
+    setSlug(org.slug || '');
+    setStatus(org.status);
+    setDetailErrors({});
+    setIsFormOpen(true);
+  };
+
+  const handleEditPlanClick = (org: Organization) => {
+    setSelectedOrg(org);
+    setOrgPlan(org.plan);
+    setPlanActiveUntil(org.planActiveUntil ? org.planActiveUntil.slice(0, 10) : '');
+    setPlanErrors({});
+    setIsPlanOpen(true);
+  };
+
+  const handleDeleteClick = (org: Organization) => {
+    setSelectedOrg(org);
+    setIsDeleteOpen(true);
+  };
+
+  // Validations
+  const validateDetails = () => {
+    const errs: Record<string, string> = {};
+    if (!name.trim()) errs.name = 'El nombre es obligatorio';
+    if (email.trim() && !/\S+@\S+\.\S+/.test(email)) errs.email = 'El correo electrónico no es válido';
+    if (slug.trim() && !/^[a-z0-9-]+$/.test(slug)) errs.slug = 'El slug solo permite letras minúsculas, números y guiones';
+    
+    setDetailErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const validatePlan = () => {
+    const errs: Record<string, string> = {};
+    if (orgPlan !== 'FREE' && !planActiveUntil) {
+      errs.planActiveUntil = 'La fecha de vencimiento es obligatoria para planes de pago';
+    }
+    setPlanErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  // Form Submit Handlers
+  const handleDetailsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateDetails()) return;
+
+    const payload = {
+      name: name.trim(),
+      email: email.trim() || undefined,
+      slug: slug.trim() || undefined,
+      status,
+    };
+
+    if (selectedOrg) {
+      // Edit mode
+      updateMutation.mutate(
+        { id: selectedOrg.id, payload },
+        {
+          onSuccess: () => {
+            toast.success('Organización actualizada con éxito');
+            setIsFormOpen(false);
+          },
+          onError: (err: any) => {
+            toast.error(err.response?.data?.message || 'Error al actualizar la organización');
+          },
+        }
+      );
+    } else {
+      // Create mode
+      createMutation.mutate(
+        payload,
+        {
+          onSuccess: () => {
+            toast.success('Organización creada con éxito');
+            setIsFormOpen(false);
+          },
+          onError: (err: any) => {
+            toast.error(err.response?.data?.message || 'Error al crear la organización');
+          },
+        }
+      );
+    }
+  };
+
+  const handlePlanSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validatePlan()) return;
+
+    if (!selectedOrg) return;
+
+    updatePlanMutation.mutate(
+      {
+        id: selectedOrg.id,
+        payload: {
+          plan: orgPlan,
+          planActiveUntil: orgPlan === 'FREE' ? null : new Date(planActiveUntil).toISOString(),
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Plan de organización actualizado con éxito');
+          setIsPlanOpen(false);
+        },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.message || 'Error al actualizar el plan');
+        },
+      }
+    );
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedOrg) return;
+
+    deleteMutation.mutate(selectedOrg.id, {
+      onSuccess: () => {
+        toast.success('Organización eliminada con éxito');
+        setIsDeleteOpen(false);
+      },
+      onError: (err: any) => {
+        toast.error(err.response?.data?.message || 'Error al eliminar la organización');
+      },
+    });
+  };
+
   const organizations = data?.data || [];
 
   return (
     <div className="space-y-6">
-      {/* Search Input (No container) */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-        <Input
-          type="text"
-          placeholder="Buscar organización por nombre..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 h-10 text-xs border-border bg-card focus-visible:ring-brand-500 placeholder:text-muted-foreground/50 shadow-sm"
-        />
+      {/* Search and Action Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+          <Input
+            type="text"
+            placeholder="Buscar organización por nombre..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 h-10 text-xs border-border bg-card focus-visible:ring-brand-500 placeholder:text-muted-foreground/50 shadow-sm"
+          />
+        </div>
+        <button
+          onClick={handleCreateClick}
+          className="bg-brand-500 hover:bg-brand-600 text-white rounded-[11px] gap-1.5 flex items-center justify-center px-4 h-10 transition-all duration-150 active:scale-95 cursor-pointer text-xs font-semibold shadow-xs shrink-0"
+        >
+          <Plus className="h-4 w-4 shrink-0" />
+          Nueva Organización
+        </button>
       </div>
 
       {/* Content Area */}
@@ -176,12 +375,39 @@ export default function AdminOrganizationsPage() {
                       </div>
                     </div>
 
-                    <div className={cn(
-                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border shrink-0 select-none",
-                      statusConfig.bg
-                    )}>
-                      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusConfig.dot)} />
-                      <span>{statusConfig.label}</span>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <div className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border select-none",
+                        statusConfig.bg
+                      )}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusConfig.dot)} />
+                        <span>{statusConfig.label}</span>
+                      </div>
+
+                      {/* Card Actions */}
+                      <div className="flex items-center gap-1 mt-1">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEditClick(org); }}
+                          title="Editar detalles"
+                          className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 active:scale-90 cursor-pointer"
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEditPlanClick(org); }}
+                          title="Cambiar plan"
+                          className="p-1 rounded-lg text-muted-foreground hover:text-brand-500 hover:bg-brand-500/10 transition-all duration-150 active:scale-90 cursor-pointer"
+                        >
+                          <CalendarCheck className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteClick(org); }}
+                          title="Eliminar organización"
+                          className="p-1 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 transition-all duration-150 active:scale-90 cursor-pointer"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -229,6 +455,247 @@ export default function AdminOrganizationsPage() {
           })}
         </div>
       )}
+
+      {/* dialogs & modals */}
+
+      {/* details dialog (Create / Edit) */}
+      <Dialog open={isFormOpen} onOpenChange={(open) => !open && setIsFormOpen(false)}>
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md rounded-xl bg-card border border-border/40 shadow-xl p-6 gap-6">
+          <DialogHeader className="gap-1">
+            <DialogTitle className="text-xl font-heading font-semibold text-foreground">
+              {selectedOrg ? 'Editar Organización' : 'Nueva Organización'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {selectedOrg 
+                ? 'Modifica los datos principales de la organización registrada.' 
+                : 'Crea una nueva organización en la plataforma con plan inicial gratuito.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleDetailsSubmit} className="space-y-5">
+            <div className="space-y-4">
+              {/* Name */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="org-name" className="text-xs font-bold text-muted-foreground/90">
+                  Nombre de la Organización <span className="text-destructive font-bold">*</span>
+                </Label>
+                <Input
+                  id="org-name"
+                  placeholder="Ej. Mi Negocio S.A.S"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (detailErrors.name) setDetailErrors((prev) => ({ ...prev, name: '' }));
+                  }}
+                  aria-invalid={!!detailErrors.name}
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                />
+                {detailErrors.name && (
+                  <span className="text-xs text-destructive mt-0.5">{detailErrors.name}</span>
+                )}
+              </div>
+
+              {/* Email */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="org-email" className="text-xs font-bold text-muted-foreground/90">
+                  Correo Electrónico de Contacto
+                </Label>
+                <Input
+                  id="org-email"
+                  type="email"
+                  placeholder="Ej. contacto@minegocio.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (detailErrors.email) setDetailErrors((prev) => ({ ...prev, email: '' }));
+                  }}
+                  aria-invalid={!!detailErrors.email}
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                />
+                {detailErrors.email && (
+                  <span className="text-xs text-destructive mt-0.5">{detailErrors.email}</span>
+                )}
+              </div>
+
+              {/* Slug */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="org-slug" className="text-xs font-bold text-muted-foreground/90">
+                  Subdominio / Slug
+                </Label>
+                <Input
+                  id="org-slug"
+                  placeholder="Ej. mi-negocio"
+                  value={slug}
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    if (detailErrors.slug) setDetailErrors((prev) => ({ ...prev, slug: '' }));
+                  }}
+                  aria-invalid={!!detailErrors.slug}
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                />
+                {detailErrors.slug && (
+                  <span className="text-xs text-destructive mt-0.5">{detailErrors.slug}</span>
+                )}
+                <span className="text-[10px] text-muted-foreground">
+                  Se utilizará para la URL: <strong>{slug || 'slug'}.easypoint.app</strong>
+                </span>
+              </div>
+
+              {/* Status (Only in Edit mode) */}
+              {selectedOrg && (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="org-status" className="text-xs font-bold text-muted-foreground/90">
+                    Estado de la Organización <span className="text-destructive font-bold">*</span>
+                  </Label>
+                  <Select
+                    value={status}
+                    onValueChange={(val) => setStatus(val as OrganizationStatus)}
+                    disabled={updateMutation.isPending}
+                  >
+                    <SelectTrigger
+                      id="org-status"
+                      className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground"
+                    >
+                      <SelectValue placeholder="Seleccionar estado" />
+                    </SelectTrigger>
+                    <SelectContent className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg">
+                      <SelectItem value="ACTIVE" className="rounded-lg text-xs py-2 cursor-pointer">Activa</SelectItem>
+                      <SelectItem value="INACTIVE" className="rounded-lg text-xs py-2 cursor-pointer">Inactiva</SelectItem>
+                      <SelectItem value="FROZEN" className="rounded-lg text-xs py-2 cursor-pointer">Congelada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0 mt-6 border-t border-border/40 pt-4 flex flex-row items-center justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsFormOpen(false)}
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="px-4 py-2 hover:bg-muted/50 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {(createMutation.isPending || updateMutation.isPending) && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                )}
+                {selectedOrg ? 'Guardar Cambios' : 'Crear Organización'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Plan edit dialog */}
+      <Dialog open={isPlanOpen} onOpenChange={(open) => !open && setIsPlanOpen(false)}>
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md rounded-xl bg-card border border-border/40 shadow-xl p-6 gap-6">
+          <DialogHeader className="gap-1">
+            <DialogTitle className="text-xl font-heading font-semibold text-foreground">
+              Gestionar Plan de Suscripción
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Modifica la suscripción comercial y fecha de vencimiento para <strong>{selectedOrg?.name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handlePlanSubmit} className="space-y-5">
+            <div className="space-y-4">
+              {/* Plan Select */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="org-plan-select" className="text-xs font-bold text-muted-foreground/90">
+                  Plan de Suscripción <span className="text-destructive font-bold">*</span>
+                </Label>
+                <Select
+                  value={orgPlan}
+                  onValueChange={(val) => {
+                    setOrgPlan(val as Plan);
+                    if (val === 'FREE') setPlanActiveUntil('');
+                    if (planErrors.planActiveUntil) setPlanErrors({});
+                  }}
+                  disabled={updatePlanMutation.isPending}
+                >
+                  <SelectTrigger
+                    id="org-plan-select"
+                    className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground"
+                  >
+                    <SelectValue placeholder="Seleccionar plan" />
+                  </SelectTrigger>
+                  <SelectContent className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg">
+                    <SelectItem value="FREE" className="rounded-lg text-xs py-2 cursor-pointer">FREE (Permanente)</SelectItem>
+                    <SelectItem value="BASIC" className="rounded-lg text-xs py-2 cursor-pointer">BASIC (Pago)</SelectItem>
+                    <SelectItem value="PREMIUM" className="rounded-lg text-xs py-2 cursor-pointer">PREMIUM (Pago)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* planActiveUntil Date Input */}
+              {orgPlan !== 'FREE' && (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="org-plan-date" className="text-xs font-bold text-muted-foreground/90">
+                    Fecha de Vencimiento <span className="text-destructive font-bold">*</span>
+                  </Label>
+                  <Input
+                    id="org-plan-date"
+                    type="date"
+                    value={planActiveUntil}
+                    onChange={(e) => {
+                      setPlanActiveUntil(e.target.value);
+                      if (planErrors.planActiveUntil) setPlanErrors((prev) => ({ ...prev, planActiveUntil: '' }));
+                    }}
+                    aria-invalid={!!planErrors.planActiveUntil}
+                    disabled={updatePlanMutation.isPending}
+                  />
+                  {planErrors.planActiveUntil && (
+                    <span className="text-xs text-destructive mt-0.5">{planErrors.planActiveUntil}</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0 mt-6 border-t border-border/40 pt-4 flex flex-row items-center justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsPlanOpen(false)}
+                disabled={updatePlanMutation.isPending}
+                className="px-4 py-2 hover:bg-muted/50 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={updatePlanMutation.isPending}
+                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {updatePlanMutation.isPending && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                )}
+                Actualizar Plan
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation modal */}
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="¿Eliminar Organización?"
+        description={`Esta acción eliminará de forma permanente la organización "${selectedOrg?.name}". Se perderán todos los datos vinculados de insumos, stock, usuarios, y facturación.`}
+        confirmLabel="Eliminar Organización"
+        cancelLabel="Cancelar"
+        isLoading={deleteMutation.isPending}
+        variant="danger"
+      />
     </div>
   );
 }
