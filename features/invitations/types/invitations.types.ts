@@ -23,6 +23,10 @@ export interface CreateInvitationDTO {
   role: string; // The role name (e.g. 'ADMINISTRATOR', 'COLLABORATOR', 'USER')
 }
 
+export interface CreateAdminInvitationDTO extends CreateInvitationDTO {
+  organizationId: string;
+}
+
 export interface AcceptInvitationDTO {
   invitationToken: string;
 }
