@@ -1,5 +1,5 @@
 import { apiClient } from "@/shared/services/api-client"
-import type { Invitation, CreateInvitationDTO } from "../types/invitations.types"
+import type { Invitation, CreateInvitationDTO, CreateAdminInvitationDTO } from "../types/invitations.types"
 
 export class InvitationsServiceClass {
   protected readonly endpoint = "invitations"
@@ -43,6 +43,33 @@ export class InvitationsServiceClass {
    */
   async delete(id: string): Promise<{ message: string }> {
     const { data } = await apiClient.delete<{ message: string }>(`/${this.endpoint}/${id}`)
+    return data
+  }
+
+  /**
+   * Gets all invitations globally (Admin Only)
+   * GET /invitations/admin
+   */
+  async getAllAdmin(): Promise<Invitation[]> {
+    const { data } = await apiClient.get<Invitation[]>(`/${this.endpoint}/admin`)
+    return data
+  }
+
+  /**
+   * Creates an invitation globally for a specific organization (Admin Only)
+   * POST /invitations/admin
+   */
+  async createAdmin(payload: CreateAdminInvitationDTO): Promise<Invitation> {
+    const { data } = await apiClient.post<Invitation>(`/${this.endpoint}/admin`, payload)
+    return data
+  }
+
+  /**
+   * Deletes an invitation globally (Admin Only)
+   * DELETE /invitations/admin/:id
+   */
+  async deleteAdmin(id: string): Promise<{ message: string }> {
+    const { data } = await apiClient.delete<{ message: string }>(`/${this.endpoint}/admin/${id}`)
     return data
   }
 }
