@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { MODULES_CATALOG, type ModuleItem } from '@/shared/config/modules.config';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
+import { useOrgModulesStore } from '@/shared/store/use-org-modules-store';
 import { AppIcon } from '@/shared/components/ui/app-icon';
 import { cn } from '@/shared/lib/utils';
 
@@ -21,6 +22,7 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
   const pathname = usePathname();
   const { isSidebarCollapsed } = useUiStore();
   const { dynamicFavoriteIds } = useFavoritesStore();
+  const { activeModuleKeys } = useOrgModulesStore();
 
   // 1. Pinned favorites from modules config (always shown)
   const pinnedFavorites = MODULES_CATALOG.filter((mod) => mod.pinned);
@@ -33,10 +35,12 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
   // Combine: pinned first, then dynamic (newest last in array → shown at bottom)
   const allFavorites = [...pinnedFavorites, ...dynamicFavorites];
 
-  // Filter based on active search query
-  const filteredFavorites = allFavorites.filter((mod) =>
-    mod.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter based on active search query and organization active modules (except pinned)
+  const filteredFavorites = allFavorites.filter((mod) => {
+    if (!mod.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (!mod.pinned && activeModuleKeys !== null && !activeModuleKeys.has(mod.id)) return false;
+    return true;
+  });
 
   // If no favorites match the search criteria, do not render the section
   if (filteredFavorites.length === 0) {

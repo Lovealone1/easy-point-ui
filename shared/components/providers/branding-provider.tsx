@@ -5,9 +5,13 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore, type OrganizationConfig } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
+import { useOrgModulesStore } from '@/shared/store/use-org-modules-store';
 import { getMe } from '@/features/auth/services/auth.service';
 import { getConfig } from '@/features/organization-configs/services/organization-configs.service';
+import { organizationModulesService } from '@/features/organization-modules/services/organization-modules.service';
 import { generateShades } from '@/shared/utils/color-shades';
+import { toast } from 'sonner';
+import { MODULES_CATALOG } from '@/shared/config/modules.config';
 
 
 async function forceLogout(): Promise<void> {
@@ -116,6 +120,7 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
 
   const { setTheme } = useUiStore();
   const { initForUser, clearForUser } = useFavoritesStore();
+  const { activeModuleKeys } = useOrgModulesStore();
 
   // Initialize favorites store when user logs in
   useEffect(() => {
@@ -228,6 +233,46 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
 
     fetchOrgConfig();
   }, [activeOrganization, setTheme]);
+
+  useEffect(() => {
+    if (!activeOrganization) {
+      useOrgModulesStore.getState().clearActiveModules();
+      return;
+    }
+
+    async function fetchOrgModules() {
+      try {
+        const modules = await organizationModulesService.getOrgModules(activeOrganization!.id);
+        const keys = modules.map((m) => m.key);
+        useOrgModulesStore.getState().setActiveModules(keys);
+      } catch (error) {
+        console.error('Failed to fetch organization modules:', error);
+      }
+    }
+
+    fetchOrgModules();
+  }, [activeOrganization?.id, pathname]);
+
+  useEffect(() => {
+    if (pathname?.startsWith('/admin') || pathname === '/auth' || pathname === '/dashboard' || pathname === '/unauthorized') {
+      return;
+    }
+
+    if (activeModuleKeys === null) return;
+
+    // Find the module in the catalog that matches the current pathname prefix
+    const matchingModule = MODULES_CATALOG.find((mod) => {
+      if (mod.path === '/') return false;
+      return pathname.startsWith(mod.path);
+    });
+
+    if (matchingModule && !matchingModule.pinned) {
+      if (!activeModuleKeys.has(matchingModule.id)) {
+        toast.error(`El módulo "${matchingModule.name}" no está activo para tu organización.`);
+        window.location.replace('/unauthorized');
+      }
+    }
+  }, [pathname, activeModuleKeys]);
 
   useEffect(() => {
     if (pathname?.startsWith('/admin')) {
