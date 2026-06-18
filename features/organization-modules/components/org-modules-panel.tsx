@@ -22,6 +22,8 @@ import * as LucideIcons from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/shared/lib/utils"
 import { Switch } from "@/shared/components/ui/switch"
+import { useAuthStore } from "@/shared/store/use-auth-store"
+import { useOrgModulesStore } from "@/shared/store/use-org-modules-store"
 
 import {
   useSystemModules,
@@ -98,7 +100,6 @@ export function OrgModulesPanel({ orgId, orgName }: OrgModulesPanelProps) {
   const assignedModuleIds = React.useMemo(() => {
     return new Set((assignedModules ?? []).map((m) => m.id))
   }, [assignedModules])
-
   const handleToggle = (module: SystemModule, checked: boolean) => {
     const key = module.id
     if (key in pendingToggles) return
@@ -118,6 +119,18 @@ export function OrgModulesPanel({ orgId, orgName }: OrgModulesPanelProps) {
               delete copy[key]
               return copy
             })
+
+            // Sync with useOrgModulesStore if it's the current active organization
+            const { activeOrganization } = useAuthStore.getState()
+            if (activeOrganization?.id === orgId) {
+              const currentKeys = useOrgModulesStore.getState().activeModuleKeys
+              if (currentKeys) {
+                const updatedKeys = new Set(currentKeys)
+                updatedKeys.add(module.key)
+                useOrgModulesStore.getState().setActiveModules(Array.from(updatedKeys))
+              }
+            }
+
             toast.success(`Módulo "${module.name}" asignado con éxito`)
           },
           onError: (err: any) => {
@@ -143,6 +156,18 @@ export function OrgModulesPanel({ orgId, orgName }: OrgModulesPanelProps) {
               delete copy[key]
               return copy
             })
+
+            // Sync with useOrgModulesStore if it's the current active organization
+            const { activeOrganization } = useAuthStore.getState()
+            if (activeOrganization?.id === orgId) {
+              const currentKeys = useOrgModulesStore.getState().activeModuleKeys
+              if (currentKeys) {
+                const updatedKeys = new Set(currentKeys)
+                updatedKeys.delete(module.key)
+                useOrgModulesStore.getState().setActiveModules(Array.from(updatedKeys))
+              }
+            }
+
             toast.success(`Módulo "${module.name}" desasignado con éxito`)
           },
           onError: (err: any) => {
@@ -169,7 +194,6 @@ export function OrgModulesPanel({ orgId, orgName }: OrgModulesPanelProps) {
   // ─────────────────────────────────────────────────────────────────────────────
   // Loading & Error States
   // ─────────────────────────────────────────────────────────────────────────────
-
   if (isLoadingSystem || isLoadingAssigned) {
     return (
       <div className="w-full pb-12 px-4 sm:px-8 animate-in fade-in duration-300 space-y-8">
