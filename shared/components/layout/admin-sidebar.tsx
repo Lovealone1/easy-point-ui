@@ -82,6 +82,25 @@ export default function AdminSidebar() {
             </Link>
 
             <Link
+              href="/admin/system-modules"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors border-l-[3px]",
+                pathname === '/admin/system-modules'
+                  ? "bg-brand-500/10 text-brand-500 border-brand-500"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border-transparent"
+              )}
+            >
+              <AppIcon
+                name="extension-rounded"
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-transform duration-200",
+                  pathname === '/admin/system-modules' ? "text-brand-500" : "text-brand-400"
+                )}
+              />
+              <span className="truncate">Módulos de Sistema</span>
+            </Link>
+
+            <Link
               href="/admin/users"
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors border-l-[3px]",

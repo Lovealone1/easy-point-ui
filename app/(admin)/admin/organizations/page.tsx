@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   useOrganizationsAdmin,
   useCreateOrganization,
@@ -46,10 +47,12 @@ import {
   Edit,
   Trash2,
   CalendarCheck,
+  LayoutGrid,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
 export default function AdminOrganizationsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -399,6 +402,13 @@ export default function AdminOrganizationsPage() {
                           className="p-1 rounded-lg text-muted-foreground hover:text-brand-500 hover:bg-brand-500/10 transition-all duration-150 active:scale-90 cursor-pointer"
                         >
                           <CalendarCheck className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); router.push(`/admin/organizations/${org.id}/modules`); }}
+                          title="Gestionar módulos"
+                          className="p-1 rounded-lg text-muted-foreground hover:text-brand-500 hover:bg-brand-500/10 transition-all duration-150 active:scale-90 cursor-pointer"
+                        >
+                          <LayoutGrid className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDeleteClick(org); }}
