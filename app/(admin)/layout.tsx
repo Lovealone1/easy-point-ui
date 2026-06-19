@@ -52,7 +52,7 @@ export default function AdminLayout({
               <AdminSidebar />
               <div className="flex flex-col flex-1 overflow-hidden">
                 <DashboardHeader />
-                <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10">
+                <main className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 lg:p-10">
                   {children}
                 </main>
               </div>
