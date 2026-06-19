@@ -19,7 +19,7 @@ import { useRouter } from 'next/navigation';
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { user, clearSession } = useAuthStore();
-  const { theme, toggleTheme } = useUiStore();
+  const { theme, toggleTheme, isMobileMenuOpen, setMobileMenuOpen } = useUiStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
 
@@ -42,7 +42,22 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground h-full flex-shrink-0">
+    <>
+      {/* Backdrop overlay for mobile drawer */}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-background/80 backdrop-blur-sm transition-opacity duration-300 md:hidden",
+          isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out md:static md:translate-x-0 md:flex-shrink-0",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+      >
       {/* Header */}
       <div className="flex items-center h-16 border-b border-sidebar-border shrink-0 px-6 gap-2.5">
         <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 text-brand-500 flex items-center justify-center font-bold">
@@ -55,15 +70,17 @@ export default function AdminSidebar() {
       </div>
 
       {/* Menu Sections */}
-      <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-4 space-y-6">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-2 space-y-4">
+        {/* Inicio */}
         <div className="space-y-1">
           <span className="text-[10px] font-bold text-brand-200 uppercase tracking-wider px-3 select-none">
-            Módulos
+            Inicio
           </span>
 
           <div className="space-y-0.5">
             <Link
               href="/admin"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors border-l-[3px]",
                 pathname === '/admin'
@@ -80,9 +97,19 @@ export default function AdminSidebar() {
               />
               <span className="truncate">Dashboard</span>
             </Link>
+          </div>
+        </div>
 
+        {/* Módulos */}
+        <div className="space-y-1">
+          <span className="text-[10px] font-bold text-brand-200 uppercase tracking-wider px-3 select-none">
+            Módulos
+          </span>
+
+          <div className="space-y-0.5">
             <Link
               href="/admin/organizations"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors border-l-[3px]",
                 pathname === '/admin/organizations'
@@ -102,6 +129,7 @@ export default function AdminSidebar() {
 
             <Link
               href="/admin/system-modules"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors border-l-[3px]",
                 pathname === '/admin/system-modules'
@@ -121,6 +149,7 @@ export default function AdminSidebar() {
 
             <Link
               href="/admin/users"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors border-l-[3px]",
                 pathname === '/admin/users'
@@ -140,6 +169,7 @@ export default function AdminSidebar() {
 
             <Link
               href="/admin/organization-users"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors border-l-[3px]",
                 pathname === '/admin/organization-users'
@@ -159,6 +189,7 @@ export default function AdminSidebar() {
 
             <Link
               href="/admin/invitations"
+              onClick={() => setMobileMenuOpen(false)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors border-l-[3px]",
                 pathname === '/admin/invitations'
@@ -244,5 +275,6 @@ export default function AdminSidebar() {
         )}
       </div>
     </aside>
+    </>
   );
 }
