@@ -22,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select"
+import { DatePicker } from "@/shared/components/ui/date-picker"
 
-export type FormFieldType = "text" | "number" | "textarea" | "select" | "boolean" | "file"
+export type FormFieldType = "text" | "number" | "textarea" | "select" | "boolean" | "file" | "date"
 
 export interface FormFieldSchema {
   name: string
@@ -70,7 +71,7 @@ export function DynamicFormModal({
       const initialValues: Record<string, any> = defaultValues ? { ...defaultValues } : {}
       fields.forEach((f) => {
         if (initialValues[f.name] === undefined || initialValues[f.name] === null) {
-          initialValues[f.name] = f.type === "boolean" ? false : f.type === "file" ? null : ""
+          initialValues[f.name] = f.type === "boolean" ? false : f.type === "file" ? null : f.type === "date" ? new Date() : ""
         }
       })
       setValues(initialValues)
@@ -269,7 +270,11 @@ export function DynamicFormModal({
                           id={field.name}
                           className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 outline-none transition-[color,box-shadow]"
                         >
-                          <SelectValue placeholder={field.placeholder || "Selecciona una opción"} />
+                          <SelectValue placeholder={field.placeholder || "Selecciona una opción"}>
+                            {values[field.name] === "none"
+                              ? "Ninguno (Sin Categoría)"
+                              : (field.options?.find(opt => opt.value === values[field.name])?.label)}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg max-h-60 overflow-y-auto">
                           {!field.required && !field.options?.some(opt => opt.value === "none") && (
@@ -291,6 +296,33 @@ export function DynamicFormModal({
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors[field.name] && (
+                        <span className="text-xs text-destructive mt-0.5">
+                          {errors[field.name]}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Date Input */}
+                  {field.type === "date" && (
+                    <div className="flex flex-col gap-1.5">
+                      <Label
+                        htmlFor={field.name}
+                        className="text-xs font-bold text-muted-foreground/90"
+                      >
+                        {field.label}{" "}
+                        {field.required && <span className="text-destructive font-bold">*</span>}
+                      </Label>
+                      <DatePicker
+                        value={values[field.name]}
+                        onChange={(date) => {
+                          setValues((prev) => ({ ...prev, [field.name]: date }))
+                          if (errors[field.name]) {
+                            setErrors((prev) => ({ ...prev, [field.name]: "" }))
+                          }
+                        }}
+                      />
                       {errors[field.name] && (
                         <span className="text-xs text-destructive mt-0.5">
                           {errors[field.name]}
