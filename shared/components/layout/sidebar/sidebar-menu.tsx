@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
+import { useOrgModulesStore } from '@/shared/store/use-org-modules-store';
 import { MODULES_CATALOG, type ModuleItem } from '@/shared/config/modules.config';
 import { AppIcon } from '@/shared/components/ui/app-icon';
 import { cn } from '@/shared/lib/utils';
@@ -20,6 +21,7 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
   const pathname = usePathname();
   const { isSidebarCollapsed } = useUiStore();
   const { dynamicFavoriteIds } = useFavoritesStore();
+  const { activeModuleKeys } = useOrgModulesStore();
 
   // All modules that are in favorites (pinned or user-added) — these get their
   // active highlight suppressed in the regular menu so only the favorites bar
@@ -27,10 +29,13 @@ export default function SidebarMenu({ searchQuery }: SidebarMenuProps) {
   const pinnedIds = MODULES_CATALOG.filter((m) => m.pinned).map((m) => m.id);
   const allFavoriteIds = new Set([...pinnedIds, ...dynamicFavoriteIds]);
 
-  // Filter non-pinned catalog modules based on search query
-  const filteredCatalog = MODULES_CATALOG.filter(
-    (mod) => !mod.pinned && mod.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter non-pinned catalog modules based on search query and organization module settings
+  const filteredCatalog = MODULES_CATALOG.filter((mod) => {
+    if (mod.pinned) return false;
+    if (!mod.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (activeModuleKeys !== null && !activeModuleKeys.has(mod.id)) return false;
+    return true;
+  });
 
   // Group non-pinned modules by category
   const groupedModules = CATEGORIES.reduce((acc, cat) => {
