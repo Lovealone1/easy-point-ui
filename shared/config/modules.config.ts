@@ -187,6 +187,22 @@ export const MODULES_CATALOG: ModuleItem[] = [
     available: true,
   },
   {
+    id: 'expense-categories',
+    name: 'Cat. de Gastos',
+    path: '/expense-categories',
+    icon: 'label-rounded',
+    category: 'Finanzas',
+    available: true,
+  },
+  {
+    id: 'expenses',
+    name: 'Gastos',
+    path: '/expenses',
+    icon: 'payments-rounded',
+    category: 'Finanzas',
+    available: true,
+  },
+  {
     id: 'utilities',
     name: 'Utilidades',
     path: '/utilities',
