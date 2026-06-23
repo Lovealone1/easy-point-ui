@@ -12,8 +12,9 @@ import {
 } from "@/shared/components/ui/input-otp";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
-import { verifyOtp } from '@/features/auth/services/auth.service';
+import { verifyOtp, getMe } from '@/features/auth/services/auth.service';
 import { VerifiedCard } from './verified-card';
+import { toast } from 'sonner';
 import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
 
 export function OtpView() {
@@ -34,6 +35,9 @@ export function OtpView() {
   const setUserFromLogin = useAuthStore((s) => s.setUserFromLogin);
   const setPendingVerification = useAuthStore((s) => s.setPendingVerification);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const hydrateProfile = useAuthStore((s) => s.hydrateProfile);
+  const setActiveOrganization = useAuthStore((s) => s.setActiveOrganization);
+  const setOrganizationConfig = useAuthStore((s) => s.setOrganizationConfig);
 
   useEffect(() => {
     if (!pendingVerificationEmail && !isSuccess) {
@@ -78,6 +82,38 @@ export function OtpView() {
       setUserFromLogin(res.data.user);
       setIsSuccess(true);
       setPendingVerification('', pendingIntent);
+
+      // Hydrate profile and configs immediately if we accepted an invitation
+      if (token) {
+        toast.loading('Cargando configuraciones de la organización...', { id: 'loading-configs' });
+        try {
+          const data = await getMe();
+          if (data && data.id) {
+            setUserFromLogin({ id: data.id, email: data.email });
+            hydrateProfile({
+              firstName: data.firstName || null,
+              lastName: data.lastName || null,
+              fullName: data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : null,
+              avatarUrl: undefined,
+              globalRole: data.globalRole || null,
+            });
+
+            if (data.organizations && data.organizations.length > 0) {
+              const firstOrg = data.organizations[0];
+              setActiveOrganization(
+                { id: firstOrg.id, name: firstOrg.name, slug: firstOrg.slug },
+                { orgRoles: [firstOrg.role], permissions: firstOrg.permissions ?? [] }
+              );
+              if (firstOrg.config) {
+                setOrganizationConfig(firstOrg.config);
+              }
+            }
+          }
+          toast.success('Configuraciones cargadas.', { id: 'loading-configs' });
+        } catch (err) {
+          toast.dismiss('loading-configs');
+        }
+      }
 
       setTimeout(() => {
         router.replace('/dashboard');

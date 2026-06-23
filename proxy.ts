@@ -11,8 +11,9 @@ export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAuthRoute = pathname === '/auth' || pathname === '/auth/otp';
+  const hasToken = request.nextUrl.searchParams.has('token');
 
-  if (isAuthRoute && isAuthenticated) {
+  if (isAuthRoute && isAuthenticated && !hasToken) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

@@ -11,7 +11,7 @@ import 'react-phone-number-input/style.css';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/shared/components/ui/command';
 import { useAuthStore } from '@/shared/store/use-auth-store';
-import { requestOtp } from '@/features/auth/services/auth.service';
+import { requestOtp, getMe } from '@/features/auth/services/auth.service';
 import { invitationsService } from '@/features/invitations/services/invitations.service';
 import { toast } from 'sonner';
 import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
@@ -82,6 +82,10 @@ function InvitationAcceptContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const setPendingVerification = useAuthStore((s) => s.setPendingVerification);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const setUserFromLogin = useAuthStore((s) => s.setUserFromLogin);
+  const hydrateProfile = useAuthStore((s) => s.hydrateProfile);
+  const setActiveOrganization = useAuthStore((s) => s.setActiveOrganization);
+  const setOrganizationConfig = useAuthStore((s) => s.setOrganizationConfig);
 
   // Forms state
   const [view, setView] = useState<'register' | 'login'>('register');
@@ -93,7 +97,7 @@ function InvitationAcceptContent() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
-  // 1. Verify invitation token on mount
+  // 1. Verify invitation token and recover session on mount
   useEffect(() => {
     if (!token) {
       setErrorMsg('El token de invitación no está presente en la URL.');
@@ -101,10 +105,29 @@ function InvitationAcceptContent() {
       return;
     }
 
-    async function verifyToken() {
+    async function verifyAndRecover() {
       try {
         const data = await invitationsService.verify(token!);
         setInvitationData(data);
+
+        // Try to recover user session if store shows not authenticated
+        if (!isAuthenticated) {
+          try {
+            const me = await getMe();
+            if (me && me.id) {
+              setUserFromLogin({ id: me.id, email: me.email });
+              hydrateProfile({
+                firstName: me.firstName || null,
+                lastName: me.lastName || null,
+                fullName: me.firstName && me.lastName ? `${me.firstName} ${me.lastName}` : null,
+                avatarUrl: undefined,
+                globalRole: me.globalRole || null,
+              });
+            }
+          } catch {
+            // Silently ignore session recovery failures (user is not logged in)
+          }
+        }
       } catch (err: any) {
         setErrorMsg(
           err?.response?.data?.message ||
@@ -115,8 +138,8 @@ function InvitationAcceptContent() {
       }
     }
 
-    void verifyToken();
-  }, [token]);
+    void verifyAndRecover();
+  }, [token, isAuthenticated, setUserFromLogin, hydrateProfile]);
 
   // Translate Role keys
   const getRoleLabel = (roleName: string) => {
@@ -140,8 +163,37 @@ function InvitationAcceptContent() {
     try {
       await invitationsService.accept(token);
       toast.success('¡Invitación aceptada exitosamente!');
+      
+      // Show loader message while preloading organization configurations
+      toast.loading('Cargando configuraciones de la organización...', { id: 'loading-configs' });
+      
+      const data = await getMe();
+      if (data && data.id) {
+        setUserFromLogin({ id: data.id, email: data.email });
+        hydrateProfile({
+          firstName: data.firstName || null,
+          lastName: data.lastName || null,
+          fullName: data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : null,
+          avatarUrl: undefined,
+          globalRole: data.globalRole || null,
+        });
+
+        if (data.organizations && data.organizations.length > 0) {
+          const firstOrg = data.organizations[0];
+          setActiveOrganization(
+            { id: firstOrg.id, name: firstOrg.name, slug: firstOrg.slug },
+            { orgRoles: [firstOrg.role], permissions: firstOrg.permissions ?? [] }
+          );
+          if (firstOrg.config) {
+            setOrganizationConfig(firstOrg.config);
+          }
+        }
+      }
+      
+      toast.success('Configuraciones cargadas.', { id: 'loading-configs' });
       router.replace('/dashboard');
     } catch (err: any) {
+      toast.dismiss('loading-configs');
       setErrorForm(
         err?.response?.data?.message ||
         'Error al aceptar la invitación.'
