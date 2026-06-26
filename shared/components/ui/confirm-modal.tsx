@@ -18,7 +18,7 @@ interface ConfirmModalProps {
   onClose: () => void
   onConfirm: () => void | Promise<void>
   title: string
-  description: string
+  description: React.ReactNode
   confirmLabel?: string
   cancelLabel?: string
   isLoading?: boolean
@@ -71,7 +71,9 @@ export function ConfirmModal({
           <DialogTitle className="text-lg font-heading font-bold text-foreground">
             {title}
           </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground leading-relaxed max-w-[280px]">
+          <DialogDescription
+            render={<div className="text-xs text-muted-foreground leading-relaxed max-w-[280px]" />}
+          >
             {description}
           </DialogDescription>
         </DialogHeader>
