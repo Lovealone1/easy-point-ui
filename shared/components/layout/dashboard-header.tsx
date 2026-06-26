@@ -26,6 +26,7 @@ import { cn } from '@/shared/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { rolesService } from '@/features/roles/services/roles.service';
 import { roleKeys } from '@/features/roles/hooks/use-roles';
+import { organizationsAdminService } from '@/features/organization/services/organizations-admin.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -93,6 +94,8 @@ function segmentToLabel(segment: string): string {
     permissions: 'Permisos',
     admin: 'Admin',
     organizations: 'Organizaciones',
+    modules: 'Módulos',
+    plans: 'Planes de Precios',
   };
 
   // Check if it matches a module name
@@ -354,6 +357,16 @@ function Breadcrumbs() {
     enabled: !!roleId && roleId !== 'create',
   });
 
+  // If we are on an organization admin dynamic route, fetch the organization name dynamically
+  const isOrgAdminPath = segments[0] === 'admin' && segments[1] === 'organizations';
+  const orgId = isOrgAdminPath && segments[2] ? segments[2] : '';
+
+  const { data: org } = useQuery({
+    queryKey: ['organizations-admin', 'detail', orgId],
+    queryFn: () => organizationsAdminService.getById(orgId),
+    enabled: !!orgId,
+  });
+
   // Determine the leaf module for the pin button
   const leafSegment = segments[segments.length - 1];
   const leafMod = leafSegment
@@ -400,6 +413,10 @@ function Breadcrumbs() {
 
   if (isRolePath && segments.length > 1 && leafSegment === roleId && role) {
     leafLabel = role.name;
+  }
+
+  if (isOrgAdminPath && segments.length > 2 && leafSegment === orgId && org) {
+    leafLabel = org.name;
   }
 
   return (
@@ -483,6 +500,9 @@ function Breadcrumbs() {
           let label = segmentToLabel(segment);
           if (isRolePath && idx === 1 && role) {
             label = role.name;
+          }
+          if (isOrgAdminPath && idx === 2 && org) {
+            label = org.name;
           }
 
           const isRoleSegmentNonClickable = isRolePath && idx === 1;
