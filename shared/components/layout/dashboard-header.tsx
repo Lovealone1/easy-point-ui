@@ -96,6 +96,8 @@ function segmentToLabel(segment: string): string {
     organizations: 'Organizaciones',
     modules: 'Módulos',
     plans: 'Planes de Precios',
+    subscriptions: 'Suscripciones',
+    invoices: 'Facturas',
   };
 
   // Check if it matches a module name
