@@ -24,6 +24,7 @@ import { Input } from "@/shared/components/ui/input"
 // Forms & Confirmation
 import { DynamicFormModal, type FormFieldSchema } from "@/shared/components/ui/dynamic-form-modal"
 import { ConfirmModal } from "@/shared/components/ui/confirm-modal"
+import { InvoiceDetailModal } from "@/features/invoices/components/invoice-detail-modal"
 
 // Fetch bindings
 import {
@@ -252,17 +253,17 @@ export default function InvoicesAdminPage() {
     })
   }
 
-  // Confirm delete (void) invoice
+  // Confirm delete invoice (physical deletion)
   const handleDeleteConfirm = () => {
     if (!selectedRecord) return
     deleteMutation.mutate(selectedRecord.id, {
       onSuccess: () => {
-        toast.success("Factura anulada con éxito")
+        toast.success("Factura eliminada con éxito")
         setIsDeleteOpen(false)
         setSelectedRecord(null)
       },
       onError: (err: any) => {
-        toast.error(err.response?.data?.message || "Error al anular la factura")
+        toast.error(err.response?.data?.message || "Error al eliminar la factura")
       },
     })
   }
@@ -371,18 +372,16 @@ export default function InvoicesAdminPage() {
           >
             <Eye className="h-3.5 w-3.5" />
           </button>
-          {row.status !== "VOID" && row.status !== "PAID" && (
-            <button
-              onClick={() => {
-                setSelectedRecord(row)
-                setIsDeleteOpen(true)
-              }}
-              title="Anular factura"
-              className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-600/10 transition-all active:scale-90 cursor-pointer"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setSelectedRecord(row)
+              setIsDeleteOpen(true)
+            }}
+            title="Eliminar factura"
+            className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-600/10 transition-all active:scale-90 cursor-pointer"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
         </div>
       ),
     },
@@ -453,55 +452,32 @@ export default function InvoicesAdminPage() {
         onSubmit={handleCreateSubmit}
       />
 
-      {/* Void (Anular) Confirmation */}
+      {/* Deletion Confirmation */}
       <ConfirmModal
         isOpen={isDeleteOpen}
         onClose={() => {
           setIsDeleteOpen(false)
           setSelectedRecord(null)
         }}
-        title="¿Anular Factura?"
-        description="Esta acción marcará la factura como ANULADA (o la eliminará de forma permanente si no está pagada). No se puede deshacer."
-        confirmLabel="Anular Factura"
+        title="¿Eliminar Factura?"
+        description="Esta acción eliminará de forma permanente el registro de la factura de la base de datos. No se puede deshacer."
+        confirmLabel="Eliminar Factura"
         cancelLabel="Cancelar"
         isLoading={deleteMutation.isPending}
         onConfirm={handleDeleteConfirm}
         variant="danger"
       />
 
-      {/* Details View (Temporary basic layout modal as per guidelines) */}
-      <ConfirmModal
+      {/* Premium Electronic Invoice Details Modal */}
+      <InvoiceDetailModal
         isOpen={isDetailsOpen}
         onClose={() => {
           setIsDetailsOpen(false)
           setSelectedRecord(null)
         }}
-        title="Detalles de la Factura"
-        description={
-          selectedRecord ? (
-            <div className="space-y-2.5 text-left text-xs text-foreground/80 mt-4 border border-border/40 p-4 rounded-xl bg-muted/5 font-mono leading-relaxed max-h-[60vh] overflow-y-auto">
-              <div><strong>ID:</strong> {selectedRecord.id}</div>
-              <div><strong>Número Factura:</strong> {selectedRecord.invoiceNumber}</div>
-              <div><strong>Organización:</strong> {orgMap.get(selectedRecord.organizationId) || selectedRecord.organizationId}</div>
-              <div><strong>Suscripción ID:</strong> {selectedRecord.subscriptionId}</div>
-              <div><strong>Plan:</strong> {selectedRecord.subscription?.plan?.name || planMap.get(selectedRecord.subscription?.planId || "") || "Cargando..."}</div>
-              <div><strong>Monto:</strong> {formatCurrency(Number(selectedRecord.amount), selectedRecord.currency)}</div>
-              <div><strong>Estado:</strong> {selectedRecord.status}</div>
-              <div><strong>Vencimiento:</strong> {formatDate(selectedRecord.dueDate)}</div>
-              <div><strong>Pagada el:</strong> {formatDate(selectedRecord.paidAt)}</div>
-              <div><strong>Método Pago:</strong> {selectedRecord.paymentMethod || "-"}</div>
-              <div><strong>Ref Pago:</strong> {selectedRecord.paymentReference || "-"}</div>
-              <div><strong>Notas Pago:</strong> {selectedRecord.paymentNotes || "-"}</div>
-              <div><strong>Período Facturación:</strong> {formatDate(selectedRecord.billingPeriodStart)} a {formatDate(selectedRecord.billingPeriodEnd)}</div>
-              <div><strong>Notas Factura:</strong> {selectedRecord.notes || "-"}</div>
-              <div><strong>Creada el:</strong> {selectedRecord.createdAt}</div>
-              <div><strong>Actualizada el:</strong> {selectedRecord.updatedAt}</div>
-              <div><strong>Metadatos:</strong> {selectedRecord.metadata ? JSON.stringify(selectedRecord.metadata) : "-"}</div>
-            </div>
-          ) : ""
-        }
-        confirmLabel="Cerrar"
-        onConfirm={() => setIsDetailsOpen(false)}
+        invoice={selectedRecord}
+        orgName={selectedRecord ? (orgMap.get(selectedRecord.organizationId) || "Cargando...") : undefined}
+        planName={selectedRecord ? (selectedRecord.subscription?.plan?.name || planMap.get(selectedRecord.subscription?.planId || "") || "Cargando...") : undefined}
       />
     </div>
   )
