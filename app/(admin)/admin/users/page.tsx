@@ -28,8 +28,10 @@ import {
   Calendar,
   Clock,
   AlertCircle,
+  FileText,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 // Shared modal components
 import { DynamicFormModal, FormFieldSchema } from '@/shared/components/ui/dynamic-form-modal';
@@ -54,6 +56,7 @@ import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 
 export default function AdminUsersPage() {
+  const router = useRouter();
   // Query and Mutation Hooks
   const updateUserMutation = useUpdateUser();
   const updateRoleMutation = useUpdateUserRole();
@@ -291,6 +294,7 @@ export default function AdminUsersPage() {
     {
       key: 'acciones',
       header: 'Acciones',
+      align: 'center',
       className: 'w-[170px]',
       render: (row) => {
         const isEditing = updateUserMutation.isPending && updateUserMutation.variables?.id === row.id;
@@ -301,7 +305,7 @@ export default function AdminUsersPage() {
         const isEmailPending = isEmailRequesting || isEmailVerifying;
 
         return (
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
             {/* Editar Perfil */}
             <button
               onClick={() => {
@@ -354,6 +358,18 @@ export default function AdminUsersPage() {
               ) : (
                 <Shield className="h-3.5 w-3.5" />
               )}
+            </button>
+
+            {/* Facturación Electrónica */}
+            <button
+              onClick={() => {
+                router.push(`/admin/user-info/${row.id}`);
+              }}
+              disabled={isEmailPending}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-brand-500 hover:bg-brand-500/10 transition-all duration-150 active:scale-90 cursor-pointer disabled:opacity-50"
+              title="Configurar facturación electrónica"
+            >
+              <FileText className="h-3.5 w-3.5" />
             </button>
 
             {/* Eliminar Cuenta */}

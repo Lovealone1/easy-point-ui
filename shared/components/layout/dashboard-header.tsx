@@ -27,6 +27,7 @@ import { useQuery } from '@tanstack/react-query';
 import { rolesService } from '@/features/roles/services/roles.service';
 import { roleKeys } from '@/features/roles/hooks/use-roles';
 import { organizationsAdminService } from '@/features/organization/services/organizations-admin.service';
+import { usersService } from '@/features/users/services/users.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -81,6 +82,7 @@ function segmentToLabel(segment: string): string {
   const labels: Record<string, string> = {
     dashboard: 'Dashboard',
     'organization-config': 'Ajustes de Marca',
+    'user-info': 'Información de Usuario',
     settings: 'Configuración',
     users: 'Usuarios',
     inventory: 'Inventario',
@@ -291,16 +293,30 @@ function UserMenu({ user }: UserMenuProps) {
 
         {/* Menu actions */}
         <div className="p-1.5">
-          <button
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
-            onClick={() => setOpen(false)}
-          >
-            <User className="h-3.5 w-3.5 group-hover:text-foreground transition-colors" />
-            <span>Mi perfil</span>
-            <span className="ml-auto text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 rounded-full border border-border/30">
-              Próximamente
-            </span>
-          </button>
+          {user.globalRole === 'ADMIN' ? (
+            <Link
+              href={`/admin/user-info/${user.id}`}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
+              onClick={() => setOpen(false)}
+            >
+              <User className="h-3.5 w-3.5 group-hover:text-foreground transition-colors" />
+              <span>Mi perfil</span>
+              <span className="ml-auto text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-full border border-primary/20">
+                Configurado
+              </span>
+            </Link>
+          ) : (
+            <button
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground opacity-60 cursor-not-allowed group"
+              disabled
+            >
+              <User className="h-3.5 w-3.5" />
+              <span>Mi perfil</span>
+              <span className="ml-auto text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 rounded-full border border-border/30">
+                Próximamente
+              </span>
+            </button>
+          )}
 
           <button
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
@@ -369,12 +385,21 @@ function Breadcrumbs() {
     enabled: !!orgId,
   });
 
+  // If we are on user-info admin path, fetch target user details for name translation
+  const isUserInfoPath = segments[0] === 'admin' && segments[1] === 'user-info';
+  const userInfoUserId = isUserInfoPath && segments[2] ? segments[2] : '';
+
+  const { data: userInfoUser } = useQuery({
+    queryKey: ['users', 'detail', userInfoUserId],
+    queryFn: () => usersService.getById(userInfoUserId),
+    enabled: !!userInfoUserId,
+  });
+
   // Determine the leaf module for the pin button
   const leafSegment = segments[segments.length - 1];
   const leafMod = leafSegment
     ? MODULES_CATALOG.find((m) => m.path === `/${leafSegment}`)
     : null;
-  // Pinned modules (Dashboard) cannot be toggled by the user
   const canPin = leafMod && !leafMod.pinned;
   const isPinned = canPin ? isFavorite(leafMod!.id) : false;
 
@@ -419,6 +444,11 @@ function Breadcrumbs() {
 
   if (isOrgAdminPath && segments.length > 2 && leafSegment === orgId && org) {
     leafLabel = org.name;
+  }
+
+  if (isUserInfoPath && segments.length > 2 && leafSegment === userInfoUserId && userInfoUser) {
+    const fullName = [userInfoUser.firstName, userInfoUser.lastName].filter(Boolean).join(' ');
+    leafLabel = fullName || userInfoUser.email;
   }
 
   return (
@@ -505,6 +535,10 @@ function Breadcrumbs() {
           }
           if (isOrgAdminPath && idx === 2 && org) {
             label = org.name;
+          }
+          if (isUserInfoPath && idx === 2 && userInfoUser) {
+            const fullName = [userInfoUser.firstName, userInfoUser.lastName].filter(Boolean).join(' ');
+            label = fullName || userInfoUser.email;
           }
 
           const isRoleSegmentNonClickable = isRolePath && idx === 1;
