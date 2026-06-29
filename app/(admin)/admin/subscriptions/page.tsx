@@ -145,6 +145,7 @@ export default function SubscriptionsAdminPage() {
       required: false,
       options: [
         { label: "Activa", value: "ACTIVE" },
+        { label: "Pendiente de Pago", value: "PENDING_PAYMENT" },
         { label: "Prueba (Trial)", value: "TRIALING" },
         { label: "Vencida", value: "PAST_DUE" },
         { label: "Cancelada", value: "CANCELLED" },
@@ -172,11 +173,19 @@ export default function SubscriptionsAdminPage() {
       type: "date",
       required: false,
       gridCols: 1,
+      showIf: (values) => values.status === "TRIALING",
     },
     {
       name: "notes",
       label: "Notas",
       type: "textarea",
+      required: false,
+      gridCols: 2,
+    },
+    {
+      name: "showAdvanced",
+      label: "Configuraciones Avanzadas",
+      type: "boolean",
       required: false,
       gridCols: 2,
     },
@@ -187,6 +196,7 @@ export default function SubscriptionsAdminPage() {
       required: false,
       gridCols: 2,
       placeholder: 'ej: {\n  "gatewayId": "sub_abc"\n}',
+      showIf: (values) => !!values.showAdvanced,
     },
   ], [orgsResponse, plansResponse])
 
@@ -201,6 +211,7 @@ export default function SubscriptionsAdminPage() {
       currentPeriodStart: start,
       currentPeriodEnd: end,
       trialEndsAt: trial,
+      showAdvanced: !!selectedRecord.metadata,
       metadata: selectedRecord.metadata ? JSON.stringify(selectedRecord.metadata, null, 2) : "",
     }
   }, [selectedRecord])
@@ -215,11 +226,12 @@ export default function SubscriptionsAdminPage() {
       }
     }
 
+    const { showAdvanced, ...cleanedValues } = values
     const payload = {
-      ...values,
-      currentPeriodStart: values.currentPeriodStart ? new Date(values.currentPeriodStart).toISOString() : undefined,
-      currentPeriodEnd: values.currentPeriodEnd ? new Date(values.currentPeriodEnd).toISOString() : undefined,
-      trialEndsAt: values.trialEndsAt ? new Date(values.trialEndsAt).toISOString() : undefined,
+      ...cleanedValues,
+      currentPeriodStart: cleanedValues.currentPeriodStart ? new Date(cleanedValues.currentPeriodStart).toISOString() : undefined,
+      currentPeriodEnd: cleanedValues.currentPeriodEnd ? new Date(cleanedValues.currentPeriodEnd).toISOString() : undefined,
+      trialEndsAt: cleanedValues.trialEndsAt ? new Date(cleanedValues.trialEndsAt).toISOString() : undefined,
       metadata: meta,
     }
 
@@ -249,11 +261,12 @@ export default function SubscriptionsAdminPage() {
       }
     }
 
+    const { showAdvanced, ...cleanedValues } = values
     const payload: Record<string, any> = {
-      ...values,
-      currentPeriodStart: values.currentPeriodStart ? new Date(values.currentPeriodStart).toISOString() : undefined,
-      currentPeriodEnd: values.currentPeriodEnd ? new Date(values.currentPeriodEnd).toISOString() : undefined,
-      trialEndsAt: values.trialEndsAt ? new Date(values.trialEndsAt).toISOString() : undefined,
+      ...cleanedValues,
+      currentPeriodStart: cleanedValues.currentPeriodStart ? new Date(cleanedValues.currentPeriodStart).toISOString() : undefined,
+      currentPeriodEnd: cleanedValues.currentPeriodEnd ? new Date(cleanedValues.currentPeriodEnd).toISOString() : undefined,
+      trialEndsAt: cleanedValues.trialEndsAt ? new Date(cleanedValues.trialEndsAt).toISOString() : undefined,
       metadata: meta,
     }
 
@@ -380,6 +393,9 @@ export default function SubscriptionsAdminPage() {
         if (row.status === "ACTIVE") {
           styles = "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
           label = "Activa"
+        } else if (row.status === "PENDING_PAYMENT") {
+          styles = "bg-amber-500/10 text-amber-600 border-amber-500/20"
+          label = "Pendiente de Pago"
         } else if (row.status === "TRIALING") {
           styles = "bg-blue-500/10 text-blue-600 border-blue-500/20"
           label = "Prueba"
@@ -387,7 +403,7 @@ export default function SubscriptionsAdminPage() {
           styles = "bg-rose-500/10 text-rose-600 border-rose-500/20"
           label = "Vencida"
         } else if (row.status === "CANCELLED") {
-          styles = "bg-amber-500/10 text-amber-600 border-amber-500/20"
+          styles = "bg-zinc-500/10 text-zinc-500 border-zinc-500/20"
           label = "Cancelada"
         }
         return (

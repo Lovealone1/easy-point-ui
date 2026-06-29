@@ -86,7 +86,7 @@ async function proxyRequest(
       body,
     });
 
-    return NextResponse.json(data ?? {});
+    return NextResponse.json(data === undefined ? {} : data);
   } catch (error) {
     if (error instanceof BackendApiError) {
       return NextResponse.json(

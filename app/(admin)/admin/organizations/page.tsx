@@ -6,10 +6,9 @@ import {
   useOrganizationsAdmin,
   useCreateOrganization,
   useUpdateOrganization,
-  useUpdateOrganizationPlan,
   useDeleteOrganization,
 } from '@/features/organization/hooks/use-organizations-admin';
-import type { Organization, Plan, OrganizationStatus } from '@/features/organization/types/organization.types';
+import type { Organization, OrganizationStatus } from '@/features/organization/types/organization.types';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Button } from '@/shared/components/ui/button';
@@ -58,7 +57,6 @@ export default function AdminOrganizationsPage() {
 
   // Modals visibility state
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isPlanOpen, setIsPlanOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
 
@@ -67,17 +65,13 @@ export default function AdminOrganizationsPage() {
   const [email, setEmail] = useState('');
   const [slug, setSlug] = useState('');
   const [status, setStatus] = useState<OrganizationStatus>('ACTIVE');
-  const [orgPlan, setOrgPlan] = useState<Plan>('FREE');
-  const [planActiveUntil, setPlanActiveUntil] = useState('');
   
   // Validation Errors
   const [detailErrors, setDetailErrors] = useState<Record<string, string>>({});
-  const [planErrors, setPlanErrors] = useState<Record<string, string>>({});
 
   // Mutations
   const createMutation = useCreateOrganization();
   const updateMutation = useUpdateOrganization();
-  const updatePlanMutation = useUpdateOrganizationPlan();
   const deleteMutation = useDeleteOrganization();
 
   // Debounce search input
@@ -171,14 +165,6 @@ export default function AdminOrganizationsPage() {
     setIsFormOpen(true);
   };
 
-  const handleEditPlanClick = (org: Organization) => {
-    setSelectedOrg(org);
-    setOrgPlan(org.plan);
-    setPlanActiveUntil(org.planActiveUntil ? org.planActiveUntil.slice(0, 10) : '');
-    setPlanErrors({});
-    setIsPlanOpen(true);
-  };
-
   const handleDeleteClick = (org: Organization) => {
     setSelectedOrg(org);
     setIsDeleteOpen(true);
@@ -192,15 +178,6 @@ export default function AdminOrganizationsPage() {
     if (slug.trim() && !/^[a-z0-9-]+$/.test(slug)) errs.slug = 'El slug solo permite letras minúsculas, números y guiones';
     
     setDetailErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const validatePlan = () => {
-    const errs: Record<string, string> = {};
-    if (orgPlan !== 'FREE' && !planActiveUntil) {
-      errs.planActiveUntil = 'La fecha de vencimiento es obligatoria para planes de pago';
-    }
-    setPlanErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
@@ -245,32 +222,6 @@ export default function AdminOrganizationsPage() {
         }
       );
     }
-  };
-
-  const handlePlanSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validatePlan()) return;
-
-    if (!selectedOrg) return;
-
-    updatePlanMutation.mutate(
-      {
-        id: selectedOrg.id,
-        payload: {
-          plan: orgPlan,
-          planActiveUntil: orgPlan === 'FREE' ? null : new Date(planActiveUntil).toISOString(),
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success('Plan de organización actualizado con éxito');
-          setIsPlanOpen(false);
-        },
-        onError: (err: any) => {
-          toast.error(err.response?.data?.message || 'Error al actualizar el plan');
-        },
-      }
-    );
   };
 
   const handleDeleteConfirm = () => {
@@ -395,13 +346,6 @@ export default function AdminOrganizationsPage() {
                           className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 active:scale-90 cursor-pointer"
                         >
                           <Edit className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleEditPlanClick(org); }}
-                          title="Cambiar plan"
-                          className="p-1 rounded-lg text-muted-foreground hover:text-brand-500 hover:bg-brand-500/10 transition-all duration-150 active:scale-90 cursor-pointer"
-                        >
-                          <CalendarCheck className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); router.push(`/admin/organizations/${org.id}/modules`); }}
@@ -568,7 +512,7 @@ export default function AdminOrganizationsPage() {
                     >
                       <SelectValue placeholder="Seleccionar estado" />
                     </SelectTrigger>
-                    <SelectContent className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg">
+                    <SelectContent alignItemWithTrigger={false} className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg">
                       <SelectItem value="ACTIVE" className="rounded-lg text-xs py-2 cursor-pointer">Activa</SelectItem>
                       <SelectItem value="INACTIVE" className="rounded-lg text-xs py-2 cursor-pointer">Inactiva</SelectItem>
                       <SelectItem value="FROZEN" className="rounded-lg text-xs py-2 cursor-pointer">Congelada</SelectItem>
@@ -603,96 +547,7 @@ export default function AdminOrganizationsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Plan edit dialog */}
-      <Dialog open={isPlanOpen} onOpenChange={(open) => !open && setIsPlanOpen(false)}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md rounded-xl bg-card border border-border/40 shadow-xl p-6 gap-6">
-          <DialogHeader className="gap-1">
-            <DialogTitle className="text-xl font-heading font-semibold text-foreground">
-              Gestionar Plan de Suscripción
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              Modifica la suscripción comercial y fecha de vencimiento para <strong>{selectedOrg?.name}</strong>.
-            </DialogDescription>
-          </DialogHeader>
 
-          <form onSubmit={handlePlanSubmit} className="space-y-5">
-            <div className="space-y-4">
-              {/* Plan Select */}
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="org-plan-select" className="text-xs font-bold text-muted-foreground/90">
-                  Plan de Suscripción <span className="text-destructive font-bold">*</span>
-                </Label>
-                <Select
-                  value={orgPlan}
-                  onValueChange={(val) => {
-                    setOrgPlan(val as Plan);
-                    if (val === 'FREE') setPlanActiveUntil('');
-                    if (planErrors.planActiveUntil) setPlanErrors({});
-                  }}
-                  disabled={updatePlanMutation.isPending}
-                >
-                  <SelectTrigger
-                    id="org-plan-select"
-                    className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground"
-                  >
-                    <SelectValue placeholder="Seleccionar plan" />
-                  </SelectTrigger>
-                  <SelectContent className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg">
-                    <SelectItem value="FREE" className="rounded-lg text-xs py-2 cursor-pointer">FREE (Permanente)</SelectItem>
-                    <SelectItem value="BASIC" className="rounded-lg text-xs py-2 cursor-pointer">BASIC (Pago)</SelectItem>
-                    <SelectItem value="PREMIUM" className="rounded-lg text-xs py-2 cursor-pointer">PREMIUM (Pago)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* planActiveUntil Date Input */}
-              {orgPlan !== 'FREE' && (
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="org-plan-date" className="text-xs font-bold text-muted-foreground/90">
-                    Fecha de Vencimiento <span className="text-destructive font-bold">*</span>
-                  </Label>
-                  <Input
-                    id="org-plan-date"
-                    type="date"
-                    value={planActiveUntil}
-                    onChange={(e) => {
-                      setPlanActiveUntil(e.target.value);
-                      if (planErrors.planActiveUntil) setPlanErrors((prev) => ({ ...prev, planActiveUntil: '' }));
-                    }}
-                    aria-invalid={!!planErrors.planActiveUntil}
-                    disabled={updatePlanMutation.isPending}
-                  />
-                  {planErrors.planActiveUntil && (
-                    <span className="text-xs text-destructive mt-0.5">{planErrors.planActiveUntil}</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-0 mt-6 border-t border-border/40 pt-4 flex flex-row items-center justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsPlanOpen(false)}
-                disabled={updatePlanMutation.isPending}
-                className="px-4 py-2 hover:bg-muted/50 rounded-lg text-xs font-semibold cursor-pointer"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={updatePlanMutation.isPending}
-                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                {updatePlanMutation.isPending && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                )}
-                Actualizar Plan
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete confirmation modal */}
       <ConfirmModal

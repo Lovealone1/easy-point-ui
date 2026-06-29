@@ -111,23 +111,17 @@ export default function InvoicesAdminPage() {
       label: "Suscripción",
       type: "select",
       required: true,
-      options: subsResponse?.data?.map(s => {
-        const orgName = orgMap.get(s.organizationId) || s.organizationId
-        const planName = s.plan?.name || planMap.get(s.planId) || s.planId
-        return {
-          label: `${orgName} - ${planName} (ID: ${s.id.substring(0, 8)})`,
-          value: s.id,
-        }
-      }) || [],
+      options: subsResponse?.data
+        ?.filter(s => s.plan && Number(s.plan.monthlyPrice) > 0)
+        ?.map(s => {
+          const orgName = orgMap.get(s.organizationId) || s.organizationId
+          const planName = s.plan?.name || planMap.get(s.planId) || s.planId
+          return {
+            label: `${orgName} - ${planName} (ID: ${s.id.substring(0, 8)})`,
+            value: s.id,
+          }
+        }) || [],
       gridCols: 1,
-    },
-    {
-      name: "amount",
-      label: "Monto",
-      type: "number",
-      required: true,
-      gridCols: 1,
-      placeholder: "ej: 50000",
     },
     {
       name: "currency",
@@ -151,27 +145,6 @@ export default function InvoicesAdminPage() {
         { label: "Vencida", value: "OVERDUE" },
         { label: "Anulada", value: "VOID" },
       ],
-      gridCols: 1,
-    },
-    {
-      name: "dueDate",
-      label: "Fecha de Vencimiento",
-      type: "date",
-      required: true,
-      gridCols: 1,
-    },
-    {
-      name: "billingPeriodStart",
-      label: "Inicio Período Facturación",
-      type: "date",
-      required: true,
-      gridCols: 1,
-    },
-    {
-      name: "billingPeriodEnd",
-      label: "Fin Período Facturación",
-      type: "date",
-      required: true,
       gridCols: 1,
     },
     {
@@ -212,12 +185,20 @@ export default function InvoicesAdminPage() {
       gridCols: 2,
     },
     {
+      name: "showAdvanced",
+      label: "Configuraciones Avanzadas",
+      type: "boolean",
+      required: false,
+      gridCols: 2,
+    },
+    {
       name: "metadata",
       label: "Metadatos (JSON, opcional)",
       type: "textarea",
       required: false,
       gridCols: 2,
       placeholder: 'ej: {\n  "gatewayId": "ch_abc"\n}',
+      showIf: (values) => !!values.showAdvanced,
     },
   ], [orgsResponse, subsResponse, orgMap, planMap])
 
@@ -233,11 +214,9 @@ export default function InvoicesAdminPage() {
       }
     }
 
+    const { showAdvanced, ...cleanedValues } = values
     const payload = {
-      ...values,
-      dueDate: values.dueDate ? new Date(values.dueDate).toISOString() : undefined,
-      billingPeriodStart: values.billingPeriodStart ? new Date(values.billingPeriodStart).toISOString() : undefined,
-      billingPeriodEnd: values.billingPeriodEnd ? new Date(values.billingPeriodEnd).toISOString() : undefined,
+      ...cleanedValues,
       paidAt: values.paidAt ? new Date(values.paidAt).toISOString() : undefined,
       metadata: meta || undefined,
     }
