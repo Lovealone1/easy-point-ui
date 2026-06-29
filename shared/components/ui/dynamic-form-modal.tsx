@@ -276,7 +276,7 @@ export function DynamicFormModal({
                               : (field.options?.find(opt => opt.value === values[field.name])?.label)}
                           </SelectValue>
                         </SelectTrigger>
-                        <SelectContent className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg max-h-60 overflow-y-auto">
+                        <SelectContent alignItemWithTrigger={false} className="min-w-[180px] rounded-xl p-1 bg-popover border border-border/25 shadow-lg max-h-60 overflow-y-auto">
                           {!field.required && !field.options?.some(opt => opt.value === "none") && (
                             <SelectItem
                               value="none"

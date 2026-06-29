@@ -8,7 +8,7 @@ import type { Plan } from "@/features/plans/types/plans.types"
 
 export type BillingCycle = "MONTHLY" | "YEARLY"
 
-export type SubscriptionStatus = "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "TRIALING"
+export type SubscriptionStatus = "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "TRIALING" | "PENDING_PAYMENT"
 
 export interface Subscription {
   id: string
