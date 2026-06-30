@@ -421,12 +421,13 @@ export default function SubscriptionsAdminPage() {
     {
       key: "actions",
       header: "Acciones",
+      align: "center",
       className: "w-[180px]",
       render: (row) => {
         const isEditing = updateMutation.isPending && updateMutation.variables?.id === row.id
 
         return (
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => { setSelectedRecord(row); setIsDetailsOpen(true) }}
               title="Ver detalles"
