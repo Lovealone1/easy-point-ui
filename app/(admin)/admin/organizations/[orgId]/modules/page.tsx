@@ -11,7 +11,8 @@ import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useOrganizationAdmin } from "@/features/organization/hooks/use-organizations-admin"
 import { OrgModulesPanel } from "@/features/organization-modules/components/org-modules-panel"
-import { Loader2, ChevronLeft, ShieldAlert } from "lucide-react"
+import { Spinner } from "@/shared/components/ui/spinner"
+import { ChevronLeft, ShieldAlert } from "lucide-react"
 
 export default function OrgModulesPage() {
   const params = useParams()
@@ -23,7 +24,7 @@ export default function OrgModulesPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-2 select-none animate-in fade-in duration-300">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+        <Spinner size="md" className="text-brand-500" />
         <p className="text-xs text-muted-foreground font-medium">Cargando datos de la organización...</p>
       </div>
     )

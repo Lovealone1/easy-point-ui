@@ -540,7 +540,7 @@ export default function UtilitiesPage() {
             isFilterDrawerOpen ? "translate-x-0" : "translate-x-full"
           )}
         >
-          <div className="space-y-6 overflow-y-auto pr-1 flex-1">
+          <div className="space-y-6 overflow-y-auto pr-1 flex-1" data-lenis-prevent>
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border/20 pb-3">
               <div>

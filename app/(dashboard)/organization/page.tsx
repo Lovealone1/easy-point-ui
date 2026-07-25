@@ -856,7 +856,7 @@ export default function OrganizationPage() {
                 </div>
 
                 {/* Fake App Body */}
-                <div className="flex-1 space-y-4 overflow-y-auto">
+                <div className="flex-1 space-y-4 overflow-y-auto" data-lenis-prevent>
                   <div className="space-y-1">
                     <div className="h-4 w-28 rounded bg-muted/70" />
                     <div className="h-3 w-40 rounded bg-muted/40" />

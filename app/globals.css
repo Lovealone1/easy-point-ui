@@ -405,6 +405,20 @@
   animation: loading-scanner 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* Brand color swap — global theme → org theme (see branding-provider.tsx applyBrandingToDOM) */
+.brand-fade {
+  transition:
+    background-color 700ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 700ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 700ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-fade {
+    transition: none;
+  }
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
