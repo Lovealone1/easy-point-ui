@@ -53,24 +53,22 @@ function mix(
   return rgbToHex(r, g, b);
 }
 
+const BRAND_DEFAULT_HEX = '#8b1fc1';
+
 export function generateShades(baseHex: string): ColorShades {
-  const defaultShades: ColorShades = {
-    50: '#f8fafc',
-    100: '#f1f5f9',
-    200: '#e2e8f0',
-    300: '#cbd5e1',
-    400: '#94a3b8',
-    500: baseHex,
-    600: '#475569',
-    700: '#334155',
-    800: '#1e293b',
-    900: '#0f172a',
-    950: '#020617',
-  };
-
   const baseRgb = hexToRgb(baseHex);
-  if (!baseRgb) return defaultShades;
 
+  // Fall back to the brand default palette (not a gray palette) when the
+  // provided color can't be parsed, so the worst case is still on-brand.
+  if (!baseRgb) {
+    const fallbackRgb = hexToRgb(BRAND_DEFAULT_HEX)!;
+    return buildShades(fallbackRgb);
+  }
+
+  return buildShades(baseRgb);
+}
+
+function buildShades(baseRgb: { r: number; g: number; b: number }): ColorShades {
   const white = { r: 255, g: 255, b: 255 };
   const darkBase = { r: 10, g: 7, b: 23 }; // #0a0717
 

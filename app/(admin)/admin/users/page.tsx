@@ -18,6 +18,7 @@ import {
 } from '@/features/users/hooks/use-users';
 import type { User, GlobalRole } from '@/features/users/types/users.types';
 import { Input } from '@/shared/components/ui/input';
+import { Spinner } from '@/shared/components/ui/spinner';
 import {
   Pencil,
   Shield,
@@ -600,7 +601,7 @@ export default function AdminUsersPage() {
       {/* Main Content Area */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+          <Spinner size="md" className="text-brand-500" />
           <span className="text-xs text-muted-foreground font-medium">Cargando usuarios...</span>
         </div>
       ) : error ? (

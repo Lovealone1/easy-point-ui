@@ -20,7 +20,6 @@ import {
   UserX,
   Shield,
   Clock,
-  Loader2,
   UserPlus,
   UserMinus,
   AlertCircle,
@@ -32,6 +31,7 @@ import { useOrganizationUsersAdmin } from "@/features/organization-users/hooks/u
 import type { OrganizationUser, Role } from "@/features/organization-users/types/organization-users.types"
 import { ChangeRoleAdminModal } from "@/features/organization-users/components/change-role-admin-modal"
 import { RemoveUserAdminModal } from "@/features/organization-users/components/remove-user-admin-modal"
+import { Spinner } from "@/shared/components/ui/spinner"
 import { AssignUserAdminModal } from "@/features/organization-users/components/assign-user-admin-modal"
 import { cn } from "@/shared/lib/utils"
 
@@ -277,7 +277,7 @@ export default function AdminOrganizationUsersPage() {
       ) : isLoadingUsers ? (
         /* Loading State */
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+          <Spinner size="md" className="text-brand-500" />
           <span className="text-xs text-muted-foreground font-medium">Cargando miembros de la organización...</span>
         </div>
       ) : error ? (

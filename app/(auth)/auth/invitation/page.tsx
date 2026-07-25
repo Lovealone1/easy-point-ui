@@ -15,6 +15,8 @@ import { requestOtp, getMe } from '@/features/auth/services/auth.service';
 import { invitationsService } from '@/features/invitations/services/invitations.service';
 import { toast } from 'sonner';
 import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
+import { Spinner } from '@/shared/components/ui/spinner';
+import { resolveActiveOrg } from '@/shared/utils/resolve-active-org';
 
 const CountrySelect = ({ value, onChange, labels, options, iconComponent: Icon }: any) => {
   const [open, setOpen] = useState(false);
@@ -178,14 +180,14 @@ function InvitationAcceptContent() {
           globalRole: data.globalRole || null,
         });
 
-        if (data.organizations && data.organizations.length > 0) {
-          const firstOrg = data.organizations[0];
+        const activeOrg = resolveActiveOrg(data.organizations);
+        if (activeOrg) {
           setActiveOrganization(
-            { id: firstOrg.id, name: firstOrg.name, slug: firstOrg.slug },
-            { orgRoles: [firstOrg.role], permissions: firstOrg.permissions ?? [] }
+            { id: activeOrg.id, name: activeOrg.name, slug: activeOrg.slug },
+            { orgRoles: [activeOrg.role], permissions: activeOrg.permissions ?? [] }
           );
-          if (firstOrg.config) {
-            setOrganizationConfig(firstOrg.config);
+          if (activeOrg.config) {
+            setOrganizationConfig(activeOrg.config);
           }
         }
       }
@@ -251,7 +253,7 @@ function InvitationAcceptContent() {
   if (loading) {
     return (
       <div className="w-full flex flex-col items-center justify-center p-8 text-center min-h-[400px]">
-        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+        <Spinner size="lg" className="mb-4" />
         <p className="text-muted-foreground text-sm font-medium">
           Verificando tu invitación...
         </p>
@@ -526,7 +528,7 @@ export default function InvitationAcceptPage() {
   return (
     <Suspense fallback={
       <div className="w-full flex flex-col items-center justify-center p-8 text-center min-h-[400px]">
-        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+        <Spinner size="lg" className="mb-4" />
         <p className="text-muted-foreground text-sm font-medium">Cargando...</p>
       </div>
     }>

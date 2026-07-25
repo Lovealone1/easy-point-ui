@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
+import { useEnvironmentSwitchStore } from '@/shared/store/use-environment-switch-store';
 import { AppIcon } from '@/shared/components/ui/app-icon';
 import { cn } from '@/shared/lib/utils';
 import {
@@ -11,6 +12,7 @@ import {
   Sun,
   Moon,
   LogOut,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useState } from 'react';
 import { logout } from '@/features/auth/services/auth.service';
@@ -20,6 +22,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const { user, clearSession } = useAuthStore();
   const { theme, toggleTheme, isMobileMenuOpen, setMobileMenuOpen } = useUiStore();
+  const requestEnvironmentSwitch = useEnvironmentSwitchStore((s) => s.request);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
 
@@ -272,6 +275,19 @@ export default function AdminSidebar() {
 
         {/* Footer */}
         <div className="border-t border-sidebar-border shrink-0 p-3 space-y-3 bg-card/10">
+          {/* Back to organization dashboard */}
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              requestEnvironmentSwitch('/dashboard');
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-sidebar-border transition-colors"
+          >
+            <ArrowLeftRight className="h-3.5 w-3.5 shrink-0 text-brand-400" />
+            <span className="truncate">Volver a mi organización</span>
+          </button>
+
           {/* Theme switch */}
           <div className="px-1">
             <div className="flex items-center p-1 rounded-lg bg-muted border border-sidebar-border">

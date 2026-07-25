@@ -4,11 +4,14 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useRouter } from 'next/navigation';
 import ThemeProvider from '@/shared/components/providers/theme-provider';
-import BrandingProvider from '@/shared/components/providers/branding-provider';
+import AdminSessionProvider from '@/shared/components/providers/admin-session-provider';
 import QueryProvider from '@/shared/components/providers/query-provider';
 import { Toaster } from '@/shared/components/ui/sonner';
 import AdminSidebar from '@/shared/components/layout/admin-sidebar';
-import DashboardHeader from '@/shared/components/layout/dashboard-header';
+import AdminHeader from '@/shared/components/layout/admin-header';
+import SmoothScrollMain from '@/shared/components/layout/smooth-scroll-main';
+import EnvironmentSwitchGate from '@/shared/components/layout/environment-switch-gate';
+import { PageLoader } from '@/shared/components/ui/spinner';
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoadingSession } = useAuthStore();
@@ -25,14 +28,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, user, isLoadingSession, router]);
 
   if (isLoadingSession || !isAuthenticated || user?.globalRole !== 'ADMIN') {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-t-transparent border-primary"></div>
-          <span className="text-xs text-muted-foreground font-medium">Validando credenciales de administrador...</span>
-        </div>
-      </div>
-    );
+    return <PageLoader label="Validando credenciales de administrador..." />;
   }
 
   return <>{children}</>;
@@ -45,22 +41,23 @@ export default function AdminLayout({
 }) {
   return (
     <ThemeProvider>
-      <BrandingProvider>
+      <AdminSessionProvider>
         <QueryProvider>
           <AdminGuard>
             <div className="flex h-screen overflow-hidden bg-background text-foreground">
               <AdminSidebar />
               <div className="flex flex-col flex-1 overflow-hidden">
-                <DashboardHeader />
-                <main className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 lg:p-10">
+                <AdminHeader />
+                <SmoothScrollMain className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 lg:p-10">
                   {children}
-                </main>
+                </SmoothScrollMain>
               </div>
             </div>
           </AdminGuard>
           <Toaster position="top-right" richColors />
+          <EnvironmentSwitchGate />
         </QueryProvider>
-      </BrandingProvider>
+      </AdminSessionProvider>
     </ThemeProvider>
   );
 }

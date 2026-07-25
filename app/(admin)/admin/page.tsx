@@ -561,7 +561,7 @@ export default function AdminDashboardPage() {
                   <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">Popularidad de Módulos</h2>
                 </div>
 
-                <div className="space-y-2 overflow-y-auto no-scrollbar flex-1 min-h-0 pr-1">
+                <div className="space-y-2 overflow-y-auto no-scrollbar flex-1 min-h-0 pr-1" data-lenis-prevent>
                   {data?.moduleDistribution.slice(0, 8).map((m) => {
                     const totalOrgs = data.kpis.total.organizations || 1;
                     const percent = Math.min((m.count / totalOrgs) * 100, 100);

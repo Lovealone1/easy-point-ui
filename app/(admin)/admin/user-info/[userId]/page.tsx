@@ -25,6 +25,7 @@ import type { PersonaNaturalBilling, PersonaJuridicaBilling } from "@/features/u
 import { Button } from "@/shared/components/ui/button"
 import { Input } from "@/shared/components/ui/input"
 import { Label } from "@/shared/components/ui/label"
+import { Spinner } from "@/shared/components/ui/spinner"
 import { toast } from "@/shared/utils/toast"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/shared/components/ui/select"
 import { DatePicker } from "@/shared/components/ui/date-picker"
@@ -236,7 +237,7 @@ export default function UserInfoAdminPage({ params }: PageProps) {
   if (isProfileLoading || isUserLoading) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Spinner size="md" />
         <p className="text-sm text-muted-foreground animate-pulse">Cargando información...</p>
       </div>
     )

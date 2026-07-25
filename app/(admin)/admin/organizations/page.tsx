@@ -28,6 +28,7 @@ import {
   SelectItem,
 } from '@/shared/components/ui/select';
 import { ConfirmModal } from '@/shared/components/ui/confirm-modal';
+import { Spinner } from '@/shared/components/ui/spinner';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -266,7 +267,7 @@ export default function AdminOrganizationsPage() {
       {/* Content Area */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+          <Spinner size="md" className="text-brand-500" />
           <span className="text-xs text-muted-foreground font-medium">Buscando organizaciones...</span>
         </div>
       ) : error ? (

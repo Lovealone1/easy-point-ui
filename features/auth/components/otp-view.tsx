@@ -16,6 +16,8 @@ import { verifyOtp, getMe } from '@/features/auth/services/auth.service';
 import { VerifiedCard } from './verified-card';
 import { toast } from 'sonner';
 import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
+import { DEFAULT_LANDING, safeInternalPath } from '@/shared/utils/safe-redirect';
+import { resolveActiveOrg } from '@/shared/utils/resolve-active-org';
 
 export function OtpView() {
   useAuthBrandingReset();
@@ -28,6 +30,7 @@ export function OtpView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || undefined;
+  const callbackUrl = safeInternalPath(searchParams.get('callbackUrl'));
 
   const pendingVerificationEmail = useAuthStore((s) => s.pendingVerificationEmail);
   const pendingIntent = useAuthStore((s) => s.pendingIntent);
@@ -98,14 +101,14 @@ export function OtpView() {
               globalRole: data.globalRole || null,
             });
 
-            if (data.organizations && data.organizations.length > 0) {
-              const firstOrg = data.organizations[0];
+            const activeOrg = resolveActiveOrg(data.organizations);
+            if (activeOrg) {
               setActiveOrganization(
-                { id: firstOrg.id, name: firstOrg.name, slug: firstOrg.slug },
-                { orgRoles: [firstOrg.role], permissions: firstOrg.permissions ?? [] }
+                { id: activeOrg.id, name: activeOrg.name, slug: activeOrg.slug },
+                { orgRoles: [activeOrg.role], permissions: activeOrg.permissions ?? [] }
               );
-              if (firstOrg.config) {
-                setOrganizationConfig(firstOrg.config);
+              if (activeOrg.config) {
+                setOrganizationConfig(activeOrg.config);
               }
             }
           }
@@ -116,7 +119,7 @@ export function OtpView() {
       }
 
       setTimeout(() => {
-        router.replace('/dashboard');
+        router.replace(callbackUrl ?? DEFAULT_LANDING);
       }, 800);
     } catch {
       setError('No se pudo verificar el código. Intenta de nuevo.');

@@ -4,6 +4,8 @@ import ThemeProvider from '@/shared/components/providers/theme-provider';
 import BrandingProvider from '@/shared/components/providers/branding-provider';
 import DashboardHeader from '@/shared/components/layout/dashboard-header';
 import Sidebar from '@/shared/components/layout/sidebar/sidebar';
+import SmoothScrollMain from '@/shared/components/layout/smooth-scroll-main';
+import EnvironmentSwitchGate from '@/shared/components/layout/environment-switch-gate';
 
 export default function DashboardLayout({
   children,
@@ -18,14 +20,15 @@ export default function DashboardLayout({
             <Sidebar />
             <div className="flex flex-col flex-1 overflow-hidden">
               <DashboardHeader />
-              <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+              <SmoothScrollMain className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
                 {children}
-              </main>
+              </SmoothScrollMain>
             </div>
           </div>
-          
+
           {/* Notifier Provider (Sonner) */}
           <Toaster position="top-right" richColors />
+          <EnvironmentSwitchGate />
         </QueryProvider>
       </BrandingProvider>
     </ThemeProvider>

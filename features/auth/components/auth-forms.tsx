@@ -9,11 +9,12 @@ import es from 'react-phone-number-input/locale/es.json';
 import 'react-phone-number-input/style.css';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/shared/components/ui/command';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { requestOtp } from '@/features/auth/services/auth.service';
 import { TransitionCard } from './transition-card';
 import { useAuthBrandingReset } from '@/shared/components/providers/branding-provider';
+import { safeInternalPath } from '@/shared/utils/safe-redirect';
 
 const CountrySelect = ({ value, onChange, labels, options, iconComponent: Icon }: any) => {
   const [open, setOpen] = useState(false);
@@ -79,6 +80,9 @@ export function AuthForms() {
   const [lastName, setLastName] = useState('');
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = safeInternalPath(searchParams.get('callbackUrl'));
+  const otpUrl = callbackUrl ? `/auth/otp?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/auth/otp';
   const setPendingVerification = useAuthStore((state) => state.setPendingVerification);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -95,7 +99,7 @@ export function AuthForms() {
       setPendingVerification(emailLogin, 'login');
       setIsTransitioning(true);
       setTimeout(() => {
-        router.push('/auth/otp');
+        router.push(otpUrl);
       }, 2000);
     } catch {
       setError('No se pudo conectar con el servicio. Intenta de nuevo.');
@@ -118,7 +122,7 @@ export function AuthForms() {
       setPendingVerification(emailRegister, 'register', { firstName, lastName, phoneNumber: phone });
       setIsTransitioning(true);
       setTimeout(() => {
-        router.push('/auth/otp');
+        router.push(otpUrl);
       }, 2000);
     } catch {
       setError('No se pudo conectar con el servicio. Intenta de nuevo.');
