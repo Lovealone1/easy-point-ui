@@ -1,0 +1,57 @@
+# Manual/Cloud Build trigger deploy to Cloud Run.
+#
+# Run with:
+#   gcloud builds submit --config=cloudbuild.yaml \
+#     --substitutions=_REGION=us-central1,_SERVICE=easy-point-ui,_REPO=easy-point
+#
+# Required substitutions (set here or via --substitutions):
+#   _REGION  — Cloud Run / Artifact Registry region, e.g. us-central1
+#   _SERVICE — Cloud Run service name, e.g. easy-point-ui
+#   _REPO    — Artifact Registry repository name
+#
+# BACKEND_API_URL and OTP_REQUEST_PATH are NOT set here — they're
+# environment-specific secrets/config. Set them once on the Cloud Run
+# service (console, or `gcloud run services update --set-env-vars`) and
+# they persist across deploys; this build only ships the image.
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE: easy-point-ui
+  _REPO: easy-point
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA'
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA'
+      - -t
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest'
+      - .
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}'
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - '${_SERVICE}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--port=8080'
+      - '--quiet'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

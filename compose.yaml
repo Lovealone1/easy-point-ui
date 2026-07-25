@@ -1,0 +1,28 @@
+# Levanta la imagen de producción (Dockerfile) en local, para probar el
+# build antes de desplegar — no reemplaza `pnpm dev`.
+#
+# Uso:
+#   docker compose up --build
+#
+# Requiere un `easy-point-api` corriendo en el host (p. ej. vía el
+# docker-compose.yml del repo easy-point-api, o `pnpm start:dev` local).
+# `host.docker.internal` es cómo este contenedor alcanza el puerto del
+# host — funciona en Docker Desktop (Windows/Mac) y en Docker Engine con
+# el `extra_hosts` de abajo.
+
+services:
+  easy-point-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: easy-point-ui:local
+    container_name: easy-point-ui
+    ports:
+      - '3000:8080'
+    environment:
+      BACKEND_API_URL: http://host.docker.internal:3001
+      API_VERSION: v1
+      OTP_REQUEST_PATH: /api/v1/development/otp
+      BACKEND_TIMEOUT_MS: '30000'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
