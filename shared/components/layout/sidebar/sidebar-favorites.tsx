@@ -78,8 +78,8 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
                     : "gap-3 px-3 py-2 flex-1 min-w-0 border-l-[3px]",
                   isActive
                     ? cn(
-                      "bg-brand-500/10 text-brand-500 font-semibold",
-                      !isSidebarCollapsed && "border-brand-500"
+                      "bg-sidebar-primary/10 text-sidebar-primary font-semibold",
+                      !isSidebarCollapsed && "border-sidebar-primary"
                     )
                     : cn(
                       "text-muted-foreground hover:text-foreground",
@@ -92,7 +92,7 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
                   name={mod.icon}
                   className={cn(
                     "h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-105",
-                    isActive ? "text-brand-500" : "text-brand-400 group-hover:text-brand-500"
+                    isActive ? "text-sidebar-primary" : "text-brand-400 group-hover:text-sidebar-primary"
                   )}
                 />
 

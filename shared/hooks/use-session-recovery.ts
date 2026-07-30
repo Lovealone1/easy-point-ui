@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
@@ -17,6 +18,13 @@ interface UseSessionRecoveryOptions {
    *  session resolves. Dashboard: true. Admin: false — the admin shell
    *  ignores org branding entirely and stays on the default palette. */
   applyBranding: boolean;
+  /**
+   * Path to redirect to when the session resolves and the user has no
+   * organization membership at all (e.g. '/onboarding'). Omit to disable —
+   * the admin shell must NOT set this, since a global admin legitimately
+   * has no organization membership.
+   */
+  redirectWhenNoOrg?: string;
 }
 
 /**
@@ -24,7 +32,10 @@ interface UseSessionRecoveryOptions {
  * from `/auth/me`, and tears the session down on 401. Shared by the
  * dashboard and admin shells so both authenticate the same way.
  */
-export function useSessionRecovery({ applyBranding }: UseSessionRecoveryOptions): void {
+export function useSessionRecovery({
+  applyBranding,
+  redirectWhenNoOrg,
+}: UseSessionRecoveryOptions): void {
   const {
     user,
     profileHydrated,
@@ -37,6 +48,7 @@ export function useSessionRecovery({ applyBranding }: UseSessionRecoveryOptions)
   } = useAuthStore();
   const setTheme = useUiStore((s) => s.setTheme);
   const clearForUser = useFavoritesStore((s) => s.clearForUser);
+  const router = useRouter();
 
   useEffect(() => {
     function handleUnauthorized() {
@@ -52,6 +64,9 @@ export function useSessionRecovery({ applyBranding }: UseSessionRecoveryOptions)
   useEffect(() => {
     async function recoverSession() {
       if (user && profileHydrated) {
+        if (redirectWhenNoOrg && !useAuthStore.getState().activeOrganization) {
+          router.replace(redirectWhenNoOrg);
+        }
         setLoadingSession(false);
         return;
       }
@@ -81,6 +96,8 @@ export function useSessionRecovery({ applyBranding }: UseSessionRecoveryOptions)
                 await new Promise((resolve) => setTimeout(resolve, BRAND_REVEAL_HOLD_MS));
               }
             }
+          } else if (redirectWhenNoOrg) {
+            router.replace(redirectWhenNoOrg);
           }
         } else {
           clearSession();
