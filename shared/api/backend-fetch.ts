@@ -18,6 +18,7 @@ import { BackendApiError } from '@/shared/utils/api-error';
 
 const BACKEND_URL = process.env.BACKEND_API_URL ?? 'http://localhost:3001';
 const API_VERSION = process.env.API_VERSION ?? 'v1';
+const TIMEOUT_MS = Number(process.env.BACKEND_TIMEOUT_MS) || 30_000;
 
 /**
  * Builds the full URL for a versioned backend endpoint.
@@ -87,11 +88,28 @@ export async function backendFetch<T = unknown>(
 
   const url = rawUrl ?? buildApiUrl(endpoint);
 
-  const response = await fetch(url, {
-    ...restOptions,
-    headers,
-    body: serializedBody,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...restOptions,
+      headers,
+      body: serializedBody,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new BackendApiError(504, {
+        statusCode: 504,
+        message: 'Request to backend service timed out',
+      });
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (response.status === 204) {
     return null as T;

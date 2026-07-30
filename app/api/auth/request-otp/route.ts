@@ -3,11 +3,10 @@
 //
 // BFF Route — Step 1 of the OTP flow.
 //
-// Currently wired to the development endpoint:
-//   POST /api/v1/development/otp   (logs OTP to NestJS console)
-//
-// To switch to the production endpoint, change NESTJS_OTP_PATH below:
-//   const NESTJS_OTP_PATH = '/auth/otp';
+// The NestJS endpoint is driven by OTP_REQUEST_PATH so the same image can
+// run against dev and prod without a rebuild:
+//   Development (default): /api/v1/development/otp  (OTP printed to NestJS console)
+//   Production:             set OTP_REQUEST_PATH=/api/v1/auth/otp (OTP sent via email)
 // ─────────────────────────────────────────────────────────────────────────────
 import { type NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse, OtpRequestBody } from '@/shared/api/types';
@@ -16,10 +15,7 @@ import { ok, fail, makeApiError } from '@/shared/api/types';
 const BACKEND_URL = process.env.BACKEND_API_URL ?? 'http://localhost:3001';
 const TIMEOUT_MS = 10_000;
 
-// ── Toggle between dev and production endpoint ────────────────────────────────
-// Development:  POST /api/v1/development/otp  (OTP printed to NestJS console)
-// Production:   POST /auth/otp                (OTP sent via email)
-const NESTJS_OTP_PATH = '/api/v1/development/otp'; // ← swap to '/auth/otp' for prod
+const NESTJS_OTP_PATH = process.env.OTP_REQUEST_PATH ?? '/api/v1/development/otp';
 
 interface OtpRequestSuccess {
   message: string;
