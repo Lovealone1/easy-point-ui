@@ -54,8 +54,8 @@ function Breadcrumbs() {
       className={cn(
         "ml-1 flex items-center justify-center w-6 h-6 rounded-md transition-all duration-200 shrink-0 group",
         isPinned
-          ? "text-brand-500 hover:text-brand-600 hover:bg-brand-500/10"
-          : "text-muted-foreground/40 hover:text-brand-500 hover:bg-brand-500/10"
+          ? "text-primary hover:bg-primary/10"
+          : "text-muted-foreground/40 hover:text-primary hover:bg-primary/10"
       )}
       aria-label={isPinned ? 'Quitar de favoritos' : 'Agregar a favoritos'}
     >
@@ -97,7 +97,7 @@ function Breadcrumbs() {
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
         <span
-          className="text-[15px] font-semibold text-brand-500 truncate"
+          className="text-[15px] font-semibold text-primary truncate"
           style={{ letterSpacing: '-0.12px' }}
         >
           {leafLabel}
@@ -140,10 +140,10 @@ function Breadcrumbs() {
                 {/* Separator between Category and Name */}
                 <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
 
-                {/* Module Name — brand-500 when active (isLast) */}
+                {/* Module Name — primary color when active (isLast) */}
                 {isLast ? (
                   <span
-                    className="text-[15px] font-semibold text-brand-500 truncate"
+                    className="text-[15px] font-semibold text-primary truncate"
                     style={{ letterSpacing: '-0.12px' }}
                   >
                     {mod.name}
@@ -176,7 +176,7 @@ function Breadcrumbs() {
                 <span
                   className={cn(
                     "text-[15px] truncate select-none",
-                    isLast ? "font-semibold text-brand-500" : "font-medium text-muted-foreground/75"
+                    isLast ? "font-semibold text-primary" : "font-medium text-muted-foreground/75"
                   )}
                   style={{ letterSpacing: '-0.12px' }}
                 >

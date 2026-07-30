@@ -53,6 +53,45 @@ function mix(
   return rgbToHex(r, g, b);
 }
 
+function luminance({ r, g, b }: { r: number; g: number; b: number }): number {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+/**
+ * Shade 400 becomes `--primary` / `--sidebar-primary` in dark mode (see
+ * globals.css), i.e. the active/interactive color rendered directly on the
+ * near-black sidebar and canvas surfaces. Its normal 20%-toward-white mix
+ * is fine for typical brand colors, but organizations that haven't set a
+ * custom color (schema default `primaryColor = "#000000"`) — or picked one
+ * close to black — end up with a shade 400 that's still almost black,
+ * making the active nav item render as an unreadable dark-on-dark block.
+ *
+ * This computes the extra mix-toward-white weight needed so shade 400
+ * never drops below a legible minimum luminance, while leaving already-
+ * light base colors (which clear the floor at the normal 0.2 weight)
+ * untouched.
+ */
+function weightForMinLuminance(
+  base: { r: number; g: number; b: number },
+  target: { r: number; g: number; b: number },
+  minLuminance: number,
+  fallbackWeight: number,
+): number {
+  const baseLum = luminance(base);
+  if (baseLum >= minLuminance) return fallbackWeight;
+
+  const targetLum = luminance(target);
+  if (targetLum <= baseLum) return fallbackWeight;
+
+  const requiredWeight = (minLuminance - baseLum) / (targetLum - baseLum);
+  return Math.min(1, Math.max(fallbackWeight, requiredWeight));
+}
+
+// Perceptual luminance (0–255) floor for shade 400. Comfortably legible
+// against the app's dark-mode surfaces (--sidebar/--background sit around
+// luminance 25–40).
+const DARK_MODE_ACTIVE_MIN_LUMINANCE = 110;
+
 const BRAND_DEFAULT_HEX = '#8b1fc1';
 
 export function generateShades(baseHex: string): ColorShades {
@@ -72,12 +111,19 @@ function buildShades(baseRgb: { r: number; g: number; b: number }): ColorShades 
   const white = { r: 255, g: 255, b: 255 };
   const darkBase = { r: 10, g: 7, b: 23 }; // #0a0717
 
+  const shade400Weight = weightForMinLuminance(
+    baseRgb,
+    white,
+    DARK_MODE_ACTIVE_MIN_LUMINANCE,
+    0.2,
+  );
+
   return {
     50: mix(baseRgb, white, 0.92),
     100: mix(baseRgb, white, 0.8),
     200: mix(baseRgb, white, 0.6),
     300: mix(baseRgb, white, 0.4),
-    400: mix(baseRgb, white, 0.2),
+    400: mix(baseRgb, white, shade400Weight),
     500: rgbToHex(baseRgb.r, baseRgb.g, baseRgb.b),
     600: mix(baseRgb, darkBase, 0.2),
     700: mix(baseRgb, darkBase, 0.4),

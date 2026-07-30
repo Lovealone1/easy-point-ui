@@ -53,14 +53,14 @@ export default function SidebarSearch({ searchQuery, setSearchQuery }: SidebarSe
         </button>
       ) : (
         <div className="relative flex items-center group">
-          <Search className="absolute left-3 h-4 w-4 text-muted-foreground group-focus-within:text-brand-500 transition-colors" />
+          <Search className="absolute left-3 h-4 w-4 text-muted-foreground group-focus-within:text-sidebar-primary transition-colors" />
           <Input
             ref={inputRef}
             type="text"
             placeholder="Buscar..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-8 h-9 text-xs rounded-lg border-border/40 focus-visible:ring-brand-500/30 focus-visible:border-brand-500 transition-all bg-card/20"
+            className="pl-9 pr-8 h-9 text-xs rounded-lg border-border/40 focus-visible:ring-sidebar-primary/30 focus-visible:border-sidebar-primary transition-all bg-card/20"
           />
           <div className="absolute right-3 hidden sm:flex items-center gap-0.5 select-none pointer-events-none text-[10px] font-medium text-muted-foreground bg-muted border border-border px-1 py-0.5 rounded font-mono">
             <span>⌘</span>
