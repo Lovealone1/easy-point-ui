@@ -7,7 +7,12 @@
 
 import { BaseClientService } from "@/shared/services/base-client.service"
 import { apiClient } from "@/shared/services/api-client"
-import type { Subscription, CreateSubscriptionDTO, UpdateSubscriptionDTO } from "../types/subscriptions.types"
+import type {
+  Subscription,
+  CreateSubscriptionDTO,
+  UpdateSubscriptionDTO,
+  SubscriptionAccessState,
+} from "../types/subscriptions.types"
 
 export class SubscriptionsServiceClass extends BaseClientService<
   Subscription,
@@ -42,6 +47,15 @@ export class SubscriptionsServiceClass extends BaseClientService<
    */
   async cancel(id: string): Promise<Subscription> {
     const { data } = await apiClient.patch<Subscription>(`/${this.endpoint}/${id}/cancel`)
+    return data
+  }
+
+  /**
+   * The calling org's own access state (plan, trial, blocked or not).
+   * Target: GET /subscriptions/me — usable even when access is blocked.
+   */
+  async getMyState(): Promise<SubscriptionAccessState> {
+    const { data } = await apiClient.get<SubscriptionAccessState>("/subscriptions/me")
     return data
   }
 }

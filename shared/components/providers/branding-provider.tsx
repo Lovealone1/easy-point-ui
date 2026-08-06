@@ -90,6 +90,12 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
         // doesn't change or when setTheme is captured as a stale closure.
         const { hasUserSetTheme } = useUiStore.getState();
         applyBrandingToDOM(merged, setTheme, !hasUserSetTheme);
+
+        // The trial/subscription can lapse mid-session (not just on login) —
+        // re-check on every org-config fetch, not only session recovery.
+        if (merged.accessBlocked && pathname !== '/trial-expired') {
+          window.location.replace('/trial-expired');
+        }
       } catch (error) {
         console.error('Failed to fetch organization config:', error);
       }
@@ -104,6 +110,12 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
       return;
     }
 
+    // Access is already known to be blocked (subscription/trial expired) —
+    // SubscriptionAccessGuard rejects this endpoint too, so skip the request
+    // instead of logging an expected 403. The org-config effect above already
+    // triggers the redirect to /trial-expired.
+    if (useAuthStore.getState().organizationConfig?.accessBlocked) return;
+
     async function fetchOrgModules() {
       try {
         const modules = await organizationModulesService.getOrgModules(activeOrganization!.id);
@@ -115,10 +127,15 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
     }
 
     fetchOrgModules();
-  }, [activeOrganization?.id, pathname]);
+  }, [activeOrganization?.id, pathname, organizationConfig?.accessBlocked]);
 
   useEffect(() => {
-    if (pathname === '/auth' || pathname === '/dashboard' || pathname === '/unauthorized') {
+    if (
+      pathname === '/auth' ||
+      pathname === '/dashboard' ||
+      pathname === '/unauthorized' ||
+      pathname === '/trial-expired'
+    ) {
       return;
     }
 

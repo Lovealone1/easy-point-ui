@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
-import { Settings, HelpCircle, Sun, Moon, Sparkles } from 'lucide-react';
+import { Settings, HelpCircle, Sun, Moon, Sparkles, Clock } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
 export default function SidebarFooter() {
@@ -22,6 +22,10 @@ export default function SidebarFooter() {
   const orgPlan = organizationConfig?.plan || 'FREE';
   const initial = orgName.charAt(0).toUpperCase();
   const isDark = theme === 'dark';
+
+  const isTrial = organizationConfig?.isTrial ?? false;
+  const trialDaysRemaining = organizationConfig?.trialDaysRemaining ?? null;
+  const isTrialUrgent = trialDaysRemaining !== null && trialDaysRemaining <= 2;
 
   const planBadgeClass =
     orgPlan === 'PREMIUM'
@@ -159,6 +163,25 @@ export default function SidebarFooter() {
                 <span>{orgPlan}</span>
               </div>
             </div>
+
+            {/* Trial countdown */}
+            {isTrial && trialDaysRemaining !== null && (
+              <div
+                className={cn(
+                  "relative flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-semibold",
+                  isTrialUrgent
+                    ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                )}
+              >
+                <Clock className="h-3 w-3 shrink-0" />
+                <span>
+                  Prueba · {trialDaysRemaining === 0
+                    ? "termina hoy"
+                    : `${trialDaysRemaining} día${trialDaysRemaining === 1 ? '' : 's'} restante${trialDaysRemaining === 1 ? '' : 's'}`}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>

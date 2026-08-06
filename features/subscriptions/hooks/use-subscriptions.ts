@@ -22,6 +22,7 @@ export const subscriptionKeys = {
   list: (params: FindSubscriptionsParams) => [...subscriptionKeys.lists(), params] as const,
   details: () => [...subscriptionKeys.all, "detail"] as const,
   detail: (id: string) => [...subscriptionKeys.details(), id] as const,
+  myState: () => [...subscriptionKeys.all, "me"] as const,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -131,5 +132,18 @@ export function useCancelSubscription() {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() })
     },
+  })
+}
+
+/**
+ * Hook to retrieve the calling org's own subscription/access state.
+ * Works even when access is blocked (trial expired) — the endpoint is
+ * exempt from SubscriptionAccessGuard.
+ */
+export function useMySubscriptionState() {
+  return useQuery({
+    queryKey: subscriptionKeys.myState(),
+    queryFn: () => subscriptionsService.getMyState(),
+    staleTime: 60 * 1000,
   })
 }

@@ -35,7 +35,7 @@ export default function EnvironmentSplash({ label = 'Preparando tu entorno' }: E
           alt="EasyPoint"
           width={180}
           height={50}
-          className="mb-8 object-contain"
+          className="mb-8 object-contain w-auto h-auto"
           priority
         />
 

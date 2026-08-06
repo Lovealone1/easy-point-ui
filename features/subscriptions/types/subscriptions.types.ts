@@ -56,3 +56,14 @@ export interface CreateSubscriptionDTO {
 }
 
 export type UpdateSubscriptionDTO = Partial<CreateSubscriptionDTO>;
+
+/** GET /subscriptions/me — the calling org's own access state. */
+export interface SubscriptionAccessState {
+  plan: string
+  planActiveUntil: string | null
+  subscriptionStatus: SubscriptionStatus | null
+  isTrial: boolean
+  trialEndsAt: string | null
+  trialDaysRemaining: number | null
+  accessBlocked: boolean
+}

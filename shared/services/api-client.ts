@@ -95,6 +95,20 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Backend's SubscriptionAccessGuard rejects org-scoped requests once the
+    // trial/subscription has lapsed — bounce straight to the block page
+    // rather than surfacing a generic 403 in whatever UI triggered the call.
+    if (error.response?.status === 403) {
+      const code = (error.response.data as { error?: { code?: string } } | undefined)?.error?.code;
+      if (
+        (code === 'TRIAL_EXPIRED' || code === 'SUBSCRIPTION_EXPIRED') &&
+        typeof window !== 'undefined' &&
+        window.location.pathname !== '/trial-expired'
+      ) {
+        window.location.replace('/trial-expired');
+      }
+    }
+
     return Promise.reject(error);
   },
 );
