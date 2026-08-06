@@ -53,7 +53,7 @@ export default function AuthLayout({
             alt="EasyPoint"
             width={180}
             height={50}
-            className="object-contain"
+            className="object-contain w-auto h-auto"
             priority
           />
         </header>

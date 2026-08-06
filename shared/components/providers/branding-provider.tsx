@@ -110,6 +110,12 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
       return;
     }
 
+    // Access is already known to be blocked (subscription/trial expired) —
+    // SubscriptionAccessGuard rejects this endpoint too, so skip the request
+    // instead of logging an expected 403. The org-config effect above already
+    // triggers the redirect to /trial-expired.
+    if (useAuthStore.getState().organizationConfig?.accessBlocked) return;
+
     async function fetchOrgModules() {
       try {
         const modules = await organizationModulesService.getOrgModules(activeOrganization!.id);
@@ -121,7 +127,7 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
     }
 
     fetchOrgModules();
-  }, [activeOrganization?.id, pathname]);
+  }, [activeOrganization?.id, pathname, organizationConfig?.accessBlocked]);
 
   useEffect(() => {
     if (
