@@ -41,6 +41,15 @@ export interface OrganizationConfig {
   organizationEmail: string | null;
   plan: string;
   planActiveUntil: string | null;
+  /** Latest subscription status: ACTIVE | TRIALING | EXPIRED | CANCELLED | PAST_DUE | PENDING_PAYMENT | null. */
+  subscriptionStatus: string | null;
+  /** True while `plan === 'FREE'` — FREE is always a 7-day trial, never a standing tier. */
+  isTrial: boolean;
+  trialEndsAt: string | null;
+  /** Whole days left in the trial, floored at 0. Null when not on a trial. */
+  trialDaysRemaining: number | null;
+  /** True once the subscription/trial has lapsed — drives the redirect to /trial-expired. */
+  accessBlocked: boolean;
   organizationIsActive: boolean;
   organizationCreatedAt?: string;
 }

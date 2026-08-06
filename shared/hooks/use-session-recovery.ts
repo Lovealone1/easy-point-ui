@@ -64,8 +64,11 @@ export function useSessionRecovery({
   useEffect(() => {
     async function recoverSession() {
       if (user && profileHydrated) {
-        if (redirectWhenNoOrg && !useAuthStore.getState().activeOrganization) {
+        const cachedOrg = useAuthStore.getState().activeOrganization;
+        if (redirectWhenNoOrg && !cachedOrg) {
           router.replace(redirectWhenNoOrg);
+        } else if (cachedOrg && useAuthStore.getState().organizationConfig?.accessBlocked) {
+          router.replace('/trial-expired');
         }
         setLoadingSession(false);
         return;
@@ -94,6 +97,9 @@ export function useSessionRecovery({
               if (applyBranding) {
                 applyBrandingToDOM(activeOrg.config, setTheme);
                 await new Promise((resolve) => setTimeout(resolve, BRAND_REVEAL_HOLD_MS));
+              }
+              if (activeOrg.config.accessBlocked) {
+                router.replace('/trial-expired');
               }
             }
           } else if (redirectWhenNoOrg) {

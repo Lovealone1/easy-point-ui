@@ -90,6 +90,12 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
         // doesn't change or when setTheme is captured as a stale closure.
         const { hasUserSetTheme } = useUiStore.getState();
         applyBrandingToDOM(merged, setTheme, !hasUserSetTheme);
+
+        // The trial/subscription can lapse mid-session (not just on login) —
+        // re-check on every org-config fetch, not only session recovery.
+        if (merged.accessBlocked && pathname !== '/trial-expired') {
+          window.location.replace('/trial-expired');
+        }
       } catch (error) {
         console.error('Failed to fetch organization config:', error);
       }
@@ -118,7 +124,12 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
   }, [activeOrganization?.id, pathname]);
 
   useEffect(() => {
-    if (pathname === '/auth' || pathname === '/dashboard' || pathname === '/unauthorized') {
+    if (
+      pathname === '/auth' ||
+      pathname === '/dashboard' ||
+      pathname === '/unauthorized' ||
+      pathname === '/trial-expired'
+    ) {
       return;
     }
 
