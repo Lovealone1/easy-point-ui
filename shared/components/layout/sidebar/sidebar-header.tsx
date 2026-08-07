@@ -3,13 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
+import { useSidebarCatalog } from '@/shared/config/sidebar-catalog';
 import { Button } from '@/shared/components/ui/button';
 import { SidebarClose } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
+/** The personal space has no branding of its own, so it wears the app's mark. */
+const APP_LOGO_URL = '/global/easypoint-logo.png';
+const APP_LOGO_SHORT_URL = '/global/easypoint-resumed.png';
+
 export default function SidebarHeader() {
   const { organizationConfig, activeOrganization } = useAuthStore();
   const { isSidebarCollapsed, toggleSidebar, setMobileMenuOpen } = useUiStore();
+  const catalog = useSidebarCatalog();
+  const isAppBrand = catalog.brand === 'app';
 
   const handleLogoClick = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -19,12 +26,11 @@ export default function SidebarHeader() {
     }
   };
 
-  const logoShortUrl = organizationConfig?.logoShortUrl;
-  const logoUrl = organizationConfig?.logoUrl;
-  const orgName =
-    organizationConfig?.organizationName ||
-    activeOrganization?.name ||
-    'O';
+  const logoShortUrl = isAppBrand ? APP_LOGO_SHORT_URL : organizationConfig?.logoShortUrl;
+  const logoUrl = isAppBrand ? APP_LOGO_URL : organizationConfig?.logoUrl;
+  const orgName = isAppBrand
+    ? 'EasyPoint'
+    : organizationConfig?.organizationName || activeOrganization?.name || 'O';
 
   const [collapsedLogoToRender, setCollapsedLogoToRender] = useState<string | null>(null);
   const [expandedLogoToRender, setExpandedLogoToRender] = useState<string | null>(null);

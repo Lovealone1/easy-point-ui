@@ -6,8 +6,10 @@
 // Rules:
 //  - Max 5 favorites total (1 pinned Dashboard + 4 user-added).
 //  - The Dashboard (pinned: true) is always present and cannot be removed.
-//  - Dynamic favorites are stored per-user in localStorage using the key
-//    `ep_favorites_<userId>`.
+//  - Dynamic favorites are stored per-user *and per shell* in localStorage
+//    using the key `ep_favorites_<namespace>_<userId>`. The namespace keeps the
+//    organization dashboard and the personal space from sharing a list — module
+//    ids from one shell do not resolve in the other's catalog.
 //  - Overflow strategy: LIFO — when the list is full and the user pins a new
 //    module, the most recently added dynamic favorite is removed to make room
 //    for the new one (stack pop → push).
@@ -19,15 +21,15 @@ const MAX_FAVORITES = 5;
 const PINNED_ALWAYS = 1; // The Dashboard is always pinned
 const MAX_DYNAMIC = MAX_FAVORITES - PINNED_ALWAYS; // = 4
 
-/** Returns the localStorage key for a given user ID. */
-function storageKey(userId: string): string {
-  return `ep_favorites_${userId}`;
+/** Returns the localStorage key for a given shell + user. */
+function storageKey(namespace: string, userId: string): string {
+  return `ep_favorites_${namespace}_${userId}`;
 }
 
 /** Reads dynamic favorites for a user from localStorage. */
-function readFromStorage(userId: string): string[] {
+function readFromStorage(namespace: string, userId: string): string[] {
   try {
-    const raw = localStorage.getItem(storageKey(userId));
+    const raw = localStorage.getItem(storageKey(namespace, userId));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -37,9 +39,9 @@ function readFromStorage(userId: string): string[] {
 }
 
 /** Writes dynamic favorites for a user to localStorage. */
-function writeToStorage(userId: string, ids: string[]): void {
+function writeToStorage(namespace: string, userId: string, ids: string[]): void {
   try {
-    localStorage.setItem(storageKey(userId), JSON.stringify(ids));
+    localStorage.setItem(storageKey(namespace, userId), JSON.stringify(ids));
   } catch {
     // Ignore storage errors (private browsing, quota, etc.)
   }
@@ -57,6 +59,12 @@ interface FavoritesState {
   userId: string | null;
 
   /**
+   * Which shell's favorites are loaded ('org' | 'personal'). Part of the
+   * storage key, so switching shells reloads a different list.
+   */
+  namespace: string;
+
+  /**
    * Ordered list of dynamic favorite module IDs (max 4).
    * Order represents addition history; index 0 = oldest, last index = newest.
    * Dashboard is always included via `MODULES_CATALOG.pinned` and is NOT here.
@@ -64,10 +72,10 @@ interface FavoritesState {
   dynamicFavoriteIds: string[];
 
   /**
-   * Load favorites from localStorage for the given user.
+   * Load favorites from localStorage for the given user and shell.
    * Call this once after the user is authenticated.
    */
-  initForUser: (userId: string) => void;
+  initForUser: (userId: string, namespace?: string) => void;
 
   /**
    * Clears in-memory state (called on logout).
@@ -106,14 +114,15 @@ interface FavoritesState {
 
 export const useFavoritesStore = create<FavoritesState>()((set, get) => ({
   userId: null,
+  namespace: 'org',
   dynamicFavoriteIds: [],
 
   // ── initForUser ────────────────────────────────────────────────────────────
-  initForUser: (userId) => {
-    const ids = readFromStorage(userId);
+  initForUser: (userId, namespace = 'org') => {
+    const ids = readFromStorage(namespace, userId);
     // Clamp to MAX_DYNAMIC in case the stored data was somehow corrupted
     const clamped = ids.slice(0, MAX_DYNAMIC);
-    set({ userId, dynamicFavoriteIds: clamped });
+    set({ userId, namespace, dynamicFavoriteIds: clamped });
   },
 
   // ── clearForUser ───────────────────────────────────────────────────────────
@@ -126,7 +135,7 @@ export const useFavoritesStore = create<FavoritesState>()((set, get) => ({
 
   // ── addFavorite ────────────────────────────────────────────────────────────
   addFavorite: (moduleId) => {
-    const { userId, dynamicFavoriteIds } = get();
+    const { userId, namespace, dynamicFavoriteIds } = get();
 
     // Already a favorite — no-op
     if (dynamicFavoriteIds.includes(moduleId)) return;
@@ -141,15 +150,15 @@ export const useFavoritesStore = create<FavoritesState>()((set, get) => ({
     // Append the new favorite at the end (newest)
     next = [...next, moduleId];
 
-    if (userId) writeToStorage(userId, next);
+    if (userId) writeToStorage(namespace, userId, next);
     set({ dynamicFavoriteIds: next });
   },
 
   // ── removeFavorite ─────────────────────────────────────────────────────────
   removeFavorite: (moduleId) => {
-    const { userId, dynamicFavoriteIds } = get();
+    const { userId, namespace, dynamicFavoriteIds } = get();
     const next = dynamicFavoriteIds.filter((id) => id !== moduleId);
-    if (userId) writeToStorage(userId, next);
+    if (userId) writeToStorage(namespace, userId, next);
     set({ dynamicFavoriteIds: next });
   },
 

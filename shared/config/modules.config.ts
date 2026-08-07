@@ -12,7 +12,9 @@ export interface ModuleItem {
   name: string;
   path: string;
   icon: string;
-  category: 'Comercial' | 'Productos' | 'Insumos' | 'Operaciones' | 'Finanzas' | 'Administración' | 'General';
+  /** Group heading in the sidebar. Open-ended because the personal space
+   *  catalog defines its own groups; each catalog declares its own order. */
+  category: string;
   /** Whether this module has a real page behind it. Unavailable modules are
    *  rendered as disabled items with a "Próximamente" badge. */
   available: boolean;
@@ -253,3 +255,24 @@ export const MODULES_CATALOG: ModuleItem[] = [
     available: true,
   }
 ];
+
+/** Group order for the organization sidebar. 'General' is absent on purpose:
+ *  its only member is Dashboard, which is pinned and rendered by Favorites. */
+export const ORG_SIDEBAR_CATEGORIES = [
+  'Comercial',
+  'Productos',
+  'Insumos',
+  'Operaciones',
+  'Finanzas',
+  'Administración',
+];
+
+/** What the (dashboard) shell feeds to SidebarCatalogProvider. */
+export const ORG_SIDEBAR_CATALOG = {
+  items: MODULES_CATALOG,
+  categories: ORG_SIDEBAR_CATEGORIES,
+  brand: 'organization' as const,
+  settingsPath: '/organization-config',
+  filterByOrgModules: true,
+  favoritesNamespace: 'org',
+};

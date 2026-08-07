@@ -6,7 +6,7 @@ import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
 import { getMe } from '@/features/auth/services/auth.service';
-import { resolveActiveOrg } from '@/shared/utils/resolve-active-org';
+import { readPreferredOrgId, resolveActiveOrg } from '@/shared/utils/resolve-active-org';
 import { applyBrandingToDOM, forceLogout } from '@/shared/utils/apply-branding';
 
 // Hold the splash visible long enough for the org brand color swap
@@ -25,6 +25,14 @@ interface UseSessionRecoveryOptions {
    * has no organization membership.
    */
   redirectWhenNoOrg?: string;
+  /**
+   * Whether a lapsed organization subscription should bounce to
+   * /trial-expired. Only the organization shell sets this: the block is about
+   * access to the organization, and the personal space is not part of what the
+   * subscription pays for — a user whose org trial ended must still reach
+   * /personal. Same reasoning for the admin shell.
+   */
+  blockWhenAccessExpired?: boolean;
 }
 
 /**
@@ -35,6 +43,7 @@ interface UseSessionRecoveryOptions {
 export function useSessionRecovery({
   applyBranding,
   redirectWhenNoOrg,
+  blockWhenAccessExpired = false,
 }: UseSessionRecoveryOptions): void {
   const {
     user,
@@ -67,7 +76,11 @@ export function useSessionRecovery({
         const cachedOrg = useAuthStore.getState().activeOrganization;
         if (redirectWhenNoOrg && !cachedOrg) {
           router.replace(redirectWhenNoOrg);
-        } else if (cachedOrg && useAuthStore.getState().organizationConfig?.accessBlocked) {
+        } else if (
+          blockWhenAccessExpired &&
+          cachedOrg &&
+          useAuthStore.getState().organizationConfig?.accessBlocked
+        ) {
           router.replace('/trial-expired');
         }
         setLoadingSession(false);
@@ -86,7 +99,9 @@ export function useSessionRecovery({
             globalRole: data.globalRole || null,
           });
 
-          const activeOrg = resolveActiveOrg(data.organizations);
+          // Honour the workspace picker's choice across reloads; the auth
+          // store itself is memory-only by design.
+          const activeOrg = resolveActiveOrg(data.organizations, readPreferredOrgId());
           if (activeOrg) {
             setActiveOrganization(
               { id: activeOrg.id, name: activeOrg.name, slug: activeOrg.slug },
@@ -98,7 +113,7 @@ export function useSessionRecovery({
                 applyBrandingToDOM(activeOrg.config, setTheme);
                 await new Promise((resolve) => setTimeout(resolve, BRAND_REVEAL_HOLD_MS));
               }
-              if (activeOrg.config.accessBlocked) {
+              if (blockWhenAccessExpired && activeOrg.config.accessBlocked) {
                 router.replace('/trial-expired');
               }
             }
