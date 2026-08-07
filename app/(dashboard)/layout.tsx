@@ -6,6 +6,8 @@ import DashboardHeader from '@/shared/components/layout/dashboard-header';
 import Sidebar from '@/shared/components/layout/sidebar/sidebar';
 import SmoothScrollMain from '@/shared/components/layout/smooth-scroll-main';
 import EnvironmentSwitchGate from '@/shared/components/layout/environment-switch-gate';
+import { SidebarCatalogProvider } from '@/shared/config/sidebar-catalog';
+import { ORG_SIDEBAR_CATALOG } from '@/shared/config/modules.config';
 
 export default function DashboardLayout({
   children,
@@ -16,6 +18,7 @@ export default function DashboardLayout({
     <ThemeProvider>
       <BrandingProvider>
         <QueryProvider>
+          <SidebarCatalogProvider catalog={ORG_SIDEBAR_CATALOG}>
           <div className="flex h-screen overflow-hidden bg-background text-foreground">
             <Sidebar />
             <div className="flex flex-col flex-1 overflow-hidden">
@@ -29,6 +32,7 @@ export default function DashboardLayout({
           {/* Notifier Provider (Sonner) */}
           <Toaster position="top-right" richColors />
           <EnvironmentSwitchGate />
+          </SidebarCatalogProvider>
         </QueryProvider>
       </BrandingProvider>
     </ThemeProvider>
