@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUiStore } from '@/shared/store/use-ui-store';
-import { MODULES_CATALOG, type ModuleItem } from '@/shared/config/modules.config';
+import { type ModuleItem } from '@/shared/config/modules.config';
+import { useSidebarCatalog } from '@/shared/config/sidebar-catalog';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
 import { useOrgModulesStore } from '@/shared/store/use-org-modules-store';
 import { AppIcon } from '@/shared/components/ui/app-icon';
@@ -23,13 +24,16 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
   const { isSidebarCollapsed } = useUiStore();
   const { dynamicFavoriteIds } = useFavoritesStore();
   const { activeModuleKeys } = useOrgModulesStore();
+  const catalog = useSidebarCatalog();
 
-  // 1. Pinned favorites from modules config (always shown)
-  const pinnedFavorites = MODULES_CATALOG.filter((mod) => mod.pinned);
+  // 1. Pinned favorites from the active catalog (always shown)
+  const pinnedFavorites = catalog.items.filter((mod) => mod.pinned);
 
-  // 2. Dynamic favorites from the user's localStorage-backed store
+  // 2. Dynamic favorites from the user's localStorage-backed store. Ids that
+  //    do not resolve in this catalog are dropped, so a stale entry from the
+  //    other shell never renders.
   const dynamicFavorites = dynamicFavoriteIds
-    .map((id) => MODULES_CATALOG.find((m) => m.id === id))
+    .map((id) => catalog.items.find((m) => m.id === id))
     .filter((mod): mod is ModuleItem => !!mod);
 
   // Combine: pinned first, then dynamic (newest last in array → shown at bottom)
@@ -38,7 +42,14 @@ export default function SidebarFavorites({ searchQuery }: SidebarFavoritesProps)
   // Filter based on active search query and organization active modules (except pinned)
   const filteredFavorites = allFavorites.filter((mod) => {
     if (!mod.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    if (!mod.pinned && activeModuleKeys !== null && !activeModuleKeys.has(mod.id)) return false;
+    if (
+      !mod.pinned &&
+      catalog.filterByOrgModules &&
+      activeModuleKeys !== null &&
+      !activeModuleKeys.has(mod.id)
+    ) {
+      return false;
+    }
     return true;
   });
 

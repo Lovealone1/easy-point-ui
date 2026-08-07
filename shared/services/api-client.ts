@@ -100,10 +100,15 @@ apiClient.interceptors.response.use(
     // rather than surfacing a generic 403 in whatever UI triggered the call.
     if (error.response?.status === 403) {
       const code = (error.response.data as { error?: { code?: string } } | undefined)?.error?.code;
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+      // The personal space is outside what the organization subscription pays
+      // for, so a stray org-scoped 403 must not evict a user from it.
+      const isPersonalSpace = pathname === '/personal' || pathname.startsWith('/personal/');
       if (
         (code === 'TRIAL_EXPIRED' || code === 'SUBSCRIPTION_EXPIRED') &&
         typeof window !== 'undefined' &&
-        window.location.pathname !== '/trial-expired'
+        pathname !== '/trial-expired' &&
+        !isPersonalSpace
       ) {
         window.location.replace('/trial-expired');
       }

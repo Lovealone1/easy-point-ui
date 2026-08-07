@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
-import { MODULES_CATALOG } from '@/shared/config/modules.config';
+import { useSidebarCatalog } from '@/shared/config/sidebar-catalog';
 import { AppIcon } from '@/shared/components/ui/app-icon';
 import { ChevronRight, Home, Menu } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
@@ -23,6 +23,10 @@ import UserMenu from '@/shared/components/layout/header/user-menu';
 function Breadcrumbs() {
   const pathname = usePathname();
   const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const catalog = useSidebarCatalog();
+
+  /** Home is whichever module the active catalog pins. */
+  const homePath = catalog.items.find((m) => m.pinned)?.path ?? '/';
 
   // Build segments: split path, remove empty strings
   const segments = pathname.split('/').filter(Boolean);
@@ -37,11 +41,11 @@ function Breadcrumbs() {
     enabled: !!roleId && roleId !== 'create',
   });
 
-  // Determine the leaf module for the pin button
+  // Determine the leaf module for the pin button. Matched on the full path
+  // rather than the last segment, because personal-space modules are nested
+  // (/personal/subscriptions) while organization ones are not.
   const leafSegment = segments[segments.length - 1];
-  const leafMod = leafSegment
-    ? MODULES_CATALOG.find((m) => m.path === `/${leafSegment}`)
-    : null;
+  const leafMod = catalog.items.find((m) => m.path === pathname) ?? null;
   const canPin = leafMod && !leafMod.pinned;
   const isPinned = canPin ? isFavorite(leafMod!.id) : false;
 
@@ -89,7 +93,7 @@ function Breadcrumbs() {
       {/* ── Mobile: show only the leaf segment + pin ── */}
       <span className="md:hidden flex items-center gap-1.5 min-w-0 overflow-hidden">
         <Link
-          href="/dashboard"
+          href={homePath}
           className="flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 shrink-0"
           title="Inicio"
         >
@@ -108,7 +112,7 @@ function Breadcrumbs() {
       {/* ── Desktop: full breadcrumb chain ── */}
       <span className="hidden md:flex items-center gap-1.5 min-w-0 overflow-hidden flex-1">
         <Link
-          href="/dashboard"
+          href={homePath}
           className="flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 shrink-0"
           title="Inicio"
         >
@@ -121,8 +125,12 @@ function Breadcrumbs() {
           const href = '/' + segments.slice(0, idx + 1).join('/');
           const isLast = idx === segments.length - 1;
 
-          // Try to find if this segment matches a module path
-          const mod = MODULES_CATALOG.find((m) => m.path === `/${segment}`);
+          // Grouping segment with no page behind it — skip rather than render
+          // a link to a 404.
+          if (!isLast && idx === 0 && segment === catalog.hiddenPathSegment) return null;
+
+          // Match on the accumulated href so nested catalogs resolve too.
+          const mod = catalog.items.find((m) => m.path === href);
 
           if (mod) {
             return (

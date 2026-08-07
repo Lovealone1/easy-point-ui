@@ -275,17 +275,18 @@ export default function AdminSidebar() {
 
         {/* Footer */}
         <div className="border-t border-sidebar-border shrink-0 p-3 space-y-3 bg-card/10">
-          {/* Back to organization dashboard */}
+          {/* Back out of the admin panel — through the picker, since a global
+              admin may have several organizations or none at all. */}
           <button
             type="button"
             onClick={() => {
               setMobileMenuOpen(false);
-              requestEnvironmentSwitch('/dashboard');
+              requestEnvironmentSwitch('/workspace');
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-sidebar-border transition-colors"
           >
             <ArrowLeftRight className="h-3.5 w-3.5 shrink-0 text-brand-400" />
-            <span className="truncate">Volver a mi organización</span>
+            <span className="truncate">Salir del panel admin</span>
           </button>
 
           {/* Theme switch */}

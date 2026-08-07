@@ -9,6 +9,11 @@ import { DEFAULT_LANDING, safeInternalPath } from '@/shared/utils/safe-redirect'
 const PUBLIC_PATHS = ['/auth', '/terms', '/privacy'];
 
 function isPublicPath(pathname: string): boolean {
+  // The marketing landing page. Checked separately and by exact match: putting
+  // '/' in PUBLIC_PATHS would make the startsWith(`${p}/`) test below match
+  // every route in the app.
+  if (pathname === '/') return true;
+
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 

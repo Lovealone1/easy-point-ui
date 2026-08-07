@@ -43,7 +43,11 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
   const { initForUser } = useFavoritesStore();
   const { activeModuleKeys } = useOrgModulesStore();
 
-  useSessionRecovery({ applyBranding: true, redirectWhenNoOrg: '/onboarding' });
+  useSessionRecovery({
+    applyBranding: true,
+    redirectWhenNoOrg: '/onboarding',
+    blockWhenAccessExpired: true,
+  });
 
   // Re-apply the x-organization-id Axios header on mount so it survives a
   // round-trip through the admin shell, which clears it while active

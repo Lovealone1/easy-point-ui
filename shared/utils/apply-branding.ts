@@ -1,5 +1,14 @@
 import { generateShades } from '@/shared/utils/color-shades';
-import type { OrganizationConfig } from '@/shared/store/use-auth-store';
+
+/**
+ * Everything branding needs. Structural on purpose: an OrganizationConfig
+ * satisfies it, and so do the personal space's UserPreferences — both panels
+ * theme themselves through the same code path.
+ */
+export interface BrandingSource {
+  primaryColor?: string | null;
+  defaultTheme?: 'LIGHT' | 'DARK' | 'SYSTEM' | null;
+}
 
 export async function forceLogout(): Promise<void> {
   try {
@@ -11,10 +20,11 @@ export async function forceLogout(): Promise<void> {
 
 /**
  * Applies brand CSS variables and optionally the initial theme to the DOM.
- * Only ever called from the dashboard shell — the admin shell never mounts
- * org branding and calls `resetBrandingDOM()` directly instead.
+ * Called from the dashboard shell with the organization's config and from the
+ * personal shell with the user's preferences — the admin shell never brands at
+ * all and calls `resetBrandingDOM()` directly instead.
  *
- * @param config         The organization config with primaryColor and defaultTheme.
+ * @param config         Anything carrying primaryColor and defaultTheme.
  * @param setThemeFn     The UI store's setTheme action (applies .dark class).
  * @param applyTheme     When true (default), also resolves and applies the theme
  *                       from config. Pass false when the user has already set their
@@ -22,7 +32,7 @@ export async function forceLogout(): Promise<void> {
  *                       the CSS color variables are updated.
  */
 export function applyBrandingToDOM(
-  config: OrganizationConfig,
+  config: BrandingSource,
   setThemeFn: (mode: 'light' | 'dark') => void,
   applyTheme = true,
 ): void {

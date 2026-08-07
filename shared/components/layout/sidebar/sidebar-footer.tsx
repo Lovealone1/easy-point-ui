@@ -4,13 +4,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
-import { Settings, HelpCircle, Sun, Moon, Sparkles, Clock } from 'lucide-react';
+import { useSidebarCatalog } from '@/shared/config/sidebar-catalog';
+import { Settings, HelpCircle, Sun, Moon, Sparkles, Clock, User } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
 export default function SidebarFooter() {
   const pathname = usePathname();
-  const { organizationConfig, activeOrganization } = useAuthStore();
+  const { organizationConfig, activeOrganization, user } = useAuthStore();
   const { theme, toggleTheme, isSidebarCollapsed } = useUiStore();
+  const catalog = useSidebarCatalog();
+  const isPersonal = catalog.brand === 'app';
 
   // Use organizationConfig as the primary source; fall back to activeOrganization
   // for name/initial while the full config is still loading.
@@ -40,13 +43,13 @@ export default function SidebarFooter() {
       {/* Utilities */}
       <div className="space-y-0.5">
         <Link
-          href="/organization-config"
+          href={catalog.settingsPath}
           className={cn(
             "flex items-center text-xs font-medium rounded-lg transition-colors hover:bg-muted/50",
             isSidebarCollapsed
               ? "justify-center px-0 py-2.5 w-full"
               : "gap-3 px-3 py-2 border-l-[3px]",
-            pathname === '/organization-config'
+            pathname === catalog.settingsPath
               ? cn(
                   "bg-sidebar-primary/10 text-sidebar-primary font-semibold",
                   !isSidebarCollapsed && "border-sidebar-primary"
@@ -63,7 +66,7 @@ export default function SidebarFooter() {
         </Link>
 
         <Link
-          href="/dashboard"
+          href={catalog.items.find((m) => m.pinned)?.path ?? catalog.settingsPath}
           className={cn(
             "flex items-center text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground transition-colors hover:bg-muted/50",
             isSidebarCollapsed ? "justify-center px-0 py-2.5 w-full" : "gap-3 px-3 py-2"
@@ -111,9 +114,16 @@ export default function SidebarFooter() {
         )}
       </div>
 
-      {/* Organization Info Card */}
+      {/* Identity Card — the org's plan/trial in the dashboard, the user's own
+          account in the personal space, which has neither. */}
       <div className="px-1">
-        {isSidebarCollapsed ? (
+        {isPersonal ? (
+          <PersonalIdentityCard
+            isCollapsed={isSidebarCollapsed}
+            name={user?.fullName || user?.firstName || 'Mi espacio'}
+            email={user?.email ?? null}
+          />
+        ) : isSidebarCollapsed ? (
           /* Collapsed: just the initial avatar */
           <div
             className="w-full flex items-center justify-center h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 hover:bg-brand-500/20 hover:border-brand-500/30 transition-colors"
@@ -186,6 +196,56 @@ export default function SidebarFooter() {
         )}
       </div>
 
+    </div>
+  );
+}
+
+/**
+ * Personal-space counterpart of the organization card. There is no plan or
+ * trial to show here — the personal space is not billed — so it carries the
+ * user's own identity instead.
+ */
+function PersonalIdentityCard({
+  isCollapsed,
+  name,
+  email,
+}: {
+  isCollapsed: boolean;
+  name: string;
+  email: string | null;
+}) {
+  const initial = name.charAt(0).toUpperCase();
+
+  if (isCollapsed) {
+    return (
+      <div
+        className="w-full flex items-center justify-center h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 hover:bg-brand-500/20 hover:border-brand-500/30 transition-colors"
+        title={email ? `${name} · ${email}` : name}
+      >
+        <div className="w-7 h-7 rounded-lg bg-background text-sidebar-primary flex items-center justify-center font-bold text-sm shadow-sm select-none">
+          {initial}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden p-3 rounded-xl border border-sidebar-border hover:border-brand-500/40 bg-card/40 hover:bg-brand-500/5 transition-all duration-300 group">
+      <div className="absolute -top-10 -right-10 w-24 h-24 bg-brand-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+      <div className="relative flex items-center gap-2.5 min-w-0">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500/20 to-brand-500/5 border border-brand-500/20 text-sidebar-primary flex items-center justify-center shrink-0 select-none shadow-sm group-hover:scale-105 transition-transform duration-300">
+          <User className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <span className="block text-xs font-bold text-foreground truncate leading-none group-hover:text-sidebar-primary transition-colors duration-200">
+            {name}
+          </span>
+          <span className="block text-[10px] text-muted-foreground truncate mt-1">
+            {email ?? 'Espacio personal'}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

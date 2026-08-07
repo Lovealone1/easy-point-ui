@@ -122,19 +122,19 @@ export default function UserMenu({ user, environment }: UserMenuProps) {
 
         {/* Menu actions */}
         <div className="p-1.5">
-          {environment === 'admin' && (
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                requestEnvironmentSwitch('/dashboard');
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
-            >
-              <ArrowLeftRight className="h-3.5 w-3.5 group-hover:text-foreground transition-colors" />
-              <span>Volver a mi organización</span>
-            </button>
-          )}
+          {/* Both shells route through the picker rather than a fixed panel:
+              the user may have several organizations and a personal space. */}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              requestEnvironmentSwitch('/workspace');
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
+          >
+            <ArrowLeftRight className="h-3.5 w-3.5 group-hover:text-foreground transition-colors" />
+            <span>{environment === 'admin' ? 'Salir del panel admin' : 'Cambiar de espacio'}</span>
+          </button>
 
           <button
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground opacity-60 cursor-not-allowed group"

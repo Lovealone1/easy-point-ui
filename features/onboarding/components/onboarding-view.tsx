@@ -1,11 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // features/onboarding/components/onboarding-view.tsx
 //
-// Self-service organization creation — the landing page for a logged-in
-// user who does not belong to any organization yet. Two steps:
-//   1. Choose "create an organization" (only real option today) or
-//      "personal use" (disabled, coming soon). Split screen w/ brand panel.
-//   2. Organization name / email. Split screen, form centered in the middle.
+// Landing page for a logged-in user who does not belong to any organization
+// yet, and the entry point for setting up the Personal Space (?space=personal).
+// Full-bleed single column on every step — deliberately not the split brand
+// panel the auth screens use, so setup does not read as another login. Branches:
+//   1. Choose "create an organization" or "personal use".
+//   2a. Organization: name / email, then straight into the dashboard.
+//   2b. Personal: the Personal Space wizard (goal → region → reminders),
+//       which ends on /personal/dashboard.
 // Creating the organization grants every module for a 7-day free trial —
 // there is no module selection step; see the trial rules on the backend
 // (OrganizationsRepository.create).
@@ -14,7 +17,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import {
   Building2,
@@ -32,55 +35,29 @@ import { getMe } from "@/features/auth/services/auth.service"
 import { useAuthBrandingReset } from "@/shared/components/providers/branding-provider"
 import { resolveActiveOrg } from "@/shared/utils/resolve-active-org"
 import { useCreateMyOrganization } from "../hooks/use-onboarding"
+import { PersonalOnboardingWizard } from "@/features/user-onboarding/components/personal-onboarding-wizard"
+import { userOnboardingService } from "@/features/user-onboarding/services/user-onboarding.service"
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Brand Panel — decorative left column, shown on both steps.
-// ─────────────────────────────────────────────────────────────────────────────
-
-function BrandPanel() {
-  return (
-    <div className="hidden lg:flex lg:w-[38%] p-2 lg:p-4 shrink-0">
-      <div className="w-full h-full relative bg-[#090014] rounded-2xl overflow-hidden shadow-2xl p-10 xl:p-14">
-        <Image
-          src="/assets/abstract-erp-wallpaper.png"
-          alt="EasyPoint"
-          fill
-          sizes="38vw"
-          className="object-cover object-center"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-0" />
-        <div className="relative z-10 flex flex-col h-full justify-end">
-          <div className="mb-12 max-w-lg">
-            <h2 className="text-4xl xl:text-5xl font-bold leading-[1.15] text-white tracking-tight mb-5">
-              Prueba EasyPoint gratis por 7 días
-            </h2>
-            <p className="text-lg text-white/80 leading-relaxed font-medium">
-              Acceso completo a todos los módulos desde el primer minuto. Sin tarjeta, sin compromiso.
-            </p>
-          </div>
-          <p className="text-sm font-bold tracking-widest text-white/60 uppercase flex items-center gap-4">
-            <span className="w-12 h-px bg-white/30" />
-            Hecho por emprendedores para emprendedores
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-type Step = "choice" | "org-form"
+type Step = "choice" | "org-form" | "personal"
 
 export function OnboardingView() {
   useAuthBrandingReset()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // The workspace picker sends a user here with ?space=personal when they pick
+  // "Mi espacio personal" and have not set it up yet. Without that intent this
+  // page belongs only to users with no organization, and the guard below sends
+  // everyone else back to the picker — which is why a member of an org used to
+  // bounce straight back and appear to go nowhere.
+  const wantsPersonalSpace = searchParams.get("space") === "personal"
 
   const setUserFromLogin = useAuthStore((s) => s.setUserFromLogin)
   const hydrateProfile = useAuthStore((s) => s.hydrateProfile)
   const setActiveOrganization = useAuthStore((s) => s.setActiveOrganization)
   const setOrganizationConfig = useAuthStore((s) => s.setOrganizationConfig)
 
-  const [step, setStep] = React.useState<Step>("choice")
+  const [step, setStep] = React.useState<Step>(wantsPersonalSpace ? "personal" : "choice")
   const [isCheckingSession, setIsCheckingSession] = React.useState(true)
 
   const [name, setName] = React.useState("")
@@ -109,9 +86,22 @@ export function OnboardingView() {
         })
 
         const activeOrg = resolveActiveOrg(data.organizations)
-        if (activeOrg) {
-          router.replace("/dashboard")
+        if (activeOrg && !wantsPersonalSpace) {
+          // Already set up — the picker decides which space they open.
+          router.replace("/workspace")
           return
+        }
+
+        // No organization is not the same as "not set up": a user who finished
+        // the personal onboarding belongs in the Personal Space, not back here.
+        try {
+          const onboarding = await userOnboardingService.getState()
+          if (onboarding.completed) {
+            router.replace("/personal/dashboard")
+            return
+          }
+        } catch {
+          // Preferences unreachable — fall through and show the choice screen.
         }
 
         setIsCheckingSession(false)
@@ -181,158 +171,168 @@ export function OnboardingView() {
   }
 
   return (
-    <div className="h-full w-full flex overflow-hidden">
-      <BrandPanel />
+    <div className="h-full w-full flex flex-col min-h-0 relative overflow-hidden">
+      {/* Ambient background elements */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.06] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full bg-primary/10 blur-[140px] pointer-events-none animate-pulse-slow" />
 
-      <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
-        {/* Ambient background elements */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.06] pointer-events-none" />
-        <div className="absolute top-1/4 left-1/2 w-[380px] h-[380px] rounded-full bg-primary/10 blur-[120px] pointer-events-none animate-pulse-slow" />
+      <header className="shrink-0 relative z-10 px-6 sm:px-10 lg:px-14 py-6 lg:py-8 flex items-center">
+        <Image
+          src="/global/easypoint-logo.png"
+          alt="EasyPoint"
+          width={160}
+          height={44}
+          className="object-contain w-auto h-auto"
+          priority
+        />
+      </header>
 
-        <header className="shrink-0 relative z-10 px-6 sm:px-10 lg:px-14 py-6 lg:py-8 flex items-center">
-          <Image
-            src="/global/easypoint-logo.png"
-            alt="EasyPoint"
-            width={160}
-            height={44}
-            className="object-contain w-auto h-auto"
-            priority
-          />
-        </header>
-
-        <main className="flex-1 min-h-0 overflow-y-auto relative z-10 px-6 sm:px-10 lg:px-14 pb-10">
-          {step === "choice" && (
-            <div className="h-full flex items-center justify-center">
-              <div className="w-full max-w-2xl glassy-card rounded-2xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md transition-all duration-300 animate-in fade-in duration-300">
-                <div className="mb-8 text-center">
-                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-2">
-                    ¡Bienvenido a EasyPoint!
-                  </h1>
-                  <p className="text-muted-foreground text-sm sm:text-[0.95rem] leading-relaxed">
-                    Aún no perteneces a ninguna organización. Elige cómo quieres empezar.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setStep("org-form")}
-                    className="group flex flex-col items-start text-left p-6 rounded-2xl border border-border/60 bg-background hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 active:scale-[0.98]"
-                  >
-                    <div className="p-3 rounded-xl bg-primary/10 text-primary border border-primary/20 mb-4 group-hover:scale-105 transition-transform">
-                      <Building2 className="w-6 h-6" />
-                    </div>
-                    <h2 className="text-base font-bold text-foreground mb-1.5">
-                      Crear una organización
-                    </h2>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Configura tu propio espacio de trabajo y empieza a operar en minutos, con
-                      acceso completo durante 7 días.
-                    </p>
-                    <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                      Empezar <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </button>
-
-                  <div
-                    className="relative flex flex-col items-start text-left p-6 rounded-2xl border border-border/40 bg-muted/20 opacity-60 cursor-not-allowed select-none"
-                    title="Próximamente"
-                  >
-                    <span className="absolute top-4 right-4 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/70 bg-muted px-1.5 py-0.5 rounded-full border border-border/30">
-                      Pronto
-                    </span>
-                    <div className="p-3 rounded-xl bg-muted text-muted-foreground border border-border/30 mb-4">
-                      <Sparkles className="w-6 h-6" />
-                    </div>
-                    <h2 className="text-base font-bold text-foreground mb-1.5">Uso personal</h2>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Un espacio individual sin organización, ideal para uso independiente.
-                    </p>
-                  </div>
-                </div>
+      <main className="flex-1 min-h-0 overflow-y-auto relative z-10 px-6 sm:px-10 lg:px-14 pb-10">
+        {step === "choice" && (
+          <div className="h-full flex items-center justify-center">
+            <div className="w-full max-w-2xl glassy-card rounded-2xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md transition-all duration-300 animate-in fade-in duration-300">
+              <div className="mb-8 text-center">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-2">
+                  ¡Bienvenido a EasyPoint!
+                </h1>
+                <p className="text-muted-foreground text-sm sm:text-[0.95rem] leading-relaxed">
+                  Aún no perteneces a ninguna organización. Elige cómo quieres empezar.
+                </p>
               </div>
-            </div>
-          )}
 
-          {step === "org-form" && (
-            <div className="h-full flex items-center justify-center">
-              <div className="w-full max-w-lg glassy-card rounded-2xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md transition-all duration-300 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep("choice")}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group mb-6"
+                  onClick={() => setStep("org-form")}
+                  className="group flex flex-col items-start text-left p-6 rounded-2xl border border-border/60 bg-background hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 active:scale-[0.98]"
                 >
-                  <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                  Volver
+                  <div className="p-3 rounded-xl bg-primary/10 text-primary border border-primary/20 mb-4 group-hover:scale-105 transition-transform">
+                    <Building2 className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-base font-bold text-foreground mb-1.5">
+                    Crear una organización
+                  </h2>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Configura tu propio espacio de trabajo y empieza a operar en minutos, con
+                    acceso completo durante 7 días.
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                    Empezar <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </button>
 
-                <div className="mb-6">
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-2">
-                    Datos de tu organización
-                  </h1>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Empiezas con{" "}
-                    <span className="font-semibold text-primary">7 días de prueba gratis</span> y
-                    acceso a todos los módulos. Podrás elegir un plan cuando termine.
-                  </p>
-                </div>
-
-                <form
-                  className="space-y-4"
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    handleCreateOrganization()
-                  }}
+                <button
+                  type="button"
+                  onClick={() => setStep("personal")}
+                  className="group flex flex-col items-start text-left p-6 rounded-2xl border border-border/60 bg-background hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 active:scale-[0.98]"
                 >
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Nombre de la organización
-                    </label>
-                    <Input
-                      required
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Mi Tienda"
-                      className="h-12 px-4 rounded-lg bg-background border-border/70 focus-visible:border-primary transition-all duration-200"
-                    />
+                  <div className="p-3 rounded-xl bg-primary/10 text-primary border border-primary/20 mb-4 group-hover:scale-105 transition-transform">
+                    <Sparkles className="w-6 h-6" />
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Email de contacto{" "}
-                      <span className="text-muted-foreground font-normal">(opcional)</span>
-                    </label>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="contacto@mitienda.com"
-                      className="h-12 px-4 rounded-lg bg-background border-border/70 focus-visible:border-primary transition-all duration-200"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={!name.trim() || createOrgMutation.isPending}
-                    className="w-full h-12 rounded-lg bg-primary hover:bg-primary/95 text-primary-foreground text-base font-semibold transition-transform active:scale-[0.98]"
-                  >
-                    {createOrgMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" /> Creando organización...
-                      </>
-                    ) : (
-                      <>
-                        Crear organización <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </form>
+                  <h2 className="text-base font-bold text-foreground mb-1.5">Uso personal</h2>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Lleva el control de tus suscripciones: cuánto pagas, cuándo se renuevan y qué
+                    te conviene cancelar.
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                    Empezar <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </button>
               </div>
             </div>
-          )}
-        </main>
-      </div>
+          </div>
+        )}
+
+        {step === "personal" && (
+          <div className="h-full flex items-center justify-center">
+            <PersonalOnboardingWizard
+              onBack={() =>
+                // Arriving with the personal intent means there was no choice
+                // step to go back to — the picker is what they came from.
+                wantsPersonalSpace ? router.push("/workspace") : setStep("choice")
+              }
+            />
+          </div>
+        )}
+
+        {step === "org-form" && (
+          <div className="h-full flex items-center justify-center">
+            <div className="w-full max-w-lg glassy-card rounded-2xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md transition-all duration-300 animate-in fade-in duration-300">
+              <button
+                type="button"
+                onClick={() => setStep("choice")}
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group mb-6"
+              >
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                Volver
+              </button>
+
+              <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-2">
+                  Datos de tu organización
+                </h1>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Empiezas con{" "}
+                  <span className="font-semibold text-primary">7 días de prueba gratis</span> y
+                  acceso a todos los módulos. Podrás elegir un plan cuando termine.
+                </p>
+              </div>
+
+              <form
+                className="space-y-4"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleCreateOrganization()
+                }}
+              >
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Nombre de la organización
+                  </label>
+                  <Input
+                    required
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Mi Tienda"
+                    className="h-12 px-4 rounded-lg bg-background border-border/70 focus-visible:border-primary transition-all duration-200"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Email de contacto{" "}
+                    <span className="text-muted-foreground font-normal">(opcional)</span>
+                  </label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="contacto@mitienda.com"
+                    className="h-12 px-4 rounded-lg bg-background border-border/70 focus-visible:border-primary transition-all duration-200"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={!name.trim() || createOrgMutation.isPending}
+                  className="w-full h-12 rounded-lg bg-primary hover:bg-primary/95 text-primary-foreground text-base font-semibold transition-transform active:scale-[0.98]"
+                >
+                  {createOrgMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" /> Creando organización...
+                    </>
+                  ) : (
+                    <>
+                      Crear organización <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   )
 }
