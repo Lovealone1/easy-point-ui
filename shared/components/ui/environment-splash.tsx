@@ -7,9 +7,11 @@ const EXIT_X = '-100%';
 
 interface EnvironmentSplashProps {
   label?: string;
+  sessionError?: boolean;
+  retrySession?: () => void;
 }
 
-export default function EnvironmentSplash({ label = 'Preparando tu entorno' }: EnvironmentSplashProps) {
+export default function EnvironmentSplash({ label = 'Preparando tu entorno', sessionError, retrySession }: EnvironmentSplashProps) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -40,10 +42,14 @@ export default function EnvironmentSplash({ label = 'Preparando tu entorno' }: E
         />
 
         <p className="mb-6 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
-          {label}
+          {sessionError ? 'No pudimos validar tu sesión. Inténtalo de nuevo.' : label}
         </p>
 
-        <div className="relative h-[3px] w-[85vw] max-w-[760px] overflow-hidden rounded-full bg-foreground/10 sm:w-[70vw]">
+        {sessionError ? (
+          <button type="button" onClick={retrySession} className="rounded-md bg-primary px-4 py-2 text-primary-foreground">
+            Reintentar
+          </button>
+        ) : <div className="relative h-[3px] w-[85vw] max-w-[760px] overflow-hidden rounded-full bg-foreground/10 sm:w-[70vw]">
           <motion.div
             className="brand-fade absolute inset-y-0 w-1/3 rounded-full bg-primary"
             animate={
@@ -58,7 +64,7 @@ export default function EnvironmentSplash({ label = 'Preparando tu entorno' }: E
             }
             style={shouldReduceMotion ? { width: '100%' } : undefined}
           />
-        </div>
+        </div>}
       </motion.div>
     </motion.div>
   );

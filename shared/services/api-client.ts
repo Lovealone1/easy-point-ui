@@ -46,14 +46,12 @@ export const apiClient = axios.create({
 // Refresh mutex
 // A single in-flight Promise shared by all concurrent 401 retries.
 // ─────────────────────────────────────────────────────────────────────────────
-let refreshPromise: Promise<boolean> | null = null;
+let refreshPromise: Promise<Response> | null = null;
 
-async function silentRefresh(): Promise<boolean> {
+async function silentRefresh(): Promise<Response> {
   if (refreshPromise) return refreshPromise;
 
-  refreshPromise = fetch('/api/auth/refresh', { method: 'POST' })
-    .then((res) => res.ok)
-    .catch(() => false)
+  refreshPromise = fetch('/api/auth/refresh', { method: 'POST', signal: AbortSignal.timeout(10_000) })
     .finally(() => {
       refreshPromise = null;
     });
@@ -82,9 +80,18 @@ apiClient.interceptors.response.use(
 
       const refreshed = await silentRefresh();
 
-      if (refreshed) {
+      if (refreshed.ok) {
         // Cookies have been rotated — retry the original request.
         return apiClient(originalRequest);
+      }
+      if (refreshed.status !== 401) {
+        throw new axios.AxiosError('Session refresh unavailable', undefined, originalRequest, undefined, {
+          status: refreshed.status,
+          statusText: refreshed.statusText,
+          data: null,
+          headers: {},
+          config: originalRequest,
+        });
       }
     }
 

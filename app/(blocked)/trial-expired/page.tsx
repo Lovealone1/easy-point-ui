@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 import { Clock, Check, LogOut, Loader2 } from "lucide-react"
 import { useAuthStore } from "@/shared/store/use-auth-store"
 import { getMe } from "@/features/auth/services/auth.service"
+import { isSessionUnauthorized } from "@/shared/api/session-error"
+import EnvironmentSplash from "@/shared/components/ui/environment-splash"
 import { resolveActiveOrg } from "@/shared/utils/resolve-active-org"
 import { forceLogout } from "@/shared/utils/apply-branding"
 import { PageLoader } from "@/shared/components/ui/spinner"
@@ -22,6 +24,7 @@ function formatCOP(amount: number): string {
 }
 
 export default function TrialExpiredPage() {
+  const [sessionError, setSessionError] = React.useState(false)
   const router = useRouter()
   const [isCheckingSession, setIsCheckingSession] = React.useState(true)
   const [isLoggingOut, setIsLoggingOut] = React.useState(false)
@@ -38,7 +41,7 @@ export default function TrialExpiredPage() {
       try {
         const data = await getMe()
         if (!data || !data.id) {
-          router.replace("/auth")
+          await forceLogout()
           return
         }
 
@@ -62,8 +65,9 @@ export default function TrialExpiredPage() {
         }
 
         setIsCheckingSession(false)
-      } catch {
-        router.replace("/auth")
+      } catch (error) {
+        if (isSessionUnauthorized(error)) await forceLogout()
+        else setSessionError(true)
       }
     }
 
@@ -78,6 +82,10 @@ export default function TrialExpiredPage() {
   async function handleLogout() {
     setIsLoggingOut(true)
     await forceLogout()
+  }
+
+  if (sessionError) {
+    return <EnvironmentSplash sessionError retrySession={() => window.location.reload()} />
   }
 
   if (isCheckingSession) {

@@ -10,12 +10,20 @@ export interface BrandingSource {
   defaultTheme?: 'LIGHT' | 'DARK' | 'SYSTEM' | null;
 }
 
-export async function forceLogout(): Promise<void> {
-  try {
-    await fetch('/api/auth/logout', { method: 'POST' });
-  } catch {
+let logoutPromise: Promise<void> | null = null;
+
+export function forceLogout(): Promise<void> {
+  // The interceptor and session bootstrap can both detect the same expiry.
+  if (!logoutPromise) {
+    logoutPromise = (async () => {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST', signal: AbortSignal.timeout(10_000) });
+      } catch {
+      }
+      window.location.replace('/auth');
+    })();
   }
-  window.location.replace('/auth');
+  return logoutPromise;
 }
 
 /**

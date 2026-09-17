@@ -97,6 +97,7 @@ export async function clientFetch<T>(
     const refreshed = await attemptRefresh();
 
     if (!refreshed.ok) {
+      if (refreshed.status !== 401) throw await parseBffError(refreshed);
       emitUnauthorized();
       return null;
     }

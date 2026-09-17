@@ -48,10 +48,10 @@ export async function POST(
   const refreshToken = request.cookies.get('refresh_token')?.value;
 
   if (!refreshToken) {
-    return NextResponse.json(
+    return clearSessionCookies(NextResponse.json(
       fail(makeApiError(401, 'MISSING_REFRESH_TOKEN', 'No refresh token found')),
       { status: 401 },
-    );
+    ));
   }
 
   // ── 2. Hash the token to use as mutex key ─────────────────────────────────
@@ -61,18 +61,16 @@ export async function POST(
   let nestResponsePromise = inflightRefreshMap.get(tokenKey);
 
   if (!nestResponsePromise) {
-    nestResponsePromise = callNestRefresh(refreshToken, request);
-    inflightRefreshMap.set(tokenKey, nestResponsePromise);
-
-    // Clean up the mutex entry when the request completes (success or error)
-    nestResponsePromise.finally(() => {
+    nestResponsePromise = callNestRefresh(refreshToken, request).finally(() => {
       inflightRefreshMap.delete(tokenKey);
     });
+    inflightRefreshMap.set(tokenKey, nestResponsePromise);
   }
 
   let nestResponse: Response;
   try {
-    nestResponse = await nestResponsePromise;
+    // Each caller must own its body stream, including error responses.
+    nestResponse = (await nestResponsePromise).clone();
   } catch (err) {
     const isTimeout = err instanceof Error && err.name === 'AbortError';
     return NextResponse.json(
@@ -91,10 +89,10 @@ export async function POST(
   if (!nestResponse.ok) {
     // 401 from NestJS means the refresh token is invalid/revoked/expired
     if (nestResponse.status === 401) {
-      return NextResponse.json(
+      return clearSessionCookies(NextResponse.json(
         fail(makeApiError(401, 'REFRESH_TOKEN_INVALID', 'Session expired, please log in again')),
         { status: 401 },
-      );
+      ));
     }
 
     const error = await parseNestError(nestResponse);
@@ -129,6 +127,16 @@ export async function POST(
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
+
+function clearSessionCookies<T>(response: NextResponse<T>): NextResponse<T> {
+  for (const name of ['access_token', 'refresh_token']) {
+    response.cookies.set(name, '', {
+      path: '/', httpOnly: true, sameSite: 'lax',
+      secure: NODE_ENV === 'production', maxAge: 0,
+    });
+  }
+  return response;
+}
 
 /**
  * Performs the actual HTTP call to NestJS.

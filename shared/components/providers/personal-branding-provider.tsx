@@ -32,7 +32,7 @@ export default function PersonalBrandingProvider({ children }: { children: React
   const setTheme = useUiStore((s) => s.setTheme);
   const initForUser = useFavoritesStore((s) => s.initForUser);
 
-  useSessionRecovery({ applyBranding: false });
+  const sessionRecovery = useSessionRecovery({ applyBranding: false });
 
   // One query covers both the onboarding gate and the theme: UserPreferences
   // carries onboardingCompleted alongside primaryColor/defaultTheme.
@@ -62,11 +62,11 @@ export default function PersonalBrandingProvider({ children }: { children: React
     );
   }, [preferences, setTheme]);
 
-  const isBooting = isLoadingSession || !user || !profileHydrated || isLoadingPreferences;
+  const isBooting = sessionRecovery.sessionError || isLoadingSession || !user || !profileHydrated || isLoadingPreferences;
 
   return (
     <>
-      <AnimatePresence>{isBooting && <EnvironmentSplash key="environment-splash" />}</AnimatePresence>
+      <AnimatePresence>{isBooting && <EnvironmentSplash {...sessionRecovery} key="environment-splash" />}</AnimatePresence>
       {!isBooting && children}
     </>
   );
