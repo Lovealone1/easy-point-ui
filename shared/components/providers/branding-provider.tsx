@@ -43,7 +43,7 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
   const { initForUser } = useFavoritesStore();
   const { activeModuleKeys } = useOrgModulesStore();
 
-  useSessionRecovery({
+  const sessionRecovery = useSessionRecovery({
     applyBranding: true,
     redirectWhenNoOrg: '/onboarding',
     blockWhenAccessExpired: true,
@@ -166,12 +166,12 @@ export default function BrandingProvider({ children }: { children: React.ReactNo
     applyBrandingToDOM(organizationConfig, setTheme, !hasUserSetTheme);
   }, [pathname, organizationConfig, setTheme]);
 
-  const isBooting = isLoadingSession || !user || !profileHydrated;
+  const isBooting = sessionRecovery.sessionError || isLoadingSession || !user || !profileHydrated;
 
   return (
     <>
       <AnimatePresence>
-        {isBooting && <EnvironmentSplash key="environment-splash" />}
+        {isBooting && <EnvironmentSplash {...sessionRecovery} key="environment-splash" />}
       </AnimatePresence>
       {!isBooting && children}
     </>

@@ -22,6 +22,8 @@ import { PageLoader } from '@/shared/components/ui/spinner';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { getMe } from '@/features/auth/services/auth.service';
+import { isSessionUnauthorized } from '@/shared/api/session-error';
+import EnvironmentSplash from '@/shared/components/ui/environment-splash';
 import { userOnboardingService } from '@/features/user-onboarding/services/user-onboarding.service';
 import { applyBrandingToDOM, forceLogout } from '@/shared/utils/apply-branding';
 import { writePreferredOrgId, type OrgMembershipCandidate } from '@/shared/utils/resolve-active-org';
@@ -33,6 +35,7 @@ interface WorkspaceState {
 }
 
 export function WorkspacePicker() {
+  const [sessionError, setSessionError] = React.useState(false);
   const router = useRouter();
   const setUserFromLogin = useAuthStore((s) => s.setUserFromLogin);
   const hydrateProfile = useAuthStore((s) => s.hydrateProfile);
@@ -48,7 +51,7 @@ export function WorkspacePicker() {
       try {
         const data = await getMe();
         if (!data?.id) {
-          router.replace('/auth');
+          await forceLogout();
           return;
         }
 
@@ -82,8 +85,9 @@ export function WorkspacePicker() {
         }
 
         setState({ organizations, personalReady });
-      } catch {
-        router.replace('/auth');
+      } catch (error) {
+        if (isSessionUnauthorized(error)) await forceLogout();
+        else setSessionError(true);
       }
     }
 
@@ -104,6 +108,10 @@ export function WorkspacePicker() {
 
     writePreferredOrgId(org.id);
     router.push('/dashboard');
+  }
+
+  if (sessionError) {
+    return <EnvironmentSplash sessionError retrySession={() => window.location.reload()} />;
   }
 
   if (!state) {

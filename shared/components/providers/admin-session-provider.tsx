@@ -17,20 +17,20 @@ import EnvironmentSplash from '@/shared/components/ui/environment-splash';
 export default function AdminSessionProvider({ children }: { children: React.ReactNode }) {
   const { user, profileHydrated, isLoadingSession } = useAuthStore();
 
-  useSessionRecovery({ applyBranding: false });
+  const sessionRecovery = useSessionRecovery({ applyBranding: false });
 
   useEffect(() => {
     resetBrandingDOM();
     delete apiClient.defaults.headers.common['x-organization-id'];
   }, []);
 
-  const isBooting = isLoadingSession || !user || !profileHydrated;
+  const isBooting = sessionRecovery.sessionError || isLoadingSession || !user || !profileHydrated;
 
   return (
     <>
       <AnimatePresence>
         {isBooting && (
-          <EnvironmentSplash key="admin-session-splash" label="Preparando el panel de administración" />
+          <EnvironmentSplash {...sessionRecovery} key="admin-session-splash" label="Preparando el panel de administración" />
         )}
       </AnimatePresence>
       {!isBooting && children}

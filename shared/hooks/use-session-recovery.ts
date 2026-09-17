@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useFavoritesStore } from '@/shared/store/use-favorites-store';
 import { getMe } from '@/features/auth/services/auth.service';
+import { isSessionUnauthorized } from '@/shared/api/session-error';
 import { readPreferredOrgId, resolveActiveOrg } from '@/shared/utils/resolve-active-org';
 import { applyBrandingToDOM, forceLogout } from '@/shared/utils/apply-branding';
 
@@ -44,7 +45,9 @@ export function useSessionRecovery({
   applyBranding,
   redirectWhenNoOrg,
   blockWhenAccessExpired = false,
-}: UseSessionRecoveryOptions): void {
+}: UseSessionRecoveryOptions) {
+  const [sessionError, setSessionError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const {
     user,
     profileHydrated,
@@ -71,7 +74,10 @@ export function useSessionRecovery({
   }, [clearSession, clearForUser]);
 
   useEffect(() => {
+    let cancelled = false;
     async function recoverSession() {
+      setSessionError(false);
+      setLoadingSession(true);
       if (user && profileHydrated) {
         const cachedOrg = useAuthStore.getState().activeOrganization;
         if (redirectWhenNoOrg && !cachedOrg) {
@@ -89,6 +95,7 @@ export function useSessionRecovery({
 
       try {
         const data = await getMe();
+        if (cancelled) return;
         if (data && data.id) {
           setUserFromLogin({ id: data.id, email: data.email });
           hydrateProfile({
@@ -126,25 +133,26 @@ export function useSessionRecovery({
           return;
         }
       } catch (error) {
-        const is401 =
-          typeof error === 'object' &&
-          error !== null &&
-          'response' in error &&
-          (error as { response?: { status?: number } }).response?.status === 401;
-
-        if (!is401) {
+        if (cancelled) return;
+        if (!isSessionUnauthorized(error)) {
           console.error('Session recovery failed unexpectedly:', error);
+          setSessionError(true);
+          return;
         }
 
         clearSession();
+        clearForUser();
         await forceLogout();
         return;
       } finally {
-        setLoadingSession(false);
+        if (!cancelled) setLoadingSession(false);
       }
     }
 
     recoverSession();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
+
+  return { sessionError, retrySession: () => setAttempt((value) => value + 1) };
 }

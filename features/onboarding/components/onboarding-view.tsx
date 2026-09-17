@@ -32,6 +32,9 @@ import { Input } from "@/shared/components/ui/input"
 import { PageLoader } from "@/shared/components/ui/spinner"
 import { useAuthStore } from "@/shared/store/use-auth-store"
 import { getMe } from "@/features/auth/services/auth.service"
+import { isSessionUnauthorized } from "@/shared/api/session-error"
+import EnvironmentSplash from "@/shared/components/ui/environment-splash"
+import { forceLogout } from "@/shared/utils/apply-branding"
 import { useAuthBrandingReset } from "@/shared/components/providers/branding-provider"
 import { resolveActiveOrg } from "@/shared/utils/resolve-active-org"
 import { useCreateMyOrganization } from "../hooks/use-onboarding"
@@ -42,6 +45,7 @@ type Step = "choice" | "org-form" | "personal"
 
 export function OnboardingView() {
   useAuthBrandingReset()
+  const [sessionError, setSessionError] = React.useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -72,7 +76,7 @@ export function OnboardingView() {
       try {
         const data = await getMe()
         if (!data || !data.id) {
-          router.replace("/auth")
+          await forceLogout()
           return
         }
 
@@ -105,8 +109,9 @@ export function OnboardingView() {
         }
 
         setIsCheckingSession(false)
-      } catch {
-        router.replace("/auth")
+      } catch (error) {
+        if (isSessionUnauthorized(error)) await forceLogout()
+        else setSessionError(true)
       }
     }
 
@@ -164,6 +169,10 @@ export function OnboardingView() {
         },
       }
     )
+  }
+
+  if (sessionError) {
+    return <EnvironmentSplash sessionError retrySession={() => window.location.reload()} />
   }
 
   if (isCheckingSession) {
