@@ -49,19 +49,24 @@ export const PERSONAL_MODULES_CATALOG: ModuleItem[] = [
   },
 
   // ── Configuración ─────────────────────────────────────────────────────────
-  {
-    id: 'personal-appearance',
-    name: 'Personalización',
-    path: '/personal/appearance',
-    icon: 'palette-rounded',
-    category: 'Configuración',
-    available: true,
-  },
+  // Appearance is deliberately absent: colour and theme moved to
+  // /account/appearance, because they live on UserPreferences and follow the
+  // person into every space rather than belonging to this one. What stays here
+  // is what is genuinely about tracking subscriptions — timezone, currency and
+  // renewal reminders.
   {
     id: 'personal-settings',
     name: 'Preferencias',
     path: '/personal/settings',
     icon: 'tune-rounded',
+    category: 'Configuración',
+    available: true,
+  },
+  {
+    id: 'personal-account',
+    name: 'Configuración de cuenta',
+    path: '/account/profile',
+    icon: 'manage-accounts-rounded',
     category: 'Configuración',
     available: true,
   },

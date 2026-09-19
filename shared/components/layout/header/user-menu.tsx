@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Loader2, Settings, Shield, User, Building2, ArrowLeftRight } from 'lucide-react';
+import { LogOut, Loader2, Settings, Shield, User, Building2, ArrowLeftRight, MonitorSmartphone } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/shared/store/use-auth-store';
 import { useAdminAuthStore } from '@/shared/store/use-admin-auth-store';
@@ -157,27 +157,51 @@ export default function UserMenu({ user, environment }: UserMenuProps) {
             <span>{environment === 'admin' ? 'Salir del panel admin' : 'Cambiar de espacio'}</span>
           </button>
 
-          <button
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground opacity-60 cursor-not-allowed group"
-            disabled
-          >
-            <User className="h-3.5 w-3.5" />
-            <span>Mi perfil</span>
-            <span className="ml-auto text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 rounded-full border border-border/30">
-              Próximamente
-            </span>
-          </button>
+          {/* Account settings only from the dashboard, not the console.
+              /account runs on a TENANT session — the BFF sends the tenant
+              cookies — and the edge middleware bounces anyone without one to
+              /auth. An administrator holding only a console session would
+              follow this link straight out of the console, so the console
+              simply does not offer it. */}
+          {environment === 'dashboard' && (
+            <>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                router.push('/account/profile');
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
+            >
+              <User className="h-3.5 w-3.5 group-hover:text-foreground transition-colors" />
+              <span>Mi perfil</span>
+            </button>
 
-          <button
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
-            onClick={() => setOpen(false)}
-          >
-            <Settings className="h-3.5 w-3.5 group-hover:text-foreground transition-colors" />
-            <span>Preferencias</span>
-            <span className="ml-auto text-[10px] text-muted-foreground/50 bg-muted px-1.5 py-0.5 rounded-full border border-border/30">
-              Próximamente
-            </span>
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                router.push('/account/appearance');
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
+            >
+              <Settings className="h-3.5 w-3.5 group-hover:text-foreground transition-colors" />
+              <span>Configuración de cuenta</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                router.push('/account/sessions');
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150 group"
+            >
+              <MonitorSmartphone className="h-3.5 w-3.5 group-hover:text-foreground transition-colors" />
+              <span>Mis sesiones</span>
+            </button>
+            </>
+          )}
         </div>
 
         {/* Divider + Logout */}
