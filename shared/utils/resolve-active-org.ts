@@ -1,3 +1,4 @@
+import { ACTIVE_ORG_COOKIE } from '@/shared/api/session-cookies';
 import type { OrganizationConfig } from '@/shared/store/use-auth-store';
 
 export interface OrgMembershipCandidate {
@@ -9,8 +10,12 @@ export interface OrgMembershipCandidate {
   config?: OrganizationConfig | null;
 }
 
-/** Cookie the workspace picker writes so the choice survives a reload. */
-export const ACTIVE_ORG_COOKIE = 'ep_active_org';
+/**
+ * Cookie the workspace picker writes so the choice survives a reload.
+ * Defined in shared/api/session-cookies.ts, where the server-side fetch
+ * helpers read it, and re-exported here for the existing callers.
+ */
+export { ACTIVE_ORG_COOKIE };
 
 /**
  * Single point of choice for which organization becomes the active tenant out

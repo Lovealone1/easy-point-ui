@@ -5,7 +5,7 @@
 // Handles CRUD operations and active status toggles.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { apiClient } from "@/shared/services/api-client"
+import { adminApiClient } from "@/shared/services/admin-api-client"
 import type {
   SystemModule,
   CreateSystemModuleDTO,
@@ -21,7 +21,7 @@ class SystemModulesServiceClass {
    * Fetches all global system modules, optionally filtered by isActive.
    */
   async getAll(params?: Record<string, unknown>): Promise<SystemModule[]> {
-    const { data } = await apiClient.get<SystemModule[]>(`/${this.endpoint}`, { params })
+    const { data } = await adminApiClient.get<SystemModule[]>(`/${this.endpoint}`, { params })
     return data
   }
 
@@ -31,7 +31,7 @@ class SystemModulesServiceClass {
    * Fetches detailed system module properties (including nested features/permissions).
    */
   async getById(id: string): Promise<SystemModule> {
-    const { data } = await apiClient.get<SystemModule>(`/${this.endpoint}/${id}`)
+    const { data } = await adminApiClient.get<SystemModule>(`/${this.endpoint}/${id}`)
     return data
   }
 
@@ -41,7 +41,7 @@ class SystemModulesServiceClass {
    * Creates a new global system module.
    */
   async create(payload: CreateSystemModuleDTO): Promise<SystemModule> {
-    const { data } = await apiClient.post<SystemModule>(`/${this.endpoint}`, payload)
+    const { data } = await adminApiClient.post<SystemModule>(`/${this.endpoint}`, payload)
     return data
   }
 
@@ -51,7 +51,7 @@ class SystemModulesServiceClass {
    * Updates system module properties.
    */
   async update(id: string, payload: UpdateSystemModuleDTO): Promise<SystemModule> {
-    const { data } = await apiClient.patch<SystemModule>(`/${this.endpoint}/${id}`, payload)
+    const { data } = await adminApiClient.patch<SystemModule>(`/${this.endpoint}/${id}`, payload)
     return data
   }
 
@@ -61,7 +61,7 @@ class SystemModulesServiceClass {
    * Deletes a global system module.
    */
   async delete(id: string): Promise<void> {
-    await apiClient.delete(`/${this.endpoint}/${id}`)
+    await adminApiClient.delete(`/${this.endpoint}/${id}`)
   }
 
   /**
@@ -70,7 +70,7 @@ class SystemModulesServiceClass {
    * Enables or disables a system module catalog-wide.
    */
   async toggleActive(id: string, isActive: boolean): Promise<SystemModule> {
-    const { data } = await apiClient.patch<SystemModule>(
+    const { data } = await adminApiClient.patch<SystemModule>(
       `/${this.endpoint}/${id}/toggle`,
       { isActive }
     )

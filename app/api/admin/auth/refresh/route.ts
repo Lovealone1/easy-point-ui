@@ -1,17 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// app/api/auth/refresh/route.ts
+// app/api/admin/auth/refresh/route.ts
 //
-// BFF Route — silent token refresh for the tenant dashboard.
+// BFF Route — silent token refresh for the administration console.
 //
-// Flow:
-//   Browser (or middleware) → POST /api/auth/refresh
-//     → NestJS POST /auth/refresh  (Cookie: refresh_token=<value>)
-//       ← Set-Cookie: access_token, refresh_token (rotated)
-//     ← Next.js relays the cookies to the browser
-//     ← 200 { data: { message } }
-//
-// The console has its own route at /api/admin/auth/refresh; both share the
-// implementation in shared/api/auth-bff.ts, including the in-flight mutex.
+// Same dance as the dashboard's, against the console cookies and
+// NestJS /auth/admin/refresh. The API rejects a dashboard refresh token
+// presented here, so this route cannot be used to promote one session into
+// the other.
 // ─────────────────────────────────────────────────────────────────────────────
 import { type NextRequest, NextResponse } from 'next/server';
 import type { ApiResponse, RefreshResponse } from '@/shared/api/types';
@@ -20,5 +15,5 @@ import { handleRefresh } from '@/shared/api/auth-bff';
 export async function POST(
   request: NextRequest,
 ): Promise<NextResponse<ApiResponse<RefreshResponse>>> {
-  return handleRefresh(request, 'tenant');
+  return handleRefresh(request, 'admin');
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuthStore } from '@/shared/store/use-auth-store';
+import { useAdminAuthStore } from '@/shared/store/use-admin-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { useEnvironmentSwitchStore } from '@/shared/store/use-environment-switch-store';
 import { AppIcon } from '@/shared/components/ui/app-icon';
@@ -15,12 +15,12 @@ import {
   ArrowLeftRight,
 } from 'lucide-react';
 import { useState } from 'react';
-import { logout } from '@/features/auth/services/auth.service';
+import { adminLogout } from '@/features/auth/services/admin-auth.service';
 import { useRouter } from 'next/navigation';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const { user, clearSession } = useAuthStore();
+  const { user, clearSession } = useAdminAuthStore();
   const { theme, toggleTheme, isMobileMenuOpen, setMobileMenuOpen } = useUiStore();
   const requestEnvironmentSwitch = useEnvironmentSwitchStore((s) => s.request);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -28,15 +28,17 @@ export default function AdminSidebar() {
 
   const isDark = theme === 'dark';
 
+  // Ends the console session only — any organization session in this browser
+  // stays signed in.
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await logout();
+      await adminLogout();
     } catch {
       /* ignore */
     } finally {
       clearSession();
-      router.replace('/auth');
+      router.replace('/admin/login');
     }
   };
 

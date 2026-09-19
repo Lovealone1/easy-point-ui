@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { plansService } from "../services/plans.service"
+import { plansService, adminPlansService } from "../services/plans.service"
 import type { FindPlansParams, CreatePlanDTO, UpdatePlanDTO } from "../types/plans.types"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,6 +18,8 @@ export const planKeys = {
   list: (params: FindPlansParams) => [...planKeys.lists(), params] as const,
   details: () => [...planKeys.all, "detail"] as const,
   detail: (id: string) => [...planKeys.details(), id] as const,
+  adminLists: () => [...planKeys.all, "admin", "list"] as const,
+  adminList: (params: FindPlansParams) => [...planKeys.adminLists(), params] as const,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -32,6 +34,22 @@ export function usePlans(params: FindPlansParams = {}) {
     queryKey: planKeys.list(params),
     queryFn: () => plansService.getAll(params as Record<string, any>),
     placeholderData: (previousData) => previousData, // smooth pagination transition
+  })
+}
+
+/**
+ * The same list, read on a console session.
+ *
+ * Separate from usePlans because the two run against different sessions and
+ * the administration pages cannot assume the reader also belongs to an
+ * organization. Its own query key, so the two caches never bleed into each
+ * other.
+ */
+export function useAdminPlans(params: FindPlansParams = {}) {
+  return useQuery({
+    queryKey: planKeys.adminList(params),
+    queryFn: () => adminPlansService.getAll(params as Record<string, any>),
+    placeholderData: (previousData) => previousData,
   })
 }
 
@@ -53,9 +71,9 @@ export function useCreatePlan() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: CreatePlanDTO) => plansService.create(payload),
+    mutationFn: (payload: CreatePlanDTO) => adminPlansService.create(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: planKeys.adminLists() })
     },
   })
 }
@@ -68,10 +86,10 @@ export function useUpdatePlan() {
 
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: UpdatePlanDTO }) =>
-      plansService.update(id, payload),
+      adminPlansService.update(id, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(String(variables.id)) })
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: planKeys.adminLists() })
     },
   })
 }
@@ -83,10 +101,10 @@ export function useDeletePlan() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => plansService.delete(id),
+    mutationFn: (id: string) => adminPlansService.delete(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(String(id)) })
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: planKeys.adminLists() })
     },
   })
 }
@@ -99,10 +117,10 @@ export function useTogglePlanActive() {
 
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      plansService.toggleActive(id, isActive),
+      adminPlansService.toggleActive(id, isActive),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.id) })
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: planKeys.adminLists() })
     },
   })
 }

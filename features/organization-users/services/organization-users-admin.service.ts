@@ -1,4 +1,4 @@
-import { apiClient } from '@/shared/services/api-client';
+import { adminApiClient } from '@/shared/services/admin-api-client';
 import type { PaginatedApiResponse } from '@/shared/types/api.types';
 import type {
   OrganizationUser,
@@ -11,7 +11,7 @@ export class OrganizationUsersAdminServiceClass {
   private readonly endpoint = 'organization-users';
 
   async getAll(orgId: string, params: Omit<FindOrganizationUsersParams, 'organizationId'> = {}): Promise<PaginatedApiResponse<OrganizationUser>> {
-    const { data } = await apiClient.get<PaginatedApiResponse<OrganizationUser>>(`/${this.endpoint}`, {
+    const { data } = await adminApiClient.get<PaginatedApiResponse<OrganizationUser>>(`/${this.endpoint}`, {
       params: {
         ...params,
         organizationId: orgId,
@@ -24,7 +24,7 @@ export class OrganizationUsersAdminServiceClass {
   }
 
   async create(orgId: string, payload: CreateOrganizationUserDTO): Promise<OrganizationUser> {
-    const { data } = await apiClient.post<OrganizationUser>(`/${this.endpoint}`, payload, {
+    const { data } = await adminApiClient.post<OrganizationUser>(`/${this.endpoint}`, payload, {
       headers: {
         'x-organization-id': orgId,
       },
@@ -33,7 +33,7 @@ export class OrganizationUsersAdminServiceClass {
   }
 
   async updateRole(orgId: string, id: string, payload: UpdateOrganizationUserDTO): Promise<OrganizationUser> {
-    const { data } = await apiClient.patch<OrganizationUser>(`/${this.endpoint}/${id}`, payload, {
+    const { data } = await adminApiClient.patch<OrganizationUser>(`/${this.endpoint}/${id}`, payload, {
       headers: {
         'x-organization-id': orgId,
       },
@@ -42,7 +42,7 @@ export class OrganizationUsersAdminServiceClass {
   }
 
   async delete(orgId: string, id: string): Promise<void> {
-    const { data } = await apiClient.delete<void>(`/${this.endpoint}/${id}`, {
+    const { data } = await adminApiClient.delete<void>(`/${this.endpoint}/${id}`, {
       headers: {
         'x-organization-id': orgId,
       },
@@ -51,7 +51,7 @@ export class OrganizationUsersAdminServiceClass {
   }
 
   async getRoles(orgId: string): Promise<PaginatedApiResponse<any>> {
-    const { data } = await apiClient.get<PaginatedApiResponse<any>>(`/roles`, {
+    const { data } = await adminApiClient.get<PaginatedApiResponse<any>>(`/roles`, {
       headers: {
         'x-organization-id': orgId,
       },

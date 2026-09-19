@@ -4,7 +4,7 @@
 // Client service for user information and DIAN electronic billing profiles.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { apiClient } from "@/shared/services/api-client"
+import { adminApiClient } from "@/shared/services/admin-api-client"
 import type { BillingProfile } from "../types/user-info.types"
 
 export class UserInfoServiceClass {
@@ -13,7 +13,7 @@ export class UserInfoServiceClass {
    * GET /user-info/:userId/billing
    */
   async getBillingProfile(userId: string): Promise<BillingProfile | null> {
-    const { data } = await apiClient.get<BillingProfile | null>(`/user-info/${userId}/billing`)
+    const { data } = await adminApiClient.get<BillingProfile | null>(`/user-info/${userId}/billing`)
     return data
   }
 
@@ -22,7 +22,7 @@ export class UserInfoServiceClass {
    * POST /user-info/:userId/persona-natural
    */
   async configurePersonaNatural(userId: string, payload: any): Promise<any> {
-    const { data } = await apiClient.post<any>(`/user-info/${userId}/persona-natural`, payload)
+    const { data } = await adminApiClient.post<any>(`/user-info/${userId}/persona-natural`, payload)
     return data
   }
 
@@ -31,7 +31,7 @@ export class UserInfoServiceClass {
    * POST /user-info/:userId/persona-juridica
    */
   async configurePersonaJuridica(userId: string, payload: any): Promise<any> {
-    const { data } = await apiClient.post<any>(`/user-info/${userId}/persona-juridica`, payload)
+    const { data } = await adminApiClient.post<any>(`/user-info/${userId}/persona-juridica`, payload)
     return data
   }
 
@@ -40,7 +40,7 @@ export class UserInfoServiceClass {
    * DELETE /user-info/:userId/billing
    */
   async deleteBillingProfile(userId: string): Promise<{ message: string }> {
-    const { data } = await apiClient.delete<{ message: string }>(`/user-info/${userId}/billing`)
+    const { data } = await adminApiClient.delete<{ message: string }>(`/user-info/${userId}/billing`)
     return data
   }
 }

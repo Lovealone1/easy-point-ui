@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Home, ChevronRight, Menu } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
-import { useAuthStore } from '@/shared/store/use-auth-store';
+import { useAdminAuthStore } from '@/shared/store/use-admin-auth-store';
 import { useUiStore } from '@/shared/store/use-ui-store';
 import { organizationsAdminService } from '@/features/organization/services/organizations-admin.service';
 import { usersService } from '@/features/users/services/users.service';
@@ -108,7 +108,7 @@ function AdminBreadcrumbs() {
 
 export default function AdminHeader() {
   const { setMobileMenuOpen } = useUiStore();
-  const user = useAuthStore((s) => s.user);
+  const user = useAdminAuthStore((s) => s.user);
 
   return (
     <header

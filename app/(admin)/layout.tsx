@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useAuthStore } from '@/shared/store/use-auth-store';
+import { useAdminAuthStore } from '@/shared/store/use-admin-auth-store';
 import { useRouter } from 'next/navigation';
 import ThemeProvider from '@/shared/components/providers/theme-provider';
 import AdminSessionProvider from '@/shared/components/providers/admin-session-provider';
@@ -13,16 +13,31 @@ import SmoothScrollMain from '@/shared/components/layout/smooth-scroll-main';
 import EnvironmentSwitchGate from '@/shared/components/layout/environment-switch-gate';
 import { PageLoader } from '@/shared/components/ui/spinner';
 
+/**
+ * Last line of a three-part gate, and the weakest of the three — a render
+ * guard, not an authorization boundary:
+ *
+ *   1. The API rejects every console endpoint that is not reached on a
+ *      console session. That is the boundary.
+ *   2. The edge middleware redirects /admin/* to /admin/login when the console
+ *      cookie is absent, so nobody loads this bundle for nothing.
+ *   3. This, which keeps the chrome from flashing before (1) and (2) answer.
+ *
+ * It reads the console store, never the dashboard's: being signed into an
+ * organization says nothing about whether you may be here.
+ */
 function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, isLoadingSession } = useAuthStore();
+  const { user, isAuthenticated, isLoadingSession } = useAdminAuthStore();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoadingSession) {
       if (!isAuthenticated) {
-        router.replace('/auth');
+        router.replace('/admin/login');
       } else if (user?.globalRole !== 'ADMIN') {
-        router.replace('/dashboard');
+        // A console session is only ever minted for a global admin, so this is
+        // belt and braces rather than a path anyone reaches.
+        router.replace('/admin/login');
       }
     }
   }, [isAuthenticated, user, isLoadingSession, router]);

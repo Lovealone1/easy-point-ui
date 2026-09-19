@@ -1,6 +1,13 @@
 import { apiClient } from "@/shared/services/api-client"
+import { adminApiClient } from "@/shared/services/admin-api-client"
 import type { Invitation, CreateInvitationDTO, CreateAdminInvitationDTO } from "../types/invitations.types"
 
+/**
+ * Spans both applications, unlike most services: the first methods act inside
+ * the caller's own organization on a dashboard session, while the three
+ * `*Admin` ones are @Roles(ADMIN) and therefore go through the console client.
+ * Which session each call uses is fixed here, at the endpoint it targets.
+ */
 export class InvitationsServiceClass {
   protected readonly endpoint = "invitations"
 
@@ -51,7 +58,7 @@ export class InvitationsServiceClass {
    * GET /invitations/admin
    */
   async getAllAdmin(): Promise<Invitation[]> {
-    const { data } = await apiClient.get<Invitation[]>(`/${this.endpoint}/admin`)
+    const { data } = await adminApiClient.get<Invitation[]>(`/${this.endpoint}/admin`)
     return data
   }
 
@@ -60,7 +67,7 @@ export class InvitationsServiceClass {
    * POST /invitations/admin
    */
   async createAdmin(payload: CreateAdminInvitationDTO): Promise<Invitation> {
-    const { data } = await apiClient.post<Invitation>(`/${this.endpoint}/admin`, payload)
+    const { data } = await adminApiClient.post<Invitation>(`/${this.endpoint}/admin`, payload)
     return data
   }
 
@@ -69,7 +76,7 @@ export class InvitationsServiceClass {
    * DELETE /invitations/admin/:id
    */
   async deleteAdmin(id: string): Promise<{ message: string }> {
-    const { data } = await apiClient.delete<{ message: string }>(`/${this.endpoint}/admin/${id}`)
+    const { data } = await adminApiClient.delete<{ message: string }>(`/${this.endpoint}/admin/${id}`)
     return data
   }
 }

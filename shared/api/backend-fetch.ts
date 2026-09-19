@@ -15,6 +15,7 @@
 import { cookies } from 'next/headers';
 import type { BackendFetchOptions } from '@/shared/types/api.types';
 import { BackendApiError } from '@/shared/utils/api-error';
+import { ACTIVE_ORG_COOKIE, SESSION_COOKIES } from '@/shared/api/session-cookies';
 
 const BACKEND_URL = process.env.BACKEND_API_URL ?? 'http://localhost:3001';
 const API_VERSION = process.env.API_VERSION ?? 'v1';
@@ -38,8 +39,10 @@ export function buildApiUrl(endpoint: string): string {
  * Server-side fetch wrapper for the BFF proxy.
  *
  * Features:
- * - Automatically attaches the Authorization header from the `access_token` cookie.
- * - Forwards x-organization-id from cookies when present.
+ * - Attaches the Authorization header from the cookie of the requested
+ *   application (`scope`), so the admin proxy can never send the dashboard's
+ *   token or the other way round.
+ * - Forwards x-organization-id from the active-org cookie when present.
  * - Forwards Content-Type: application/json for JSON bodies.
  * - Throws a typed `BackendApiError` on non-2xx responses.
  * - Returns `null` for 204 No Content responses.
@@ -59,11 +62,19 @@ export async function backendFetch<T = unknown>(
   endpoint: string,
   options: BackendFetchOptions = {},
 ): Promise<T> {
-  const { body, skipAuth = false, rawUrl, ...restOptions } = options;
+  const { body, skipAuth = false, rawUrl, scope = 'tenant', ...restOptions } = options;
 
   const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
-  const orgId = cookieStore.get('x-organization-id')?.value;
+  const token = cookieStore.get(SESSION_COOKIES[scope].access)?.value;
+
+  // The console is not a tenant and must never carry one implicitly: admin
+  // pages that operate on a specific organization pass the header themselves,
+  // per request, so it is always a deliberate choice.
+  //
+  // Read from ACTIVE_ORG_COOKIE, which the workspace picker actually writes.
+  // This used to read a cookie named 'x-organization-id' that nothing ever
+  // set, so no server-rendered dashboard request carried a tenant at all.
+  const orgId = scope === 'tenant' ? cookieStore.get(ACTIVE_ORG_COOKIE)?.value : undefined;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

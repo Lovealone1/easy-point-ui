@@ -8,6 +8,8 @@
 //   - shared/api/types.ts                     (BFF auth route types)
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { SessionScope } from '@/shared/api/session-cookies';
+
 /**
  * Standard success response shape from the NestJS backend.
  * Every non-paginated endpoint conforms to this contract.
@@ -61,6 +63,12 @@ export interface BackendFetchOptions extends Omit<RequestInit, 'body'> {
   skipAuth?: boolean;
   /** Override the resolved URL (bypasses the /api/v{version} prefix) */
   rawUrl?: string;
+  /**
+   * Which application's credential to send. Defaults to the tenant dashboard;
+   * the admin proxy passes 'admin' so console requests carry the console
+   * cookie and never the dashboard's.
+   */
+  scope?: SessionScope;
 }
 
 // ── Legacy aliases ─────────────────────────────────────────────────────────────

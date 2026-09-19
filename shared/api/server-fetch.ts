@@ -4,6 +4,7 @@
 // Runs exclusively in Node.js — never in the browser.
 // ─────────────────────────────────────────────────────────────────────────────
 import { cookies } from 'next/headers';
+import { ACTIVE_ORG_COOKIE } from '@/shared/api/session-cookies';
 import { makeAuthError, type ApiError, type AuthError } from '@/shared/api/types';
 
 const BACKEND_URL = process.env.BACKEND_API_URL ?? 'http://localhost:3001';
@@ -67,7 +68,10 @@ export async function serverFetch<T>(
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
   const refreshToken = cookieStore.get('refresh_token')?.value;
-  const orgId = cookieStore.get('x-organization-id')?.value;
+  // ACTIVE_ORG_COOKIE is what the workspace picker writes; the name this
+  // previously read was never set by anything, so no server-rendered request
+  // carried a tenant.
+  const orgId = cookieStore.get(ACTIVE_ORG_COOKIE)?.value;
 
   const buildHeaders = (token: string | undefined): Record<string, string> => ({
     'Content-Type': 'application/json',

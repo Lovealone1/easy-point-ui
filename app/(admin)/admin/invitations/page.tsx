@@ -3,7 +3,7 @@
 import * as React from "react"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
-import { apiClient } from "@/shared/services/api-client"
+import { adminApiClient } from "@/shared/services/admin-api-client"
 import { ConfirmModal } from "@/shared/components/ui/confirm-modal"
 import { DataTableSearch } from "@/shared/components/ui/data-table-search"
 import { DataTableToolbar } from "@/shared/components/ui/data-table-toolbar"
@@ -253,7 +253,9 @@ export default function AdminInvitationsPage() {
   const { data: rolesResponse, isLoading: isRolesLoading } = useQuery({
     queryKey: ["roles", "list", { organizationId: formOrgId }],
     queryFn: async () => {
-      const { data } = await apiClient.get('/roles', {
+      // Console session, with the organization named explicitly per request:
+      // the admin proxy attaches no tenant of its own.
+      const { data } = await adminApiClient.get('/roles', {
         headers: {
           'x-organization-id': formOrgId
         }

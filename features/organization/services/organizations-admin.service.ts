@@ -1,14 +1,14 @@
 import { BaseClientService } from '@/shared/services/base-client.service';
-import { apiClient } from '@/shared/services/api-client';
+import { adminApiClient } from '@/shared/services/admin-api-client';
 import type { Organization } from '../types/organization.types';
 
 export class OrganizationsAdminServiceClass extends BaseClientService<Organization> {
   constructor() {
-    super('organizations');
+    super('organizations', adminApiClient);
   }
 
   async updatePlan(id: string, payload: { plan?: string; planActiveUntil?: string | null }): Promise<Organization> {
-    const { data } = await apiClient.patch<Organization>(`/${this.endpoint}/${id}/plan`, payload);
+    const { data } = await adminApiClient.patch<Organization>(`/${this.endpoint}/${id}/plan`, payload);
     return data;
   }
 }
