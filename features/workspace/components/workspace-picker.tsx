@@ -16,7 +16,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowRight, Building2, LogOut, Plus, Sparkles } from 'lucide-react';
+import { ArrowRight, Building2, LogOut, Plus, Shield, Sparkles } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { PageLoader } from '@/shared/components/ui/spinner';
 import { useAuthStore } from '@/shared/store/use-auth-store';
@@ -32,6 +32,8 @@ interface WorkspaceState {
   organizations: OrgMembershipCandidate[];
   /** Whether the user has finished the personal-space onboarding. */
   personalReady: boolean;
+  /** Whether to offer the administration console alongside the spaces. */
+  isGlobalAdmin: boolean;
 }
 
 export function WorkspacePicker() {
@@ -77,14 +79,16 @@ export function WorkspacePicker() {
         }
 
         const organizations: OrgMembershipCandidate[] = data.organizations ?? [];
+        const isGlobalAdmin = data.globalRole === 'ADMIN';
 
         // Nothing to choose between: a brand-new user goes straight to setup.
-        if (organizations.length === 0 && !personalReady) {
+        // A global admin always has the console, so never counts as empty.
+        if (organizations.length === 0 && !personalReady && !isGlobalAdmin) {
           router.replace('/onboarding');
           return;
         }
 
-        setState({ organizations, personalReady });
+        setState({ organizations, personalReady, isGlobalAdmin });
       } catch (error) {
         if (isSessionUnauthorized(error)) await forceLogout();
         else setSessionError(true);
@@ -118,7 +122,7 @@ export function WorkspacePicker() {
     return <PageLoader label="Cargando tus espacios..." />;
   }
 
-  const { organizations, personalReady } = state;
+  const { organizations, personalReady, isGlobalAdmin } = state;
 
   return (
     <div className="h-full w-full overflow-y-auto">
@@ -169,6 +173,20 @@ export function WorkspacePicker() {
                 description="Inventario, ventas y finanzas para tu negocio. 7 días de prueba con acceso completo."
                 cta="Empezar"
                 onSelect={() => router.push('/onboarding')}
+              />
+            )}
+
+            {/* The console is a separate application with a separate session,
+                so this leads to its own sign-in rather than straight in. The
+                card only appears for global admins, but it is the API that
+                enforces that — this is a signpost, not a gate. */}
+            {isGlobalAdmin && (
+              <WorkspaceCard
+                icon={<Shield className="w-6 h-6" />}
+                title="Panel de administración"
+                description="Organizaciones, planes y usuarios de toda la plataforma. Pide un código aparte al entrar."
+                cta="Entrar"
+                onSelect={() => router.push('/admin/login')}
               />
             )}
           </div>

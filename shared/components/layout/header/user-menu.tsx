@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { LogOut, Loader2, Settings, Shield, User, Building2, ArrowLeftRight } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/shared/store/use-auth-store';
+import { useAdminAuthStore } from '@/shared/store/use-admin-auth-store';
 import { useEnvironmentSwitchStore } from '@/shared/store/use-environment-switch-store';
 import { logout } from '@/features/auth/services/auth.service';
+import { adminLogout } from '@/features/auth/services/admin-auth.service';
 import { getAvatarColors, getInitials, formatRole } from './avatar-utils';
 
 interface UserMenuProps {
@@ -28,7 +30,8 @@ export default function UserMenu({ user, environment }: UserMenuProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const clearSession = useAuthStore((s) => s.clearSession);
+  const clearTenantSession = useAuthStore((s) => s.clearSession);
+  const clearAdminSession = useAdminAuthStore((s) => s.clearSession);
   const requestEnvironmentSwitch = useEnvironmentSwitchStore((s) => s.request);
 
   const initials = getInitials(user);
@@ -47,11 +50,29 @@ export default function UserMenu({ user, environment }: UserMenuProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  /**
+   * Signs out of THIS shell only.
+   *
+   * Each shell holds its own cookies, session and store, so leaving the
+   * console does not touch the organization session and vice versa. To end
+   * both at once there is "sign out everywhere" on the API
+   * (POST /auth/logout-all).
+   */
   const handleLogout = async () => {
+    const isAdmin = environment === 'admin';
     setIsLoggingOut(true);
-    try { await logout(); } catch { /* ignore */ } finally {
-      clearSession();
-      router.replace('/auth');
+    try {
+      await (isAdmin ? adminLogout() : logout());
+    } catch {
+      /* ignore */
+    } finally {
+      if (isAdmin) {
+        clearAdminSession();
+        router.replace('/admin/login');
+      } else {
+        clearTenantSession();
+        router.replace('/auth');
+      }
     }
   };
 

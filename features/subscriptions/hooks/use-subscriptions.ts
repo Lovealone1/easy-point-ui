@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { subscriptionsService } from "../services/subscriptions.service"
+import { subscriptionsService, adminSubscriptionsService } from "../services/subscriptions.service"
 import type {
   FindSubscriptionsParams,
   CreateSubscriptionDTO,
@@ -35,7 +35,7 @@ export const subscriptionKeys = {
 export function useSubscriptions(params: FindSubscriptionsParams = {}) {
   return useQuery({
     queryKey: subscriptionKeys.list(params),
-    queryFn: () => subscriptionsService.getAll(params as Record<string, any>),
+    queryFn: () => adminSubscriptionsService.getAll(params as Record<string, any>),
     placeholderData: (previousData) => previousData,
   })
 }
@@ -46,7 +46,7 @@ export function useSubscriptions(params: FindSubscriptionsParams = {}) {
 export function useSubscription(id: string) {
   return useQuery({
     queryKey: subscriptionKeys.detail(id),
-    queryFn: () => subscriptionsService.getById(id),
+    queryFn: () => adminSubscriptionsService.getById(id),
     enabled: !!id,
   })
 }
@@ -57,7 +57,7 @@ export function useSubscription(id: string) {
 export function useCreateSubscription() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (payload: CreateSubscriptionDTO) => subscriptionsService.create(payload),
+    mutationFn: (payload: CreateSubscriptionDTO) => adminSubscriptionsService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() })
     },
@@ -71,7 +71,7 @@ export function useUpdateSubscription() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: UpdateSubscriptionDTO }) =>
-      subscriptionsService.update(id, payload),
+      adminSubscriptionsService.update(id, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(variables.id) })
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() })
@@ -85,7 +85,7 @@ export function useUpdateSubscription() {
 export function useDeleteSubscription() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => subscriptionsService.delete(id),
+    mutationFn: (id: string) => adminSubscriptionsService.delete(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() })
@@ -99,7 +99,7 @@ export function useDeleteSubscription() {
 export function usePauseSubscription() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => subscriptionsService.pause(id),
+    mutationFn: (id: string) => adminSubscriptionsService.pause(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() })
@@ -113,7 +113,7 @@ export function usePauseSubscription() {
 export function useResumeSubscription() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => subscriptionsService.resume(id),
+    mutationFn: (id: string) => adminSubscriptionsService.resume(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() })
@@ -127,7 +127,7 @@ export function useResumeSubscription() {
 export function useCancelSubscription() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => subscriptionsService.cancel(id),
+    mutationFn: (id: string) => adminSubscriptionsService.cancel(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(id) })
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() })

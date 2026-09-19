@@ -44,7 +44,7 @@ import {
 } from "@/features/subscriptions/hooks/use-subscriptions"
 import type { Subscription, BillingCycle, SubscriptionStatus } from "@/features/subscriptions/types/subscriptions.types"
 import { useOrganizationsAdmin } from "@/features/organization/hooks/use-organizations-admin"
-import { usePlans } from "@/features/plans/hooks/use-plans"
+import { useAdminPlans } from "@/features/plans/hooks/use-plans"
 
 export default function SubscriptionsAdminPage() {
   const [search, setSearch] = useState("")
@@ -94,7 +94,7 @@ export default function SubscriptionsAdminPage() {
 
   // Load select options
   const { data: orgsResponse } = useOrganizationsAdmin({ limit: 100 })
-  const { data: plansResponse } = usePlans({ limit: 100 })
+  const { data: plansResponse } = useAdminPlans({ limit: 100 })
 
   // Maps for lookups
   const orgMap = useMemo(() => {

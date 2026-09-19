@@ -7,6 +7,7 @@
 
 import { BaseClientService } from "@/shared/services/base-client.service"
 import type { Invoice, CreateInvoiceDTO } from "../types/invoices.types"
+import { adminApiClient } from '@/shared/services/admin-api-client';
 
 export class InvoicesServiceClass extends BaseClientService<
   Invoice,
@@ -14,7 +15,7 @@ export class InvoicesServiceClass extends BaseClientService<
   unknown
 > {
   constructor() {
-    super("/invoices")
+    super("/invoices", adminApiClient)
   }
 }
 

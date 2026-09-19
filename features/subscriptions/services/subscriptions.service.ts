@@ -5,8 +5,10 @@
 // Inherits standard CRUD and adds custom administrative patch actions.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { AxiosInstance } from "axios"
 import { BaseClientService } from "@/shared/services/base-client.service"
 import { apiClient } from "@/shared/services/api-client"
+import { adminApiClient } from "@/shared/services/admin-api-client"
 import type {
   Subscription,
   CreateSubscriptionDTO,
@@ -19,8 +21,8 @@ export class SubscriptionsServiceClass extends BaseClientService<
   CreateSubscriptionDTO,
   UpdateSubscriptionDTO
 > {
-  constructor() {
-    super("/subscriptions")
+  constructor(client: AxiosInstance = apiClient) {
+    super("/subscriptions", client)
   }
 
   /**
@@ -28,7 +30,7 @@ export class SubscriptionsServiceClass extends BaseClientService<
    * Target: PATCH /subscriptions/:id/pause
    */
   async pause(id: string): Promise<Subscription> {
-    const { data } = await apiClient.patch<Subscription>(`/${this.endpoint}/${id}/pause`)
+    const { data } = await this.client.patch<Subscription>(`/${this.endpoint}/${id}/pause`)
     return data
   }
 
@@ -37,7 +39,7 @@ export class SubscriptionsServiceClass extends BaseClientService<
    * Target: PATCH /subscriptions/:id/resume
    */
   async resume(id: string): Promise<Subscription> {
-    const { data } = await apiClient.patch<Subscription>(`/${this.endpoint}/${id}/resume`)
+    const { data } = await this.client.patch<Subscription>(`/${this.endpoint}/${id}/resume`)
     return data
   }
 
@@ -46,7 +48,7 @@ export class SubscriptionsServiceClass extends BaseClientService<
    * Target: PATCH /subscriptions/:id/cancel
    */
   async cancel(id: string): Promise<Subscription> {
-    const { data } = await apiClient.patch<Subscription>(`/${this.endpoint}/${id}/cancel`)
+    const { data } = await this.client.patch<Subscription>(`/${this.endpoint}/${id}/cancel`)
     return data
   }
 
@@ -55,9 +57,19 @@ export class SubscriptionsServiceClass extends BaseClientService<
    * Target: GET /subscriptions/me — usable even when access is blocked.
    */
   async getMyState(): Promise<SubscriptionAccessState> {
+    // Always the dashboard session: this asks about the caller's own
+    // organization, which is a tenant question, and it must answer even for a
+    // user with no console access at all.
     const { data } = await apiClient.get<SubscriptionAccessState>("/subscriptions/me")
     return data
   }
 }
 
+/**
+ * Only getMyState() is reachable on a dashboard session — the rest of the
+ * /subscriptions controller is @Roles(ADMIN).
+ */
 export const subscriptionsService = new SubscriptionsServiceClass()
+
+/** The console's view: every administrative action over any organization. */
+export const adminSubscriptionsService = new SubscriptionsServiceClass(adminApiClient)

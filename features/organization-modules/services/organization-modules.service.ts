@@ -5,7 +5,7 @@
 // Connects to NestJS Backend via BFF proxy.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { apiClient } from "@/shared/services/api-client"
+import { adminApiClient } from "@/shared/services/admin-api-client"
 import type { SystemModule, AssignOrgModuleDto } from "../types/organization-modules.types"
 
 class OrganizationModulesServiceClass {
@@ -16,7 +16,7 @@ class OrganizationModulesServiceClass {
    * Requires GlobalRole.ADMIN.
    */
   async getSystemModules(): Promise<SystemModule[]> {
-    const { data } = await apiClient.get<SystemModule[]>("/system-modules")
+    const { data } = await adminApiClient.get<SystemModule[]>("/system-modules")
     return data
   }
 
@@ -27,7 +27,7 @@ class OrganizationModulesServiceClass {
    * Requires GlobalRole.ADMIN.
    */
   async getOrgModules(organizationId: string): Promise<SystemModule[]> {
-    const { data } = await apiClient.get<SystemModule[]>(`/organization-modules/${organizationId}`)
+    const { data } = await adminApiClient.get<SystemModule[]>(`/organization-modules/${organizationId}`)
     return data
   }
 
@@ -39,7 +39,7 @@ class OrganizationModulesServiceClass {
    * Requires GlobalRole.ADMIN.
    */
   async assignModule(dto: AssignOrgModuleDto): Promise<unknown> {
-    const { data } = await apiClient.post<unknown>("/organization-modules", dto)
+    const { data } = await adminApiClient.post<unknown>("/organization-modules", dto)
     return data
   }
 
@@ -50,7 +50,7 @@ class OrganizationModulesServiceClass {
    * Requires GlobalRole.ADMIN.
    */
   async unassignModule(organizationId: string, moduleId: string): Promise<void> {
-    await apiClient.delete(`/organization-modules/${organizationId}/${moduleId}`)
+    await adminApiClient.delete(`/organization-modules/${organizationId}/${moduleId}`)
   }
 }
 

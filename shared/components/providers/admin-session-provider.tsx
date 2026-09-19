@@ -1,27 +1,33 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AnimatePresence } from 'motion/react';
-import { useAuthStore } from '@/shared/store/use-auth-store';
-import { useSessionRecovery } from '@/shared/hooks/use-session-recovery';
+import { useAdminAuthStore } from '@/shared/store/use-admin-auth-store';
+import { useAdminSession } from '@/shared/hooks/use-admin-session';
 import { resetBrandingDOM } from '@/shared/utils/apply-branding';
-import { apiClient } from '@/shared/services/api-client';
 import EnvironmentSplash from '@/shared/components/ui/environment-splash';
 
 /**
- * Session bootstrap for the admin shell — authenticates the same way as
- * the dashboard's BrandingProvider, but never applies org branding and
- * never carries the tenant's x-organization-id header into admin requests
- * (see shared/store/use-auth-store.ts for what that header controls).
+ * Session bootstrap for the administration console.
+ *
+ * This used to be the entire separation between the two shells: a single
+ * `delete apiClient.defaults.headers.common['x-organization-id']` on mount,
+ * which BrandingProvider put straight back when the user returned to the
+ * dashboard. Both shells shared one session, one store and one Axios client,
+ * so the console was never more than a different set of pages.
+ *
+ * It is now what its name always claimed: it recovers a session of its own,
+ * against its own cookies, store and client.
  */
 export default function AdminSessionProvider({ children }: { children: React.ReactNode }) {
-  const { user, profileHydrated, isLoadingSession } = useAuthStore();
+  const { user, profileHydrated, isLoadingSession } = useAdminAuthStore();
 
-  const sessionRecovery = useSessionRecovery({ applyBranding: false });
+  const sessionRecovery = useAdminSession();
 
-  useEffect(() => {
+  // The console ignores organization branding and stays on the default
+  // palette, so undo whatever the dashboard painted on the way in.
+  React.useEffect(() => {
     resetBrandingDOM();
-    delete apiClient.defaults.headers.common['x-organization-id'];
   }, []);
 
   const isBooting = sessionRecovery.sessionError || isLoadingSession || !user || !profileHydrated;
@@ -30,7 +36,11 @@ export default function AdminSessionProvider({ children }: { children: React.Rea
     <>
       <AnimatePresence>
         {isBooting && (
-          <EnvironmentSplash {...sessionRecovery} key="admin-session-splash" label="Preparando el panel de administración" />
+          <EnvironmentSplash
+            {...sessionRecovery}
+            key="admin-session-splash"
+            label="Preparando el panel de administración"
+          />
         )}
       </AnimatePresence>
       {!isBooting && children}

@@ -33,7 +33,7 @@ import { ConfirmModal } from "@/shared/components/ui/confirm-modal"
 
 // Feature bindings
 import {
-  usePlans,
+  useAdminPlans,
   useCreatePlan,
   useUpdatePlan,
   useDeletePlan,
@@ -76,7 +76,7 @@ export default function PlansAdminPage() {
   }, [debouncedSearch])
 
   // Fetch paginated pricing plans
-  const { data: plansResponse, isLoading, error, refetch } = usePlans({
+  const { data: plansResponse, isLoading, error, refetch } = useAdminPlans({
     page,
     limit: 10,
     orderBy: sortKey,
