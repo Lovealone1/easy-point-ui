@@ -135,7 +135,7 @@ export default function OrganizationConfigPage() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 bg-background text-foreground transition-colors duration-300">
+    <div className="p-4 md:p-6 lg:p-8 bg-background text-foreground transition-colors duration-300">
       <div className="max-w-4xl mx-auto space-y-6">
         
         {/* Breadcrumb Back Link */}

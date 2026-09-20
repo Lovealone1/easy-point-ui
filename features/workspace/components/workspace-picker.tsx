@@ -125,7 +125,7 @@ export function WorkspacePicker() {
   const { organizations, personalReady, isGlobalAdmin } = state;
 
   return (
-    <div className="h-full w-full overflow-y-auto">
+    <div className="h-full w-full overflow-y-auto overscroll-y-contain">
       <div className="min-h-full flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-3xl space-y-8">
           <header className="text-center space-y-4">

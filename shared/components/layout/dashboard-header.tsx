@@ -221,7 +221,7 @@ export default function DashboardHeader() {
   return (
     <header
       className={cn(
-        "flex items-center w-full h-16 shrink-0 sticky top-0 z-40",
+        "relative z-40 flex items-center w-full h-16 shrink-0",
         "px-4 gap-3",
         "border-b border-sidebar-border",
         "bg-background/90 backdrop-blur-[20px] supports-[backdrop-filter]:bg-background/75",

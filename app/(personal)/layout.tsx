@@ -25,11 +25,11 @@ export default function PersonalLayout({ children }: { children: React.ReactNode
       <QueryProvider>
         <PersonalBrandingProvider>
           <SidebarCatalogProvider catalog={PERSONAL_SIDEBAR_CATALOG}>
-            <div className="flex h-screen overflow-hidden bg-background text-foreground">
+            <div className="app-viewport-shell flex overflow-hidden bg-background text-foreground">
               <Sidebar />
-              <div className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 <DashboardHeader />
-                <SmoothScrollMain className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+                <SmoothScrollMain className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 md:p-6 lg:p-8">
                   {children}
                 </SmoothScrollMain>
               </div>

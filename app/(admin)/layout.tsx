@@ -59,11 +59,11 @@ export default function AdminLayout({
       <AdminSessionProvider>
         <QueryProvider>
           <AdminGuard>
-            <div className="flex h-screen overflow-hidden bg-background text-foreground">
+            <div className="app-viewport-shell flex overflow-hidden bg-background text-foreground">
               <AdminSidebar />
-              <div className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 <AdminHeader />
-                <SmoothScrollMain className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 lg:p-10">
+                <SmoothScrollMain className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain no-scrollbar p-4 md:p-8 lg:p-10">
                   {children}
                 </SmoothScrollMain>
               </div>
