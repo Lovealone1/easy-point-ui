@@ -26,7 +26,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen p-8 md:p-12 lg:p-24 bg-background text-foreground transition-colors duration-300">
+    <div className="p-8 md:p-12 lg:p-24 bg-background text-foreground transition-colors duration-300">
       <div className="max-w-5xl mx-auto space-y-12">
         
         {/* Header Section */}

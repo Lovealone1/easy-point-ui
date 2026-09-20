@@ -95,7 +95,7 @@ export default function TrialExpiredPage() {
   const isTrial = state?.isTrial ?? organizationConfig?.isTrial ?? true
 
   return (
-    <div className="h-full w-full overflow-y-auto flex flex-col items-center px-6 py-12">
+    <div className="h-full w-full overflow-y-auto overscroll-y-contain flex flex-col items-center px-6 py-12">
       <header className="w-full max-w-4xl flex items-center justify-between mb-10">
         <Image
           src="/global/easypoint-logo.png"

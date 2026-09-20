@@ -14,7 +14,7 @@ export default function OnboardingLayout({
   return (
     <ThemeProvider>
       <QueryProvider>
-        <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
+        <div className="app-viewport-shell overflow-hidden bg-background text-foreground">
           {children}
         </div>
         <Toaster position="top-right" richColors />

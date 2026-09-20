@@ -196,7 +196,7 @@ export function OnboardingView() {
         />
       </header>
 
-      <main className="flex-1 min-h-0 overflow-y-auto relative z-10 px-6 sm:px-10 lg:px-14 pb-10">
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain relative z-10 px-6 sm:px-10 lg:px-14 pb-10">
         {step === "choice" && (
           <div className="h-full flex items-center justify-center">
             <div className="w-full max-w-2xl glassy-card rounded-2xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md transition-all duration-300 animate-in fade-in duration-300">

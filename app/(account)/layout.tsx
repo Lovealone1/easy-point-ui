@@ -1,30 +1,30 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// app/(personal)/layout.tsx
+// app/(account)/layout.tsx
 //
-// Shell for the Personal Space. Structurally identical to (dashboard) — same
-// Sidebar, same header, same scroll container — but fed a different sidebar
-// catalog and gated by PersonalBrandingProvider instead of BrandingProvider,
-// since a personal user has no organization and BrandingProvider would bounce
-// them to /onboarding.
+// Shell for account settings. Structurally identical to (dashboard) and
+// (personal) — same Sidebar, same header, same scroll container — fed the
+// account catalog and gated by AccountBrandingProvider, which is the one that
+// redirects nobody. See the note in that file for why neither of the other two
+// providers works here.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Toaster } from '@/shared/components/ui/sonner';
 import QueryProvider from '@/shared/components/providers/query-provider';
 import ThemeProvider from '@/shared/components/providers/theme-provider';
-import PersonalBrandingProvider from '@/shared/components/providers/personal-branding-provider';
+import AccountBrandingProvider from '@/shared/components/providers/account-branding-provider';
 import DashboardHeader from '@/shared/components/layout/dashboard-header';
 import Sidebar from '@/shared/components/layout/sidebar/sidebar';
 import SmoothScrollMain from '@/shared/components/layout/smooth-scroll-main';
 import EnvironmentSwitchGate from '@/shared/components/layout/environment-switch-gate';
 import { SidebarCatalogProvider } from '@/shared/config/sidebar-catalog';
-import { PERSONAL_SIDEBAR_CATALOG } from '@/shared/config/personal-modules.config';
+import { ACCOUNT_SIDEBAR_CATALOG } from '@/shared/config/account-modules.config';
 
-export default function PersonalLayout({ children }: { children: React.ReactNode }) {
+export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <QueryProvider>
-        <PersonalBrandingProvider>
-          <SidebarCatalogProvider catalog={PERSONAL_SIDEBAR_CATALOG}>
+        <AccountBrandingProvider>
+          <SidebarCatalogProvider catalog={ACCOUNT_SIDEBAR_CATALOG}>
             <div className="app-viewport-shell flex overflow-hidden bg-background text-foreground">
               <Sidebar />
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -38,7 +38,7 @@ export default function PersonalLayout({ children }: { children: React.ReactNode
             <Toaster position="top-right" richColors />
             <EnvironmentSwitchGate />
           </SidebarCatalogProvider>
-        </PersonalBrandingProvider>
+        </AccountBrandingProvider>
       </QueryProvider>
     </ThemeProvider>
   );

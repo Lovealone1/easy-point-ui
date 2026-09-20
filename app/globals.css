@@ -435,6 +435,15 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    React Colorful Customizations (Brand Settings Module)
    ───────────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+  .app-viewport-shell {
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
 .react-colorful {
   width: 100% !important;
   height: 180px !important;
