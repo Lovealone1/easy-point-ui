@@ -86,6 +86,17 @@ async function proxyRequest(
       body,
     });
 
+    if (data && typeof data === 'object' && '__binary' in data) {
+      const binary = data as unknown as {
+        data: ArrayBuffer;
+        contentType: string;
+        contentDisposition?: string;
+      };
+      const headers = new Headers();
+      headers.set('Content-Type', binary.contentType || 'application/octet-stream');
+      if (binary.contentDisposition) headers.set('Content-Disposition', binary.contentDisposition);
+      return new NextResponse(binary.data, { headers });
+    }
     return NextResponse.json(data === undefined ? {} : data);
   } catch (error) {
     if (error instanceof BackendApiError) {

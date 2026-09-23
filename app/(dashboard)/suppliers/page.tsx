@@ -9,6 +9,7 @@ import {
 import { DataTableSearch } from "@/shared/components/ui/data-table-search"
 import { DataTableAction } from "@/shared/components/ui/data-table-action"
 import { DataTableToolbar } from "@/shared/components/ui/data-table-toolbar"
+import { MasterImportActions } from "@/features/master-imports/components/master-import-actions"
 import {
   useSuppliers,
   useCreateSupplier,
@@ -342,12 +343,10 @@ export default function SuppliersPage() {
           />
         }
         actionSection={
-          <DataTableAction
-            actionType="create"
-            label="Nuevo Proveedor"
-            shape="md"
-            onClick={() => setIsCreateOpen(true)}
-          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <MasterImportActions resource="suppliers" />
+            <DataTableAction actionType="create" label="Nuevo Proveedor" shape="md" onClick={() => setIsCreateOpen(true)} />
+          </div>
         }
       />
 

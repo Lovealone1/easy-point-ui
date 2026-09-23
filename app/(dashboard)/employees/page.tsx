@@ -9,6 +9,7 @@ import {
 import { DataTableSearch } from "@/shared/components/ui/data-table-search"
 import { DataTableAction } from "@/shared/components/ui/data-table-action"
 import { DataTableToolbar } from "@/shared/components/ui/data-table-toolbar"
+import { MasterImportActions } from "@/features/master-imports/components/master-import-actions"
 import { useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useEmployees, useUpdateEmployeeStatus, useAssignEmployeeUser, useAddEmployeeNote } from "@/features/employees/hooks/use-employees"
 import { useOrganizationUsers } from "@/features/organization-users/hooks/use-organization-users"
 import type { Employee, EmployeeStatus } from "@/features/employees/types/employees.types"
@@ -400,12 +401,10 @@ export default function EmployeesPage() {
           />
         }
         actionSection={
-          <DataTableAction
-            actionType="create"
-            label="Nuevo Empleado"
-            shape="md"
-            onClick={() => setIsCreateOpen(true)}
-          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <MasterImportActions resource="employees" />
+            <DataTableAction actionType="create" label="Nuevo Empleado" shape="md" onClick={() => setIsCreateOpen(true)} />
+          </div>
         }
       />
 

@@ -140,6 +140,16 @@ export async function backendFetch<T = unknown>(
     throw new BackendApiError(response.status, apiError);
   }
 
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json') && !contentType.includes('+json')) {
+    return {
+      __binary: true,
+      data: await response.arrayBuffer(),
+      contentType,
+      contentDisposition: response.headers.get('content-disposition') ?? undefined,
+    } as T;
+  }
+
   const text = await response.text();
   return text ? (JSON.parse(text) as T) : (null as T);
 }

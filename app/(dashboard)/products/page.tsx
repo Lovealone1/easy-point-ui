@@ -9,6 +9,7 @@ import {
 import { DataTableSearch } from "@/shared/components/ui/data-table-search"
 import { DataTableAction } from "@/shared/components/ui/data-table-action"
 import { DataTableToolbar } from "@/shared/components/ui/data-table-toolbar"
+import { MasterImportActions } from "@/features/master-imports/components/master-import-actions"
 import {
   useProducts,
   useProductCategories,
@@ -359,12 +360,10 @@ export default function ProductsPage() {
           />
         }
         actionSection={
-          <DataTableAction
-            actionType="create"
-            label="Nuevo Producto"
-            shape="md"
-            onClick={() => setIsCreateOpen(true)}
-          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <MasterImportActions resource="products" />
+            <DataTableAction actionType="create" label="Nuevo Producto" shape="md" onClick={() => setIsCreateOpen(true)} />
+          </div>
         }
       />
 
