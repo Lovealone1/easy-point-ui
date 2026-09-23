@@ -9,6 +9,7 @@ import {
 import { DataTableSearch } from "@/shared/components/ui/data-table-search"
 import { DataTableAction } from "@/shared/components/ui/data-table-action"
 import { DataTableToolbar } from "@/shared/components/ui/data-table-toolbar"
+import { MasterImportActions } from "@/features/master-imports/components/master-import-actions"
 import {
   useClients,
   useCreateClient,
@@ -362,12 +363,10 @@ export default function ClientsPage() {
           />
         }
         actionSection={
-          <DataTableAction
-            actionType="create"
-            label="Nuevo Cliente"
-            shape="md"
-            onClick={() => setIsCreateOpen(true)}
-          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <MasterImportActions resource="clients" />
+            <DataTableAction actionType="create" label="Nuevo Cliente" shape="md" onClick={() => setIsCreateOpen(true)} />
+          </div>
         }
       />
 

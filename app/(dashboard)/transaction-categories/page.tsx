@@ -7,6 +7,7 @@ import { ConfirmModal } from "@/shared/components/ui/confirm-modal"
 import { DataTableSearch } from "@/shared/components/ui/data-table-search"
 import { DataTableToolbar } from "@/shared/components/ui/data-table-toolbar"
 import { DataTableAction } from "@/shared/components/ui/data-table-action"
+import { MasterImportActions } from "@/features/master-imports/components/master-import-actions"
 import { Button } from "@/shared/components/ui/button"
 import {
   useTransactionCategories,
@@ -469,12 +470,10 @@ export default function TransactionCategoriesPage() {
           />
         }
         actionSection={
-          <DataTableAction
-            actionType="create"
-            label="Nueva categoría"
-            shape="md"
-            onClick={() => setIsCreateOpen(true)}
-          />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <MasterImportActions resource="transaction-categories" />
+            <DataTableAction actionType="create" label="Nueva categoría" shape="md" onClick={() => setIsCreateOpen(true)} />
+          </div>
         }
       />
 
